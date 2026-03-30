@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#1a1030">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.svg">
+<link rel="apple-touch-icon" href="icons/icon-192.svg">
+<title>Aetheria: Resonant Coherence Training</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&display=swap');
+:root{--bg:#06060c;--bg2:#0a0810;--bg3:#0f0a14;--bdr:#1a1520;--dim:#3a3030;--mut:#4a4030;--sub:#5a4a3a;--txt:#e0d8cc;--gld:#d4a574;--gld2:#f0d4a8;--pur:#5048C4;--vio:#7B50D4;--mag:#A840B8}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh;min-height:100dvh;overflow:hidden;display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0}
+button{font-family:inherit;cursor:pointer}
+.app{flex:1;display:flex;flex-direction:column;min-height:0}
+.header{background:radial-gradient(ellipse at 50% 0%,#120a18,var(--bg) 70%);padding:env(safe-area-inset-top,8px) 16px 8px;text-align:center;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.hd-brand{letter-spacing:.4em;font-size:7px;color:var(--sub);text-transform:uppercase}
+.hd-title{font-size:18px;font-weight:300;background:linear-gradient(135deg,var(--gld),var(--gld2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.08em}
+.hd-sub{font-size:9px;color:var(--sub);margin-top:1px}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 14px 80px;-webkit-overflow-scrolling:touch;min-height:0}
+.nav{position:fixed;bottom:0;left:0;right:0;background:#0a0814ee;border-top:1px solid var(--bdr);display:flex;padding:4px 4px env(safe-area-inset-bottom,4px);z-index:20;backdrop-filter:blur(10px)}
+.nav-btn{flex:1;background:transparent;border:none;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0;font-size:8px;letter-spacing:.05em;transition:color .2s}
+.nav-btn.on{color:var(--gld)}
+.nav-ico{font-size:16px}
+.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;padding:12px;margin-bottom:10px}
+.card-h{font-size:10px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.muse-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;margin-bottom:10px}
+.muse-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:background .3s}
+.muse-txt{flex:1;font-size:12px;color:#8a7b6b}
+.muse-btn{background:transparent;padding:5px 14px;border-radius:4px;font-size:11px;letter-spacing:.05em}
+.rx{background:linear-gradient(135deg,#0a0814,#0c0a18);border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;text-align:center;margin-bottom:10px;transition:border-color .5s}
+.rx-freq{font-size:40px;font-weight:300;letter-spacing:.05em;transition:color .5s}
+.rx-name{font-size:14px;margin-top:2px;color:#c0b8a8;transition:color .3s}
+.rx-state{display:inline-block;padding:2px 12px;border-radius:12px;font-size:10px;margin-top:6px;letter-spacing:.06em;transition:all .5s}
+.rx-reason{font-size:11px;color:#6a5a4a;margin-top:8px;line-height:1.5}
+.bands{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:10px}
+.band{text-align:center}
+.band-w{height:50px;background:var(--bg2);border-radius:4px;position:relative;overflow:hidden;margin-bottom:3px}
+.band-b{position:absolute;bottom:0;width:100%;border-radius:4px 4px 0 0;transition:height .2s}
+.band-v{position:absolute;top:3px;left:0;right:0;font-size:9px;color:#fff;text-align:center;opacity:.8}
+.band-n{font-size:9px;color:var(--mut)}.band-h{font-size:7px;color:var(--dim)}
+.coh-wrap{display:flex;justify-content:center;margin-bottom:10px}
+.coh-ring{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;border:2px solid var(--bdr);transition:all .5s}
+.coh-val{font-size:26px;font-weight:300;transition:color .5s}
+.coh-lbl{font-size:8px;letter-spacing:.08em;color:#6a5a4a}
+.coh-trend{font-size:9px;margin-top:1px}
+.ctrl-row{display:flex;justify-content:center;gap:16px;padding:8px 0;border-top:1px solid var(--bdr);margin-bottom:10px;flex-wrap:wrap}
+.tog{display:flex;align-items:center;gap:8px;background:transparent;border:none;padding:4px 0}
+.tog-t{width:36px;height:20px;border-radius:10px;position:relative;transition:all .3s}
+.tog-k{width:14px;height:14px;border-radius:50%;position:absolute;top:2px;transition:all .3s}
+.tog-l{font-size:11px;letter-spacing:.04em}
+.canvas-ctr{display:flex;justify-content:center;margin-bottom:10px}
+.canvas-ctr canvas{border-radius:50%}
+.fgrid{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;margin-bottom:10px}
+.fcell{aspect-ratio:1;border-radius:3px;border:1.5px solid var(--bdr);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:7px;font-family:monospace}
+.ins{background:#0c0810;border-left:2px solid;border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:10px;font-size:11px;color:#6a5a4a;line-height:1.6}
+.gf-circle{width:90px;height:90px;border-radius:50%;margin:0 auto;transition:all .8s ease-in-out}
+.gf-dots{display:flex;gap:4px;justify-content:center;margin-top:8px}
+.gf-dot{width:8px;height:8px;border-radius:50%;transition:background .3s}
+.gf-dot-27{transition:background .3s,box-shadow .3s}
+.gf-btn{background:transparent;border:1px solid var(--gld);color:var(--gld);padding:8px 24px;border-radius:6px;font-size:13px;letter-spacing:.08em;margin-top:12px}
+.session{background:var(--bg2);border:1px solid var(--bdr);border-radius:6px;padding:10px;margin-bottom:6px}
+.session-date{font-size:9px;color:var(--dim)}
+.session-coh{font-size:14px;font-weight:300;margin-top:2px}
+.session-rx{font-size:11px;color:#8a7b6b;margin-top:3px}
+.session-bar{height:3px;background:var(--bdr);border-radius:2px;margin-top:6px;overflow:hidden}
+.session-fill{height:100%;border-radius:2px}
+.ft-link{text-align:center;padding:10px 0;font-size:10px}
+.ft-link a{color:var(--sub);text-decoration:none}
+.osc-info{border-radius:6px;padding:6px 10px;margin-bottom:10px;text-align:center;font-size:11px;transition:all .5s}
+/* Cymatics gallery */
+.cym-gallery{display:flex;gap:10px;overflow-x:auto;padding:8px 4px 12px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
+.cym-gallery::-webkit-scrollbar{height:3px}
+.cym-gallery::-webkit-scrollbar-thumb{background:#2a2030;border-radius:3px}
+.cym-card{flex:0 0 auto;width:100px;text-align:center;cursor:pointer;scroll-snap-align:center;padding:6px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--bg2);transition:border-color .3s,transform .2s}
+.cym-card.active{transform:scale(1.05)}
+.cym-card canvas{border-radius:50%}
+.cym-freq{font-size:10px;margin-top:4px;font-family:monospace}
+.cym-name{font-size:9px;color:var(--sub);margin-top:2px}
+/* Cymatics control panel */
+.cym-panel{position:fixed;left:0;top:0;bottom:0;width:220px;background:#08060eee;border-right:1px solid var(--bdr);padding:50px 14px 14px;z-index:30;transform:translateX(-100%);transition:transform .3s ease;overflow-y:auto;backdrop-filter:blur(12px)}
+.cym-panel.open{transform:translateX(0)}
+.cym-panel-close{position:absolute;top:8px;right:8px;background:transparent;border:none;color:var(--sub);font-size:20px;padding:4px 8px}
+.cym-panel h3{font-size:10px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;margin:12px 0 6px}
+.cym-slider{width:100%;margin:4px 0 8px;-webkit-appearance:none;height:3px;background:var(--bdr);border-radius:2px;outline:none}
+.cym-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;cursor:pointer}
+.cym-snap{display:flex;gap:4px;margin:4px 0 10px;flex-wrap:wrap}
+.cym-snap button{background:var(--bg2);border:1px solid var(--bdr);color:var(--sub);padding:4px 8px;border-radius:4px;font-size:10px;font-family:inherit}
+.cym-snap button.on{border-color:var(--gld);color:var(--gld)}
+.cym-overlay{position:fixed;inset:0;background:#00000066;z-index:25;display:none}
+.cym-overlay.open{display:block}
+.cym-open-btn{position:absolute;left:8px;top:8px;background:var(--bg2);border:1px solid var(--bdr);color:var(--sub);padding:5px 10px;border-radius:4px;font-size:10px;z-index:10;letter-spacing:.05em}
+/* Aetheria position indicator */
+.aetheria-pos-card{transition:border-color .5s}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media(max-width:400px){.rx-freq{font-size:32px}.bands{gap:3px}.band-w{height:40px}.coh-ring{width:64px;height:64px}.coh-val{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="hd-brand">Aetheria432.com</div>
+    <div class="hd-title">RESONANT COHERENCE TRAINING</div>
+    <div class="hd-sub" id="hd-sub">Connect Muse 2 to begin</div>
+  </div>
+  <div class="content" id="content"></div>
+  <div class="nav">
+    <button class="nav-btn on" data-tab="home" onclick="go('home')"><span class="nav-ico">◉</span>Home</button>
+    <button class="nav-btn" data-tab="cymatics" onclick="go('cymatics')"><span class="nav-ico">❋</span>Cymatics</button>
+    <button class="nav-btn" data-tab="biofield" onclick="go('biofield')"><span class="nav-ico">◎</span>Biofield</button>
+    <button class="nav-btn" data-tab="flower" onclick="go('flower')"><span class="nav-ico">✿</span>Flower</button>
+    <button class="nav-btn" data-tab="history" onclick="go('history')"><span class="nav-ico">☰</span>History</button>
+  </div>
+</div>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// ARCHITECTURE (following Perplexity's analysis):
+//   1. Muse BLE → raw EEG data
+//   2. EEG data → NeuroState (bands, coherence, prescription)
+//   3. NeuroState → AudioEngine.setFrequency() DIRECTLY
+//   4. NeuroState → updateUI() via getElementById (NO full re-render)
+//   5. render() ONLY called on tab switch
+//
+// AudioEngine is a SINGLETON. Created once. Never destroyed.
+// Muse callback NEVER calls render(). Only updateUI().
+// ═══════════════════════════════════════════════════════════════
+
+// ─── FREQUENCY DATA ───
+const F=[
+{f:174,kw:"Foundation",sc:"The Circle",c:"#8B2500",hx:8,hn:"Holding Together",hc:"Bǐ",ut:"kan",lt:"kun",hw:"Water/Earth — fields seeking union",geo:"Seed of Life"},
+{f:285,kw:"Restoration",sc:"The Mirror",c:"#B8500A",hx:22,hn:"Grace",hc:"Bì",ut:"gen",lt:"li",hw:"Mountain/Fire — inner illumination",geo:"Flower of Life"},
+{f:396,kw:"Liberation",sc:"The Storm",c:"#C47A14",hx:51,hn:"The Arousing",hc:"Zhèn",ut:"zhen",lt:"zhen",hw:"Thunder/Thunder — shock that liberates",geo:"Vesica Piscis"},
+{f:417,kw:"Change",sc:"The Gate",c:"#2E8B57",hx:53,hn:"Development",hc:"Jiàn",ut:"xun",lt:"gen",hw:"Wind/Mountain — gradual progress",geo:"Icosahedron"},
+{f:528,kw:"Transformation",sc:"The Drift",c:"#2873B8",hx:2,hn:"The Receptive",hc:"Kūn",ut:"kun",lt:"kun",hw:"Earth/Earth — surrender to healing",geo:"Metatron's Cube"},
+{f:639,kw:"Connection",sc:"The Root",c:"#5048C4",hx:24,hn:"Return",hc:"Fù",ut:"kun",lt:"zhen",hw:"Earth/Thunder — root of growth",geo:"Star Tetrahedron"},
+{f:741,kw:"Awakening",sc:"The Spark",c:"#7B50D4",hx:30,hn:"Radiance",hc:"Lí",ut:"li",lt:"li",hw:"Fire/Fire — cellular illumination",geo:"Dodecahedron"},
+{f:852,kw:"Intuition",sc:"The Still Point",c:"#9050C4",hx:52,hn:"Keeping Still",hc:"Gèn",ut:"gen",lt:"gen",hw:"Mountain/Mountain — wu wei",geo:"Octahedron"},
+{f:963,kw:"Divine",sc:"The Tide",c:"#A840B8",hx:61,hn:"Inner Truth",hc:"Zhōng Fú",ut:"xun",lt:"dui",hw:"Wind/Lake — heart coherence",geo:"Sri Yantra"},
+{f:1206,kw:"Flow",sc:"The River",c:"#C43A6A",hx:29,hn:"The Abysmal",hc:"Kǎn",ut:"kan",lt:"kan",hw:"Water/Water — emotional mastery",geo:"Torus Knot"},
+{f:1449,kw:"Sensing",sc:"The Fog",c:"#D43070",hx:4,hn:"Youthful Folly",hc:"Méng",ut:"gen",lt:"kan",hw:"Mountain/Water — learning by feel",geo:"Lemniscate"},
+{f:1692,kw:"Extension",sc:"The Edge",c:"#E02878",hx:34,hn:"Power of the Great",hc:"Dà Zhuàng",ut:"zhen",lt:"qian",hw:"Thunder/Heaven — field projection",geo:"Fibonacci Spiral"},
+{f:1935,kw:"Perception",sc:"The Lighthouse",c:"#D44040",hx:20,hn:"Contemplation",hc:"Guān",ut:"xun",lt:"kun",hw:"Wind/Earth — remote perception",geo:"Vesica Matrix"},
+{f:2178,kw:"Source",sc:"The Source",c:"#FF4477",hx:11,hn:"Peace",hc:"Tài",ut:"kun",lt:"qian",hw:"Earth/Heaven — center point",geo:"Torus"},
+{f:2421,kw:"Release",sc:"The Autumn",c:"#D46030",hx:23,hn:"Splitting Apart",hc:"Bō",ut:"gen",lt:"kun",hw:"Mountain/Earth — composting grief",geo:"Rose Curve"},
+{f:2664,kw:"Beyond",sc:"The Vessel",c:"#E07020",hx:50,hn:"The Caldron",hc:"Dǐng",ut:"li",lt:"xun",hw:"Fire/Wind — transmuting pain",geo:"Merkaba"},
+{f:2907,kw:"Creation",sc:"The Dawn",c:"#F08030",hx:49,hn:"Revolution",hc:"Gé",ut:"dui",lt:"li",hw:"Lake/Fire — creative revolution",geo:"Lissajous"},
+{f:3150,kw:"Renewal",sc:"The Garden",c:"#D4A030",hx:46,hn:"Pushing Upward",hc:"Shēng",ut:"kun",lt:"xun",hw:"Earth/Wind — forgiveness growth",geo:"Penrose Tiling"},
+{f:3504,kw:"Focus",sc:"The Forge",c:"#40A8D4",hx:21,hn:"Biting Through",hc:"Shì Hé",ut:"li",lt:"zhen",hw:"Fire/Thunder — precision",geo:"Chladni Star"},
+{f:3858,kw:"Receiving",sc:"The Receiver",c:"#30B8C4",hx:48,hn:"The Well",hc:"Jǐng",ut:"kan",lt:"xun",hw:"Water/Wind — emptying to receive",geo:"Wave Function"},
+{f:4212,kw:"Sending",sc:"The Signal",c:"#20C8B4",hx:58,hn:"The Joyous",hc:"Duì",ut:"dui",lt:"dui",hw:"Lake/Lake — resonant communication",geo:"Antenna Array"},
+{f:4566,kw:"Collective",sc:"The Chorus",c:"#30D4A0",hx:45,hn:"Gathering Together",hc:"Cuì",ut:"dui",lt:"kun",hw:"Lake/Earth — collective coherence",geo:"Harmonic Web"},
+{f:4920,kw:"Awareness",sc:"The Vastness",c:"#50D480",hx:57,hn:"The Gentle",hc:"Xùn",ut:"xun",lt:"xun",hw:"Wind/Wind — field awareness",geo:"Field Lines"},
+{f:5274,kw:"Healing",sc:"The Temple",c:"#70D460",hx:42,hn:"Increase",hc:"Yì",ut:"xun",lt:"zhen",hw:"Wind/Thunder — healing projected",geo:"Healing Mandala"},
+{f:5628,kw:"Vision",sc:"The Aurora",c:"#90D440",hx:55,hn:"Abundance",hc:"Fēng",ut:"zhen",lt:"li",hw:"Thunder/Fire — peak vision",geo:"Dream Lattice"},
+{f:5982,kw:"Learning",sc:"The Presence",c:"#B0D420",hx:31,hn:"Influence",hc:"Xián",ut:"dui",lt:"gen",hw:"Lake/Mountain — mutual resonance",geo:"Möbius Strip"},
+{f:6336,kw:"Summit",sc:"The Summit",c:"#D4C420",hx:1,hn:"The Creative",hc:"Qián",ut:"qian",lt:"qian",hw:"Heaven/Heaven — pure creation",geo:"Unified Field"},
+];
+const TRI={qian:{n:"Heaven",s:"☰"},dui:{n:"Lake",s:"☱"},li:{n:"Fire",s:"☲"},zhen:{n:"Thunder",s:"☳"},xun:{n:"Wind",s:"☴"},kan:{n:"Water",s:"☵"},gen:{n:"Mountain",s:"☶"},kun:{n:"Earth",s:"☷"}};
+const triL={qian:[1,1,1],dui:[1,1,0],li:[1,0,1],zhen:[1,0,0],xun:[0,1,1],kan:[0,1,0],gen:[0,0,1],kun:[0,0,0]};
+const BN=['delta','theta','alpha','beta','gamma'],BL=['Delta','Theta','Alpha','Beta','Gamma'],BH=['1-4','4-8','8-13','13-30','30-50'],BC=['#5048C4','#7B50D4','#A840B8','#C43A6A','#E02878'];
+
+// ═══════════════════════════════════════
+// 1. AUDIO ENGINE — Singleton, never destroyed
+// ═══════════════════════════════════════
+class AudioEngine {
+  constructor(){this.ctx=null;this.osc=null;this.gain=null;this.playing=false;this.currentFreqIdx=-1;}
+
+  start(freqIdx){
+    if(this.playing) this.stop();
+    try{
+      this.ctx=new(window.AudioContext||window.webkitAudioContext)();
+      this.osc=this.ctx.createOscillator();
+      this.gain=this.ctx.createGain();
+      this.osc.type='sine';
+      const pf=this._playable(F[freqIdx].f);
+      this.osc.frequency.setValueAtTime(pf,this.ctx.currentTime);
+      const vol=F[freqIdx].f>=2000?0.35:0.18;
+      this.gain.gain.setValueAtTime(0,this.ctx.currentTime);
+      this.gain.gain.linearRampToValueAtTime(vol,this.ctx.currentTime+0.5);
+      this.osc.connect(this.gain);this.gain.connect(this.ctx.destination);
+      this.osc.start();
+      this.playing=true;this.currentFreqIdx=freqIdx;
+      console.log('[AudioEngine] Started at',F[freqIdx].f,'Hz → playable',pf.toFixed(1),'Hz');
+    }catch(e){console.error('[AudioEngine] Start failed:',e);}
+  }
+
+  // Smoothly transition to a new frequency — THIS is what Muse calls
+  setFrequency(freqIdx){
+    if(!this.playing||!this.osc||!this.ctx||freqIdx===this.currentFreqIdx)return;
+    const pf=this._playable(F[freqIdx].f);
+    const vol=F[freqIdx].f>=2000?0.35:0.18;
+    this.osc.frequency.linearRampToValueAtTime(pf,this.ctx.currentTime+0.3);
+    this.gain.gain.linearRampToValueAtTime(vol,this.ctx.currentTime+0.3);
+    this.currentFreqIdx=freqIdx;
+    console.log('[AudioEngine] Changed to',F[freqIdx].f,'Hz → playable',pf.toFixed(1),'Hz');
+  }
+
+  stop(){
+    if(!this.playing)return;
+    try{
+      if(this.gain&&this.ctx)this.gain.gain.linearRampToValueAtTime(0,this.ctx.currentTime+0.2);
+      const o=this.osc,c=this.ctx;
+      setTimeout(()=>{try{o?.stop();c?.close();}catch(e){}},300);
+    }catch(e){}
+    this.osc=null;this.gain=null;this.ctx=null;this.playing=false;this.currentFreqIdx=-1;
+    console.log('[AudioEngine] Stopped');
+  }
+
+  _playable(f){let x=f;if(x>=2000)while(x>250)x/=2;return x;}
+}
+
+// THE singleton
+const audio = new AudioEngine();
+
+// ═══════════════════════════════════════
+// 2. NEURO STATE — Central source of truth
+// ═══════════════════════════════════════
+const neuro = {
+  connected: false,
+  status: 'idle', // idle|searching|connecting|connected|disconnected|error
+  bands: {delta:0,theta:0,alpha:0,beta:0,gamma:0},
+  psdRatios: {delta:0,theta:0,alpha:0,beta:0,gamma:0},
+  coherence: 0,
+  trend: 'stable',
+  rxIdx: 13, // prescribed frequency index
+  rxState: 'AWAITING',
+  rxReason: 'Connect Muse 2 to begin',
+  prevRxIdx: -1,
+  channels: null, // {tp9, af7, af8, tp10} per-channel waveforms
+  // Diagnostic captures
+  baseline: null, // {bands, coherence, rxIdx, timestamp} captured at session start
+  endstate: null,  // captured at session end
+  captureCountdown: 0, // seconds remaining for capture averaging
+  captureType: null, // 'baseline' or 'end'
+  captureSamples: [], // accumulator for averaging
+  // Live recording
+  recording: false,
+  recordedData: [], // raw samples [{t, d, t, a, b, g, coh, rxIdx}]
+  // Session
+  sessionStart: null,
+  cohSamples: [],
+  rxHistory: [],
+};
+
+// App state (non-neuro)
+const app = {
+  tab: 'home',
+  oscOn: false,
+  selIdx: 13, // manual frequency selection
+  sessions: [],
+  // Cymatics controls
+  cymPanel: false,
+  cymRotate: true,
+  cymRotSpeed: 0.3,
+  cymSnapAngle: -1, // -1=free, 0/90/180/270
+  cymViewAngle: 0.4, // 0=top-down, 1=equator (tilt)
+  cymZoom: 1.0,
+  cymDepth: 0.5, // pattern extrusion depth on sphere
+  cymView: 'sphere', // 'sphere', 'flat', 'torus'
+  gfPhase:0, // 0=start,1=breathing,2=blooming,3=complete
+  gfSet:0, // 1-3 (GUT/HEART/HEAD)
+  gfRound:0, // 1-3 within set
+  gfCycle:0, // 1-3 within round
+  gfBreathTotal:0, // 1-27
+  gfBreathPhase:0, // 0=inhale(3s), 1=hold(6s), 2=exhale(9s)
+  gfInhale:false, gfFormation:0,
+};
+
+// ═══════════════════════════════════════
+// 3. PRESCRIPTION ENGINE — 27 states for 27 frequencies
+// ═══════════════════════════════════════
+// Uses log-PSD display bands (~20% per band when balanced)
+// Each Aetheria frequency has its own diagnostic state
+// GUT (0-8): body/grounding states
+// HEART (9-17): emotional/relational states
+// HEAD (18-26): mental/awareness states
+let rxHoldUntil=0;
+const RX_HOLD_SEC=10;
+
+function prescribe(bands,coherence){
+  if(Date.now()<rxHoldUntil && neuro.rxIdx>=0){
+    return{idx:neuro.rxIdx,state:neuro.rxState,reason:neuro.rxReason};
+  }
+
+  const{delta:d,theta:t,alpha:a,beta:b,gamma:g}=bands;
+  const tot=d+t+a+b+g+.001;
+  const dn=d/tot,tn=t/tot,an=a/tot,bn=b/tot,gn=g/tot;
+  const tr=neuro.trend;
+
+  let result;
+
+  // ──── GUT REGIME: Physical / Grounding States ────
+
+  // 0: 174Hz Foundation — completely scattered, no dominant band
+  if(coherence<.12&&dn<.28&&an<.18)
+    result={idx:0,state:'SCATTERED FIELD',reason:'No coherence detected. 174Hz (Seed of Life) — the most fundamental grounding.'};
+
+  // 1: 285Hz Restoration — low coherence with slight alpha, body trying to self-repair
+  else if(coherence<.18&&an>.14&&an<.20)
+    result={idx:1,state:'BODY RESTORING',reason:'Low coherence, alpha flickering. 285Hz (Flower of Life) — cellular restoration.'};
+
+  // 2: 396Hz Liberation — beta dominant, stress/anxiety/sympathetic activation
+  else if(bn>.28&&an<.17)
+    result={idx:2,state:'SYMPATHETIC ACTIVATION',reason:'Beta dominant — stress response active. 396Hz (Vesica Piscis) liberates stored charge.'};
+
+  // 3: 417Hz Change — beta elevated but starting to shift, transition state
+  else if(bn>.24&&an>.15&&an<.19)
+    result={idx:3,state:'STATE TRANSITION',reason:'Beta releasing, alpha emerging. 417Hz (Icosahedron) — facilitating change.'};
+
+  // 4: 528Hz Transformation — theta dominant without alpha, subconscious processing
+  else if(tn>.26&&an<.16)
+    result={idx:4,state:'SUBCONSCIOUS DRIFT',reason:'Theta dominant, alpha absent. 528Hz (Metatron\'s Cube) — deep transformation.'};
+
+  // 5: 639Hz Connection — delta-theta dominant, grounding needed
+  else if(dn>.30&&tn>.18&&an<.16)
+    result={idx:5,state:'GROUNDING',reason:'Delta-theta dominant. 639Hz (Star Tetrahedron) — anchoring the field.'};
+
+  // 6: 741Hz Awakening — alpha just becoming dominant, awareness dawning
+  else if(an>.22&&an<.26&&tn<.20)
+    result={idx:6,state:'AWAKENING',reason:'Alpha rising. 741Hz (Dodecahedron) — awareness opening.'};
+
+  // 7: 852Hz Intuition — alpha-theta balanced with low beta, still mind
+  else if(an>.19&&tn>.19&&bn<.17&&gn<.18)
+    result={idx:7,state:'INNER STILLNESS',reason:'Alpha-theta balanced, beta quiet. 852Hz (Octahedron) — wu wei.'};
+
+  // 8: 963Hz Divine — theta-alpha dominant with coherence building
+  else if(tn>.22&&an>.20&&coherence>.30&&coherence<.45)
+    result={idx:8,state:'COHERENCE BUILDING',reason:'Theta-alpha resonance building. 963Hz (Sri Yantra) — heart coherence deepening.'};
+
+  // ──── HEART REGIME: Emotional / Relational States ────
+
+  // 9: 1206Hz Flow — beta+delta pain pattern
+  else if(bn>.22&&dn>.23&&an<.16)
+    result={idx:9,state:'PAIN PROCESSING',reason:'Beta+Delta pattern. 1206Hz (Torus Knot) — emotional flow through pain.'};
+
+  // 10: 1449Hz Sensing — delta dominant with very low everything else, foggy
+  else if(dn>.30&&tn<.17&&an<.15)
+    result={idx:10,state:'SENSORY FOG',reason:'Delta dominant, other bands suppressed. 1449Hz (Lemniscate) — sensing through fog.'};
+
+  // 11: 1692Hz Extension — gamma elevated, hyperprocessing
+  else if(gn>.24)
+    result={idx:11,state:'FIELD EXTENSION',reason:'Gamma elevated — field extending beyond body. 1692Hz (Fibonacci Spiral) — expansion.'};
+
+  // 12: 1935Hz Perception — alpha-gamma bridge, intuitive perception
+  else if(an>.20&&gn>.19)
+    result={idx:12,state:'INTUITIVE PERCEPTION',reason:'Alpha-gamma bridge. 1935Hz (Vesica Matrix) — perceiving beyond senses.'};
+
+  // 13: 2178Hz Source — deep meditation, high coherence
+  else if(tn>.22&&an>.21&&coherence>.45)
+    result={idx:13,state:'DEEP MEDITATION',reason:'High coherence, theta-alpha dominant. 2178Hz (Torus) — the source point.'};
+
+  // 14: 2421Hz Release — theta rising with falling coherence, emotional release
+  else if(tn>.23&&tr==='falling'&&coherence<.35)
+    result={idx:14,state:'EMOTIONAL RELEASE',reason:'Theta rising, coherence falling — releasing. 2421Hz (Rose Curve) — composting grief.'};
+
+  // 15: 2664Hz Beyond — beta+theta, processing intense material
+  else if(bn>.21&&tn>.21&&an<.18)
+    result={idx:15,state:'TRANSMUTATION',reason:'Beta-theta — processing intensity. 2664Hz (Merkaba) — transmuting pain into light.'};
+
+  // 16: 2907Hz Creation — alpha-theta-gamma all active, creative state
+  else if(an>.19&&tn>.19&&gn>.17)
+    result={idx:16,state:'CREATIVE FLOW',reason:'Alpha-theta-gamma triad. 2907Hz (Lissajous) — creative revolution.'};
+
+  // 17: 3150Hz Renewal — alpha dominant with rising coherence, forgiveness state
+  else if(an>.24&&tr==='rising')
+    result={idx:17,state:'RENEWAL',reason:'Alpha dominant, coherence rising. 3150Hz (Penrose Tiling) — forgiveness and growth.'};
+
+  // ──── HEAD REGIME: Mental / Mastery States ────
+
+  // 18: 3504Hz Focus — beta-alpha balanced, focused attention
+  else if(bn>.20&&an>.20&&Math.abs(bn-an)<.05)
+    result={idx:18,state:'FOCUSED ATTENTION',reason:'Beta-alpha balanced. 3504Hz (Chladni Star) — precision focus.'};
+
+  // 19: 3858Hz Receiving — theta dominant with stable coherence, receptive
+  else if(tn>.24&&coherence>.25&&coherence<.40)
+    result={idx:19,state:'RECEPTIVE STATE',reason:'Theta dominant, stable coherence. 3858Hz (Wave Function) — emptying to receive.'};
+
+  // 20: 4212Hz Sending — alpha-beta with high coherence, broadcasting
+  else if(an>.20&&bn>.19&&coherence>.40)
+    result={idx:20,state:'FIELD BROADCAST',reason:'Alpha-beta coherent. 4212Hz (Antenna Array) — broadcasting signal.'};
+
+  // 21: 4566Hz Collective — all bands relatively balanced, collective harmony
+  else if(Math.abs(dn-tn)<.06&&Math.abs(tn-an)<.06&&Math.abs(an-bn)<.06)
+    result={idx:21,state:'COLLECTIVE HARMONY',reason:'All bands balanced. 4566Hz (Harmonic Web) — collective coherence.'};
+
+  // 22: 4920Hz Awareness — alpha clearly dominant, expanded awareness
+  else if(an>.26)
+    result={idx:22,state:'EXPANDED AWARENESS',reason:'Alpha dominant. 4920Hz (Field Lines) — field awareness expanding.'};
+
+  // 23: 5274Hz Healing — theta-alpha with high coherence, healing state
+  else if(tn>.21&&an>.20&&coherence>.40)
+    result={idx:23,state:'HEALING RESONANCE',reason:'Theta-alpha coherent. 5274Hz (Healing Mandala) — healing projected.'};
+
+  // 24: 5628Hz Vision — gamma-alpha bridge with high coherence, peak experience
+  else if(gn>.18&&an>.20&&coherence>.45)
+    result={idx:24,state:'PEAK VISION',reason:'Gamma-alpha bridge, high coherence. 5628Hz (Dream Lattice) — peak vision.'};
+
+  // 25: 5982Hz Learning — theta with rising trend, integration
+  else if(tn>.22&&tr==='rising')
+    result={idx:25,state:'INTEGRATION',reason:'Theta rising — integrating experience. 5982Hz (Möbius Strip) — mutual resonance.'};
+
+  // 26: 6336Hz Summit — all bands coherent, gamma+alpha dominant, peak state
+  else if(coherence>.55&&gn>.16&&an>.20)
+    result={idx:26,state:'SUMMIT COHERENCE',reason:'Peak coherence. 6336Hz (Unified Field) — pure creation. Heaven over Heaven.'};
+
+  // ──── FALLBACK STATES ────
+
+  // Relaxed default — alpha is strongest
+  else if(an>.22)
+    result={idx:6,state:'RELAXED AWARENESS',reason:'Alpha present. 741Hz (Dodecahedron) — gentle awakening.'};
+
+  // Theta-alpha approaching meditation
+  else if(tn>.20&&an>.18)
+    result={idx:8,state:'APPROACHING COHERENCE',reason:'Theta-alpha emerging. 963Hz (Sri Yantra) — approaching heart coherence.'};
+
+  // Delta-theta resting
+  else if(dn>.25&&tn>.18)
+    result={idx:5,state:'RESTING FIELD',reason:'Delta-theta resting. 639Hz (Star Tetrahedron) — grounded rest.'};
+
+  // True balanced fallback
+  else
+    result={idx:13,state:'BALANCED',reason:'Field in equilibrium. 2178Hz (Torus) — center of the system.'};
+
+  if(result.idx !== neuro.rxIdx){
+    rxHoldUntil = Date.now() + RX_HOLD_SEC*1000;
+    console.log('[Rx] New:',F[result.idx].f,'Hz',result.state,'(hold',RX_HOLD_SEC,'s)');
+  }
+  return result;
+}
+
+// ═══════════════════════════════════════
+// 4. THE PIPELINE: Muse data → state → audio → UI
+// ═══════════════════════════════════════
+function onMuseData(data){
+  // Step 1: Update neuro state
+  neuro.bands = data.bands;           // log-normalized for display
+  neuro.psdRatios = data.psdRatios;   // raw PSD ratios for prescription
+  neuro.coherence = data.coherence;
+  neuro.trend = data.trend;
+  neuro.channels = data.channels || null;
+
+  // Step 2: Prescribe using log-PSD display bands (not raw PSD ratios)
+  // Raw PSD ratios are too skewed by 1/f power law (delta 48-99%)
+  // Log-PSD display bands compress the dynamic range and show actual brain state
+  const rx = prescribe(neuro.bands, neuro.coherence);
+  neuro.rxIdx = Math.max(0, rx.idx);
+  neuro.rxState = rx.state;
+  neuro.rxReason = rx.reason;
+
+  // Step 3: Track session + capture accumulator
+  neuro.cohSamples.push(neuro.coherence);
+  if(!neuro.rxHistory.length || neuro.rxHistory[neuro.rxHistory.length-1]!==neuro.rxIdx)
+    neuro.rxHistory.push(neuro.rxIdx);
+  if(neuro.captureCountdown>0) accumulateCapture();
+  // Live recording
+  if(neuro.recording){
+    neuro.recordedData.push({
+      t:Date.now(),
+      d:~~(neuro.bands.delta*1000)/1000,
+      th:~~(neuro.bands.theta*1000)/1000,
+      a:~~(neuro.bands.alpha*1000)/1000,
+      b:~~(neuro.bands.beta*1000)/1000,
+      g:~~(neuro.bands.gamma*1000)/1000,
+      coh:~~(neuro.coherence*1000)/1000,
+      rx:neuro.rxIdx,
+      st:neuro.rxState
+    });
+  }
+
+  // Step 4: If prescription changed → update audio DIRECTLY
+  if(neuro.rxIdx !== neuro.prevRxIdx){
+    neuro.prevRxIdx = neuro.rxIdx;
+    const pr=neuro.bands;
+    console.log('[Pipeline] Rx →',F[neuro.rxIdx].f,'Hz',neuro.rxState,
+      '| Bands: d='+~~(pr.delta*100)+'% t='+~~(pr.theta*100)+'% a='+~~(pr.alpha*100)+'% b='+~~(pr.beta*100)+'% g='+~~(pr.gamma*100)+'%',
+      '| Coh:'+~~(neuro.coherence*100)+'%');
+
+    // Auto-start oscillator on first Muse prescription
+    if(neuro.connected && !app.oscOn){
+      app.oscOn=true;
+      audio.start(neuro.rxIdx);
+      console.log('[Audio] Auto-started with Muse prescription');
+      render(); // structural change — oscillator UI needs to appear
+    } else if(app.oscOn && audio.playing){
+      audio.setFrequency(neuro.rxIdx);
+    } else if(app.oscOn && !audio.playing){
+      // Oscillator toggled on but audio died — restart
+      audio.start(neuro.rxIdx);
+      console.log('[Audio] Restarted — was on but not playing');
+    }
+  }
+
+  // Step 5: Update UI (targeted DOM updates, never render())
+  updateUI();
+}
+
+function onMuseStatus(status){
+  neuro.status = status;
+  neuro.connected = (status === 'connected');
+  if(status === 'connected'){
+    neuro.sessionStart = Date.now();
+    neuro.cohSamples = [];
+    neuro.rxHistory = [];
+    neuro.prevRxIdx = -1;
+    neuro.baseline = null;
+    neuro.endstate = null;
+    rxHoldUntil = 0;
+    // Auto-capture baseline after 5 seconds (let signal settle)
+    setTimeout(()=>{if(neuro.connected) startCapture('baseline');},5000);
+  }
+  if(status === 'disconnected' && neuro.sessionStart){
+    // Auto-capture end signature from last 15s of accumulated data
+    if(!neuro.endstate && neuro.cohSamples.length>10){
+      // Use last samples for end signature
+      const lastN=Math.min(60,neuro.cohSamples.length);
+      const avgBands={delta:0,theta:0,alpha:0,beta:0,gamma:0};
+      // We don't have band history, so use current bands as end state
+      const sig={
+        bands:{...neuro.bands},coherence:neuro.coherence,
+        position:Math.round(Math.min(26,Math.max(0,
+          (neuro.bands.alpha*0.30+neuro.bands.theta*0.25+neuro.bands.gamma*0.10+neuro.coherence*0.35)*26/0.35
+        ))),
+        dominant:BL[BN.reduce((best,b,i)=>neuro.bands[b]>neuro.bands[BN[best]]?i:best,0)],
+        dominantPct:~~(Math.max(...BN.map(b=>neuro.bands[b]))*100),
+        timestamp:Date.now()
+      };
+      neuro.endstate=sig;
+    }
+    endSession();
+  }
+  if(status === 'disconnected' && app.oscOn){
+    audio.stop(); app.oscOn=false;
+    console.log('[Audio] Stopped — Muse disconnected');
+  }
+  render(); // Status change = structural change, full render OK
+}
+
+// ═══════════════════════════════════════
+// 5. TARGETED UI UPDATES (called ~4Hz from Muse)
+// ═══════════════════════════════════════
+function updateUI(){
+  const rx = F[neuro.rxIdx];
+
+  // Header
+  const hd = document.getElementById('hd-sub');
+  if(hd) hd.textContent = `${neuro.rxState} · ${rx.f}Hz · Coherence ${~~(neuro.coherence*100)}%`;
+
+  // Band bars (home + biofield tabs)
+  BN.forEach((b,i)=>{
+    const pct = (neuro.bands[b]*100)+'%';
+    const val = ~~(neuro.bands[b]*100)+'%';
+    ['bb-','bb2-'].forEach(pre=>{const el=document.getElementById(pre+b);if(el)el.style.height=pct;});
+    const v=document.getElementById('bv-'+b);if(v)v.textContent=val;
+  });
+
+  // Coherence values
+  ['coh-val','coh-val2'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.textContent=~~(neuro.coherence*100);el.style.color=rx.c;}
+  });
+
+  // Coherence ring glow
+  ['coh-ring','coh-ring2'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){
+      const a=(~~(neuro.coherence*200+55)).toString(16).padStart(2,'0');
+      el.style.borderColor=rx.c+a;
+      el.style.boxShadow=`0 0 ${~~(neuro.coherence*20)}px ${rx.c}${(~~(neuro.coherence*60)).toString(16).padStart(2,'0')}`;
+    }
+  });
+
+  // Trend
+  const trend=document.getElementById('coh-trend');
+  if(trend){
+    trend.textContent=neuro.trend==='rising'?'↑ Rising':neuro.trend==='falling'?'↓ Falling':'— Stable';
+    trend.style.color=neuro.trend==='rising'?'#4A7C59':neuro.trend==='falling'?'#C45C5C':'var(--dim)';
+  }
+
+  // Prescription card — these have CSS transitions so changes animate smoothly
+  const rxFreq=document.getElementById('rx-freq');
+  if(rxFreq){rxFreq.textContent=rx.f+' Hz';rxFreq.style.color=rx.c;}
+  const rxName=document.getElementById('rx-name');
+  if(rxName)rxName.textContent=rx.sc+' — '+rx.kw;
+  const rxState=document.getElementById('rx-state');
+  if(rxState){rxState.textContent=neuro.rxState;rxState.style.color=rx.c;rxState.style.borderColor=rx.c+'44';}
+  const rxReason=document.getElementById('rx-reason');
+  if(rxReason)rxReason.textContent=neuro.rxReason;
+  const rxCard=document.getElementById('rx-card');
+  if(rxCard)rxCard.style.borderColor=rx.c+'33';
+
+  // Hexagram
+  const hexSvg=document.getElementById('hex-svg');
+  if(hexSvg)hexSvg.innerHTML=hexSVG(rx.ut,rx.lt,rx.c,80);
+  const hexTitle=document.getElementById('hex-title');
+  if(hexTitle)hexTitle.textContent='I CHING — HEXAGRAM '+rx.hx;
+  const hexName=document.getElementById('hex-name');
+  if(hexName){hexName.textContent=rx.hn;hexName.style.color=rx.c;}
+  const hexChi=document.getElementById('hex-chi');
+  if(hexChi)hexChi.textContent=rx.hc;
+  const hexTri=document.getElementById('hex-tri');
+  if(hexTri)hexTri.textContent=TRI[rx.ut].s+' '+TRI[rx.ut].n+' over '+TRI[rx.lt].s+' '+TRI[rx.lt].n;
+  const hexDesc=document.getElementById('hex-desc');
+  if(hexDesc)hexDesc.textContent=rx.hw;
+
+  // Oscillator info
+  const oscInfo=document.getElementById('osc-info');
+  if(oscInfo&&app.oscOn){
+    const pf=audio._playable(rx.f);
+    oscInfo.innerHTML='Playing: <span style="color:'+rx.c+'">'+pf.toFixed(1)+'Hz</span> '+(rx.f>=2000?'(sub-bass — felt)':'(sine)')+
+      (neuro.connected?' · <span style="color:#A840B8">Following prescription</span>':'');
+    oscInfo.style.borderColor=rx.c+'33';
+    oscInfo.style.background=rx.c+'08';
+  }
+  // Oscillator toggle label
+  const oscLabel=document.getElementById('osc-label');
+  if(oscLabel) oscLabel.textContent='Playing '+rx.f+'Hz';
+
+  // ── Aetheria Position indicator ──
+  const apFreq=document.getElementById('ap-freq');
+  if(apFreq){apFreq.textContent=rx.f+' Hz';apFreq.style.color=rx.c;}
+  const apName=document.getElementById('ap-name');
+  if(apName){apName.textContent=rx.sc+' — '+rx.kw;apName.style.color=rx.c;}
+  const apGeo=document.getElementById('ap-geo');
+  if(apGeo)apGeo.textContent=rx.geo;
+  const apState=document.getElementById('ap-state');
+  if(apState){apState.textContent=neuro.rxState;apState.style.color=rx.c;}
+  const apPos=document.getElementById('ap-pos');
+  if(apPos){
+    const regime=neuro.rxIdx<9?'GUT — Body':neuro.rxIdx<18?'HEART — Emotion':'HEAD — Mastery';
+    apPos.textContent='Position '+((neuro.rxIdx)+1)+' of 27';
+    const apRegime=document.getElementById('ap-regime');
+    if(apRegime)apRegime.textContent=regime;
+  }
+  // Update position bar highlights
+  F.forEach((_,i)=>{
+    const el=document.getElementById('ap-'+i);
+    if(el){
+      const isHere=i===neuro.rxIdx;
+      el.style.background=isHere?F[i].c:F[i].c+'22';
+      el.style.boxShadow=isHere?'0 0 8px '+F[i].c:'none';
+      el.innerHTML=isHere?'<div style="position:absolute;top:-2px;left:50%;transform:translateX(-50%);font-size:6px;color:#fff">▼</div>':'';
+    }
+  });
+
+  // ── Cymatics tab live updates ──
+  const cymFreq=document.getElementById('cym-freq');
+  if(cymFreq){cymFreq.textContent=rx.f+' Hz';cymFreq.style.color=rx.c;}
+  const cymName=document.getElementById('cym-name');
+  if(cymName)cymName.textContent=rx.sc+' — '+rx.kw;
+  const cymGeo=document.getElementById('cym-geo');
+  if(cymGeo){cymGeo.textContent=rx.geo;cymGeo.style.color=rx.c+'88';}
+  const cymRoot=document.getElementById('cym-root');
+  if(cymRoot)cymRoot.textContent='Root '+((rx.f%9)||9)+' · Hex '+rx.hx+' '+rx.hn;
+  // Cymatics hexagram
+  const cymHexSvg=document.getElementById('cym-hex-svg');
+  if(cymHexSvg)cymHexSvg.innerHTML=hexSVG(rx.ut,rx.lt,rx.c,60);
+  const cymHexTitle=document.getElementById('cym-hex-title');
+  if(cymHexTitle)cymHexTitle.textContent='HEXAGRAM '+rx.hx+' — '+rx.hn;
+  const cymHexName=document.getElementById('cym-hex-name');
+  if(cymHexName){cymHexName.textContent=rx.hn;cymHexName.style.color=rx.c;}
+  const cymHexChi=document.getElementById('cym-hex-chi');
+  if(cymHexChi)cymHexChi.textContent=rx.hc;
+  const cymHexTri=document.getElementById('cym-hex-tri');
+  if(cymHexTri)cymHexTri.textContent=TRI[rx.ut].s+' '+TRI[rx.ut].n+' / '+TRI[rx.lt].s+' '+TRI[rx.lt].n;
+  const cymHexDesc=document.getElementById('cym-hex-desc');
+  if(cymHexDesc)cymHexDesc.textContent=rx.hw;
+  // Control panel info
+  const cymPanelInfo=document.getElementById('cym-panel-info');
+  if(cymPanelInfo)cymPanelInfo.innerHTML='<span style="color:'+rx.c+'">'+rx.f+' Hz</span> — '+rx.kw+'<br>'+rx.sc+' · '+rx.geo+'<br>Digital Root: '+((rx.f%9)||9)+'<br>Hex '+rx.hx+' '+rx.hn+' ('+rx.hc+')';
+  // Gallery active card highlight
+  document.querySelectorAll('.cym-card').forEach((card,i)=>{
+    const isActive=neuro.connected?(i===neuro.rxIdx):(i===app.selIdx);
+    card.classList.toggle('active',isActive);
+    card.style.borderColor=isActive?F[i].c:'var(--bdr)';
+  });
+}
+
+// ═══════════════════════════════════════
+// 6. MUSE BLE — 4-channel EEG with professional band power
+// ═══════════════════════════════════════
+// Channel positions: TP9 (left ear), AF7 (left forehead), AF8 (right forehead), TP10 (right ear)
+// Band definitions per International Federation of Clinical Neurophysiology:
+//   Delta: 1-4Hz, Theta: 4-8Hz, Alpha: 8-13Hz, Beta: 13-30Hz, Gamma: 30-44Hz
+// Power normalization: Power Spectral Density (µV²/Hz) — divides by bandwidth
+//   to compensate for 1/f slope and different band widths
+const CH_NAMES=['tp9','af7','af8','tp10'];
+const CH_LABELS=['TP9 (Left Ear)','AF7 (Left Forehead)','AF8 (Right Forehead)','TP10 (Right Ear)'];
+const CH_COLORS=['#E05858','#50D4B0','#50A0E0','#D0D070'];
+const BAND_DEFS={delta:[1,4],theta:[4,8],alpha:[8,13],beta:[13,30],gamma:[30,44]};
+const BAND_WIDTHS={delta:3,theta:4,alpha:5,beta:17,gamma:14}; // Hz width for PSD
+
+class MuseBLE{
+  constructor(){
+    this.dev=null;
+    this.buf={tp9:[],af7:[],af8:[],tp10:[]};
+    this.channels={tp9:new Float32Array(256),af7:new Float32Array(256),af8:new Float32Array(256),tp10:new Float32Array(256)};
+    this.bands={delta:0,theta:0,alpha:0,beta:0,gamma:0};
+    this.psdRatios={delta:0,theta:0,alpha:0,beta:0,gamma:0};
+    this.coh=0;this.cohHist=[];
+  }
+  async connect(){
+    try{
+      onMuseStatus('searching');
+      this.dev=await navigator.bluetooth.requestDevice({filters:[{services:[0xFE8D]}]});
+      onMuseStatus('connecting');
+      const srv=await this.dev.gatt.connect();
+      const svc=await srv.getPrimaryService(0xFE8D);
+      const chs={'tp9':'273e0003-4c4d-454d-96be-f03bac821358','af7':'273e0004-4c4d-454d-96be-f03bac821358','af8':'273e0005-4c4d-454d-96be-f03bac821358','tp10':'273e0006-4c4d-454d-96be-f03bac821358'};
+      const ctrl=await svc.getCharacteristic('273e0001-4c4d-454d-96be-f03bac821358');
+      for(const[nm,uuid]of Object.entries(chs)){const ch=await svc.getCharacteristic(uuid);await ch.startNotifications();ch.addEventListener('characteristicvaluechanged',e=>this.parse(nm,e.target.value));}
+      await ctrl.writeValue(new TextEncoder().encode('v1'));
+      await new Promise(r=>setTimeout(r,100));
+      await ctrl.writeValue(new Uint8Array([0x02,0x64,0x0a]));
+      onMuseStatus('connected');
+      this.dev.addEventListener('gattserverdisconnected',()=>onMuseStatus('disconnected'));
+    }catch(e){console.error('[Muse]',e);onMuseStatus('error');}
+  }
+  parse(ch,dv){
+    const s=[];for(let i=2;i<dv.byteLength-1;i+=3){const a=dv.getUint8(i),b=dv.getUint8(i+1);if(i+2<dv.byteLength){const c=dv.getUint8(i+2);s.push(((a<<4)|(b>>4))-2048);s.push((((b&0x0F)<<8)|c)-2048);}}
+    this.buf[ch].push(...s);if(this.buf[ch].length>512)this.buf[ch]=this.buf[ch].slice(-512);
+    // Store per-channel waveform (last 256 samples)
+    if(this.buf[ch].length>=256){
+      const raw=this.buf[ch];
+      for(let i=0;i<256;i++) this.channels[ch][i]=raw[raw.length-256+i];
+    }
+    if(this.buf[ch].length>=256&&ch==='af7')this.analyze();
+  }
+  analyze(){
+    const len=256;
+    // Average all available channels for band power computation
+    const avg=new Float32Array(len);let nCh=0;
+    for(const ch of CH_NAMES){if(this.buf[ch].length>=len){for(let i=0;i<len;i++)avg[i]+=this.buf[ch][this.buf[ch].length-len+i];nCh++;}}
+    if(!nCh)return;for(let i=0;i<len;i++)avg[i]/=nCh;
+    // Hanning window
+    for(let i=0;i<len;i++)avg[i]*=.5*(1-Math.cos(2*Math.PI*i/(len-1)));
+
+    // FFT → absolute band power
+    const sr=256,pw={};
+    for(const[b,[lo,hi]]of Object.entries(BAND_DEFS)){
+      let p=0;const bl=Math.floor(lo*len/sr),bh=Math.ceil(hi*len/sr);
+      for(let k=bl;k<=bh&&k<len/2;k++){
+        let re=0,im=0;
+        for(let n=0;n<len;n++){const a=-2*Math.PI*k*n/len;re+=avg[n]*Math.cos(a);im+=avg[n]*Math.sin(a);}
+        p+=re*re+im*im;
+      }
+      pw[b]=p; // absolute power (sum of squared magnitudes)
+    }
+
+    // Power Spectral Density: divide by bandwidth (Hz) — clinical standard
+    const psd={};
+    for(const b of Object.keys(pw)) psd[b]=pw[b]/BAND_WIDTHS[b];
+
+    // For DISPLAY: log10(PSD) then normalize
+    // Clinical EEG tools (EEGLAB, MNE) use log power for visualization
+    // because the 1/f spectrum spans ~2 orders of magnitude
+    const logPsd={};
+    for(const b of Object.keys(psd)) logPsd[b]=Math.log10(Math.max(psd[b],1));
+    const logMin=Math.min(...Object.values(logPsd));
+    const logMax=Math.max(...Object.values(logPsd));
+    const logRange=logMax-logMin||1;
+    for(const b of Object.keys(logPsd)){
+      this.bands[b]=Math.max(0,Math.min(1,(logPsd[b]-logMin)/logRange));
+    }
+
+    // For PRESCRIPTION: use relative PSD ratios (not log)
+    // This preserves actual dominance for clinical state detection
+    const totalPSD=Object.values(psd).reduce((a,b)=>a+b,0);
+    this.psdRatios={};
+    for(const b of Object.keys(psd)){
+      this.psdRatios[b]=totalPSD>0?psd[b]/totalPSD:0;
+    }
+
+    // Coherence: alpha+theta power vs beta+delta power (uses raw power, not PSD)
+    const at=pw.alpha+pw.theta,bd=pw.beta+pw.delta;
+    this.coh=Math.min(1,Math.max(0,at/(at+bd+.001)));
+    this.cohHist.push(this.coh);if(this.cohHist.length>60)this.cohHist.shift();
+    let trend='stable';
+    if(this.cohHist.length>=20){
+      const r=this.cohHist.slice(-10),o=this.cohHist.slice(-20,-10);
+      const ra=r.reduce((s,v)=>s+v,0)/r.length,oa=o.reduce((s,v)=>s+v,0)/o.length;
+      if(ra-oa>.05)trend='rising';else if(ra-oa<-.05)trend='falling';
+    }
+    // Pipeline entry: pass per-channel waveforms
+    onMuseData({
+      bands:{...this.bands},psdRatios:{...this.psdRatios},coherence:this.coh,trend,
+      channels:{tp9:this.channels.tp9,af7:this.channels.af7,af8:this.channels.af8,tp10:this.channels.tp10}
+    });
+  }
+  disconnect(){if(this.dev&&this.dev.gatt.connected)this.dev.gatt.disconnect();onMuseStatus('disconnected');}
+}
+const muse = new MuseBLE();
+
+// ═══════════════════════════════════════
+// 7. SESSION TRACKING
+// ═══════════════════════════════════════
+function endSession(){
+  if(!neuro.cohSamples.length)return;
+  const avg=neuro.cohSamples.reduce((a,b)=>a+b,0)/neuro.cohSamples.length;
+  const peak=Math.max(...neuro.cohSamples);
+  const dur=Math.round((Date.now()-neuro.sessionStart)/1000);
+  app.sessions.unshift({
+    date:new Date().toISOString(),avgCoh:Math.round(avg*100),peakCoh:Math.round(peak*100),
+    duration:dur,rxFreqs:[...new Set(neuro.rxHistory.map(i=>F[i].f))],
+    baseline:neuro.baseline?{pos:neuro.baseline.position,dom:neuro.baseline.dominant,coh:~~(neuro.baseline.coherence*100)}:null,
+    endstate:neuro.endstate?{pos:neuro.endstate.position,dom:neuro.endstate.dominant,coh:~~(neuro.endstate.coherence*100)}:null,
+  });
+  if(app.sessions.length>50)app.sessions=app.sessions.slice(0,50);
+  try{localStorage.setItem('rct-sessions',JSON.stringify(app.sessions));}catch(e){}
+  neuro.sessionStart=null;
+}
+
+// Signature capture: averages bands over 15 seconds then prescribes
+let capTimer=null;
+function startCapture(type){
+  neuro.captureSamples=[];
+  neuro.captureCountdown=15;
+  neuro.captureType=type; // 'baseline' or 'end'
+  clearInterval(capTimer);
+  capTimer=setInterval(()=>{
+    neuro.captureCountdown--;
+    // Update countdown display
+    const el=document.getElementById('cap-countdown');
+    if(el) el.textContent='Capturing... '+neuro.captureCountdown+'s';
+    if(neuro.captureCountdown<=0){
+      clearInterval(capTimer);
+      finishCapture(type);
+    }
+  },1000);
+  render();
+}
+
+// Called each Muse update during capture to accumulate samples
+function accumulateCapture(){
+  if(neuro.captureCountdown>0){
+    neuro.captureSamples.push({
+      bands:{...neuro.bands},
+      coherence:neuro.coherence
+    });
+  }
+}
+
+function finishCapture(type){
+  if(!neuro.captureSamples.length){neuro.captureCountdown=0;render();return;}
+  // Average all samples — this IS the signature, not a prescription lookup
+  const n=neuro.captureSamples.length;
+  const avgBands={delta:0,theta:0,alpha:0,beta:0,gamma:0};
+  let avgCoh=0;
+  neuro.captureSamples.forEach(s=>{
+    BN.forEach(b=>avgBands[b]+=s.bands[b]);
+    avgCoh+=s.coherence;
+  });
+  BN.forEach(b=>avgBands[b]/=n);
+  avgCoh/=n;
+
+  // Compute continuous Aetheria position (0-26) from actual brain data
+  // NOT from prescription engine — can't be gamed
+  // Weighted: alpha+theta = meditation quality, coherence = field organization
+  // Higher score = higher position on spectrum
+  const resonanceScore = (
+    avgBands.alpha * 0.30 +   // alpha = awareness
+    avgBands.theta * 0.25 +   // theta = depth
+    avgBands.gamma * 0.10 +   // gamma = integration
+    avgCoh * 0.35             // coherence = field coherence
+  );
+  // Map 0-1 score to position 0-26
+  const pos = Math.round(Math.min(26, Math.max(0, resonanceScore * 26 / 0.35)));
+  // Find dominant band
+  let domBand='delta',domVal=0;
+  BN.forEach((b,i)=>{if(avgBands[b]>domVal){domVal=avgBands[b];domBand=BL[i];}});
+
+  const sig={
+    bands:{...avgBands},
+    coherence:avgCoh,
+    position:pos,            // continuous 0-26, not prescription bucket
+    dominant:domBand,         // dominant brainwave band
+    dominantPct:~~(domVal*100),
+    timestamp:Date.now()
+  };
+  if(type==='baseline') neuro.baseline=sig;
+  else neuro.endstate=sig;
+  neuro.captureCountdown=0;
+  neuro.captureSamples=[];
+  console.log('[Capture]',type,'signature: pos',pos,'/',27,F[pos].f+'Hz',
+    'dom:',domBand,~~(domVal*100)+'%','coh:',~~(avgCoh*100)+'%',
+    'bands: d='+~~(avgBands.delta*100)+' t='+~~(avgBands.theta*100)+' a='+~~(avgBands.alpha*100)+' b='+~~(avgBands.beta*100)+' g='+~~(avgBands.gamma*100));
+  render();
+}
+
+// ═══════════════════════════════════════
+// 8. CHLADNI / BIOFIELD RENDERERS (unchanged)
+// ═══════════════════════════════════════
+function drawChladni(ctx,w,h,freq,color,time,formation,rotOverride){
+  const id=ctx.createImageData(w,h),d=id.data;const fn=freq/6336,n=Math.floor(2+fn*12),m=Math.floor(1+fn*8);
+  const rc=parseInt(color.slice(1,3),16),gc=parseInt(color.slice(3,5),16),bc=parseInt(color.slice(5,7),16);
+  const cx=w/2,cy=h/2,mx=Math.min(w,h)/2;
+  // Use rotation override if provided, otherwise default
+  const rot=rotOverride!==undefined?rotOverride:time*.0003;
+  const cr=Math.cos(rot),sr=Math.sin(rot);
+  const dr=(freq%9)||9,fm=Math.max(0,Math.min(1,formation)),ns=freq*137;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const dx=(x-cx)/mx,dy=(y-cy)/mx,rx=dx*cr-dy*sr,ry=dx*sr+dy*cr;const di=Math.sqrt(rx*rx+ry*ry),i4=(y*w+x)*4;
+  if(di>1){d[i4]=6;d[i4+1]=6;d[i4+2]=12;d[i4+3]=255;continue;}
+  const c1=Math.cos(n*Math.PI*rx)*Math.cos(m*Math.PI*ry)-Math.cos(m*Math.PI*rx)*Math.cos(n*Math.PI*ry);const n2=n+dr,m2=m+Math.floor(dr/2);
+  const c2=Math.cos(n2*Math.PI*rx*.7)*Math.cos(m2*Math.PI*ry*.7)-Math.cos(m2*Math.PI*rx*.7)*Math.cos(n2*Math.PI*ry*.7);
+  const ag=Math.atan2(ry,rx),rd=Math.cos(dr*ag+rot*2)*Math.sin(di*n*Math.PI*.5);const cb=c1*.5+c2*.25+rd*.25,av=Math.abs(cb);
+  const ha=Math.abs(Math.sin((x*12.9898+y*78.233+ns)*43758.5453)%1)*.15;const ef=1-Math.pow(di,3),th=.15-fm*.11;
+  if(fm<.01){const s=ha*ef;d[i4]=~~(6+rc*s*.4);d[i4+1]=~~(6+gc*s*.4);d[i4+2]=~~(12+bc*s*.4);d[i4+3]=255;}
+  else if(av<th){const p=(1-av/th)*ef,b=fm*p+(1-fm)*ha,g=Math.pow(b,.5);d[i4]=~~(rc*g+(255-rc)*g*.25);d[i4+1]=~~(gc*g+(255-gc)*g*.25);d[i4+2]=~~(bc*g+(255-bc)*g*.25);d[i4+3]=255;}
+  else{const cl=fm*.9,rs=ha*(1-cl)*ef,da=Math.max(0,.06-av*.03)*ef*fm,ti=rs+da;d[i4]=~~(6+rc*ti*.4);d[i4+1]=~~(6+gc*ti*.4);d[i4+2]=~~(12+bc*ti*.4);d[i4+3]=255;}}
+  ctx.putImageData(id,0,0);
+}
+function drawBiofield(ctx,w,h,bands,coherence,time,color){
+  ctx.clearRect(0,0,w,h);const cx=w/2,cy=h/2,maxR=Math.min(w,h)/2-4;const bw=[.16,.17,.17,.17,.18],order=[4,3,2,1,0];let cR=maxR;
+  order.forEach(bi=>{const bp=bands[BN[bi]]||0,rw=bw[bi]*maxR,iR=Math.max(0,cR-rw);const pulse=1+bp*.08*Math.sin(time*.003+bi*1.2);
+  const dO=Math.max(1,cR*pulse),dI=Math.max(.5,iR*pulse);if(dO>dI+.5){ctx.beginPath();ctx.arc(cx,cy,dO,0,Math.PI*2);ctx.arc(cx,cy,dI,0,Math.PI*2,true);ctx.closePath();
+  ctx.fillStyle=BC[bi]+(~~(Math.min(255,(.15+bp*.6)*255))).toString(16).padStart(2,'0');ctx.fill();
+  if(bp>.05){const midR=Math.max(1,(dO+dI)/2);ctx.beginPath();ctx.arc(cx,cy,midR,-Math.PI/2+time*.001*(bi%2?1:-1),-Math.PI/2+time*.001*(bi%2?1:-1)+bp*Math.PI*2);
+  ctx.lineWidth=Math.max(1,rw*.4);ctx.strokeStyle=BC[bi]+(~~(Math.min(255,bp*1.5*255))).toString(16).padStart(2,'0');ctx.stroke();}}cR=Math.max(0,iR);});
+  const cenR=Math.max(2,cR),cg=ctx.createRadialGradient(cx,cy,0,cx,cy,cenR);
+  cg.addColorStop(0,color+(~~(coherence*180)).toString(16).padStart(2,'0'));cg.addColorStop(.7,color+'08');cg.addColorStop(1,'transparent');
+  ctx.fillStyle=cg;ctx.beginPath();ctx.arc(cx,cy,cenR,0,Math.PI*2);ctx.fill();
+  if(coherence>.3&&cenR>1){const nl=~~(coherence*12);for(let i=0;i<nl;i++){const ag=(i/nl)*Math.PI*2+time*.0005;
+  ctx.beginPath();ctx.moveTo(cx+Math.cos(ag)*cenR,cy+Math.sin(ag)*cenR);ctx.lineTo(cx+Math.cos(ag)*maxR,cy+Math.sin(ag)*maxR);
+  ctx.strokeStyle=color+(~~(coherence*40)).toString(16).padStart(2,'0');ctx.lineWidth=.5;ctx.stroke();}}
+}
+function hexSVG(ut,lt,c,sz){const u=triL[ut]||[0,0,0],l=triL[lt]||[0,0,0],all=[...l,...u];const lh=sz/9,lw=sz*.7,gap=sz*.12,cx=sz/2;let r='';
+all.forEach((y,i)=>{const yy=sz-(i+1)*lh-i*2;const op=i<3?'88':'cc';if(y)r+=`<rect x="${cx-lw/2}" y="${yy}" width="${lw}" height="${lh}" rx="1" fill="${c}${op}"/>`;
+else{const sw=(lw-gap)/2;r+=`<rect x="${cx-lw/2}" y="${yy}" width="${sw}" height="${lh}" rx="1" fill="${c}${op}"/><rect x="${cx+gap/2}" y="${yy}" width="${sw}" height="${lh}" rx="1" fill="${c}${op}"/>`;}});
+return `<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}">${r}</svg>`;}
+
+// ═══════════════════════════════════════
+// 8b. 3D SPHERE CYMATICS RENDERER
+// ═══════════════════════════════════════
+function drawCymSphere(ctx,w,h,freq,color,time,formation,tilt,zoom,depth,rotate,rotSpeed,snapAngle){
+  const id=ctx.createImageData(w,h),d=id.data;
+  const fn=freq/6336,n=Math.floor(2+fn*12),m=Math.floor(1+fn*8);
+  const rc=parseInt(color.slice(1,3),16),gc=parseInt(color.slice(3,5),16),bc=parseInt(color.slice(5,7),16);
+  const cx=w/2,cy=h/2,radius=Math.min(w,h)/2*zoom*0.9;
+  const dr=(freq%9)||9,fm=Math.max(0,Math.min(1,formation));
+
+  // Rotation
+  let rot=0;
+  if(snapAngle>=0) rot=snapAngle*Math.PI/180;
+  else if(rotate) rot=time*0.0003*rotSpeed;
+
+  // Tilt angle (0=top-down pole view, PI/2=equator view)
+  const tiltRad=tilt*Math.PI*0.48; // max ~86 degrees
+  const cosTilt=Math.cos(tiltRad),sinTilt=Math.sin(tiltRad);
+  const cosRot=Math.cos(rot),sinRot=Math.sin(rot);
+
+  // Ambient light direction
+  const lx=0.3,ly=-0.5,lz=0.8,lm=Math.sqrt(lx*lx+ly*ly+lz*lz);
+
+  for(let py=0;py<h;py++){
+    for(let px=0;px<w;px++){
+      const i4=(py*w+px)*4;
+      const sx=(px-cx)/radius, sy=(py-cy)/radius;
+      const r2=sx*sx+sy*sy;
+
+      if(r2>1){
+        // Background — subtle glow
+        const glow=Math.max(0,1-Math.sqrt(r2))*0.08*fm;
+        d[i4]=~~(rc*glow*0.3);d[i4+1]=~~(gc*glow*0.3);d[i4+2]=~~(bc*glow*0.3);d[i4+3]=255;
+        continue;
+      }
+
+      // Sphere normal at this pixel (ray-sphere intersection)
+      const sz2=Math.sqrt(1-r2);
+      // Rotate normal by tilt and rotation
+      let nx=sx, ny=sy*cosTilt-sz2*sinTilt, nz=sy*sinTilt+sz2*cosTilt;
+      const nx2=nx*cosRot-nz*sinRot, nz2=nx*sinRot+nz*cosRot;
+      nx=nx2; nz=nz2;
+
+      // Map sphere coordinates to UV for Chladni pattern
+      const u=Math.atan2(nx,nz)/Math.PI; // -1 to 1
+      const v=Math.asin(Math.max(-1,Math.min(1,ny)))/Math.PI*2; // -1 to 1
+
+      // Chladni equation on UV coords
+      const c1=Math.cos(n*Math.PI*u)*Math.cos(m*Math.PI*v)-Math.cos(m*Math.PI*u)*Math.cos(n*Math.PI*v);
+      const n2=n+dr,m2=m+Math.floor(dr/2);
+      const c2=Math.cos(n2*Math.PI*u*.7)*Math.cos(m2*Math.PI*v*.7)-Math.cos(m2*Math.PI*u*.7)*Math.cos(n2*Math.PI*v*.7);
+      const ag=Math.atan2(v,u),rd=Math.cos(dr*ag+rot*2)*Math.sin(Math.sqrt(u*u+v*v)*n*Math.PI*.5);
+      const cb=c1*.5+c2*.25+rd*.25,av=Math.abs(cb);
+
+      // Lighting
+      const dot=Math.max(0,(sx*lx/lm+sy*ly/lm+sz2*lz/lm));
+      const light=0.3+0.7*dot;
+
+      // Pattern threshold
+      const th=0.15-fm*0.11;
+      const ns=freq*137;
+      const ha=Math.abs(Math.sin((px*12.9898+py*78.233+ns)*43758.5453)%1)*0.12;
+
+      // Depth extrusion — creates dramatic 3D bump effect
+      const ridge=av<th?1:0;
+      // At high depth: ridges glow intensely, valleys get deep shadows, edges sharpen
+      const bumpLight=ridge?(1+depth*1.5):(1-depth*0.5); // ridges 2.5x brighter, valleys half
+      const edgeGlow=ridge?Math.pow(1-av/Math.max(th,0.01),2)*depth:0; // sharp edge highlight
+      const depthShade=bumpLight*(1+edgeGlow*0.8);
+
+      let pr,pg,pb;
+      if(fm<0.01){
+        const s=ha*light;
+        pr=6+rc*s*0.3;pg=6+gc*s*0.3;pb=12+bc*s*0.3;
+      } else if(av<th){
+        const p=(1-av/th)*light*depthShade;
+        const b=fm*p+(1-fm)*ha;
+        const g=Math.pow(Math.min(1,b),0.5);
+        pr=rc*g+(255-rc)*g*0.2;pg=gc*g+(255-gc)*g*0.2;pb=bc*g+(255-bc)*g*0.2;
+      } else {
+        const cl=fm*0.85;
+        const rs=ha*(1-cl)*light;
+        pr=6+rc*rs*0.3;pg=6+gc*rs*0.3;pb=12+bc*rs*0.3;
+      }
+
+      // Atmosphere rim glow
+      const rim=Math.pow(1-sz2,3)*fm*0.6;
+      pr+=rc*rim*0.4;pg+=gc*rim*0.4;pb+=bc*rim*0.4;
+
+      d[i4]=~~Math.min(255,pr);d[i4+1]=~~Math.min(255,pg);d[i4+2]=~~Math.min(255,pb);d[i4+3]=255;
+    }
+  }
+  ctx.putImageData(id,0,0);
+}
+
+// ═══════════════════════════════════════
+// 8c. TORUS CYMATICS RENDERER
+// ═══════════════════════════════════════
+function drawCymTorus(ctx,w,h,freq,color,time,formation,tilt,zoom,depth,rotate,rotSpeed,snapAngle){
+  const id=ctx.createImageData(w,h),d=id.data;
+  const fn=freq/6336,n=Math.floor(2+fn*12),m=Math.floor(1+fn*8);
+  const rc=parseInt(color.slice(1,3),16),gc=parseInt(color.slice(3,5),16),bc=parseInt(color.slice(5,7),16);
+  const cx=w/2,cy=h/2,scale=Math.min(w,h)/2*zoom*0.85;
+  const dr=(freq%9)||9,fm=Math.max(0,Math.min(1,formation));
+  const R=0.65,r=0.3; // major/minor radius ratios
+
+  let rot=0;
+  if(snapAngle>=0) rot=snapAngle*Math.PI/180;
+  else if(rotate) rot=time*0.0003*rotSpeed;
+  const tiltRad=tilt*Math.PI*0.45;
+  const cosT=Math.cos(tiltRad),sinT=Math.sin(tiltRad);
+  const cosR=Math.cos(rot),sinR=Math.sin(rot);
+  const lx=0.3,ly=-0.5,lz=0.8,lm=Math.sqrt(lx*lx+ly*ly+lz*lz);
+  const ns=freq*137;
+
+  for(let py=0;py<h;py++){
+    for(let px=0;px<w;px++){
+      const i4=(py*w+px)*4;
+      const sx=(px-cx)/scale,sy=(py-cy)/scale;
+
+      // Ray-torus intersection (simplified: sample from screen coords)
+      // Apply tilt to screen coords
+      const sy2=sy*cosT,sz2=-sy*sinT;
+      // Apply rotation
+      const sx2=sx*cosR-sz2*sinR,sz3=sx*sinR+sz2*cosR;
+
+      // Distance from torus tube center
+      const distXZ=Math.sqrt(sx2*sx2+sz3*sz3);
+      const tubeX=distXZ-R,tubeY=sy2;
+      const tubeDist=Math.sqrt(tubeX*tubeX+tubeY*tubeY);
+
+      if(tubeDist>r*1.1){
+        const glow=Math.max(0,(r*1.5-tubeDist)/(r*0.5))*fm*0.05;
+        d[i4]=~~(rc*glow*0.3);d[i4+1]=~~(gc*glow*0.3);d[i4+2]=~~(bc*glow*0.3);d[i4+3]=255;
+        continue;
+      }
+      if(tubeDist>r){
+        d[i4]=0;d[i4+1]=0;d[i4+2]=0;d[i4+3]=255;continue;
+      }
+
+      // UV mapping on torus surface
+      const u=Math.atan2(sz3,sx2)/Math.PI; // around the ring
+      const v=Math.atan2(tubeY,tubeX)/Math.PI; // around the tube
+
+      // Chladni on UV
+      const c1=Math.cos(n*Math.PI*u)*Math.cos(m*Math.PI*v)-Math.cos(m*Math.PI*u)*Math.cos(n*Math.PI*v);
+      const n2=n+dr,m2=m+Math.floor(dr/2);
+      const c2=Math.cos(n2*Math.PI*u*.7)*Math.cos(m2*Math.PI*v*.7)-Math.cos(m2*Math.PI*u*.7)*Math.cos(n2*Math.PI*v*.7);
+      const cb=c1*.5+c2*.3+Math.cos(dr*(u+v)*Math.PI)*.2;
+      const av=Math.abs(cb);
+
+      // Normal for lighting (approximate)
+      const nrX=tubeX/(tubeDist+.001),nrY=tubeY/(tubeDist+.001);
+      const tnx=nrX*(sx2/(distXZ+.001)),tny=nrY,tnz=nrX*(sz3/(distXZ+.001));
+      const dot=Math.max(0,tnx*lx/lm+tny*ly/lm+tnz*lz/lm);
+      const light=0.25+0.75*dot;
+
+      const th=0.15-fm*0.11;
+      const ha=Math.abs(Math.sin((px*12.9898+py*78.233+ns)*43758.5453)%1)*0.1;
+      const ridge=av<th?1:0;
+      const bumpLight=ridge?(1+depth*1.5):(1-depth*0.5);
+      const edgeGlow=ridge?Math.pow(1-av/Math.max(th,0.01),2)*depth:0;
+      const depthShade=bumpLight*(1+edgeGlow*0.8);
+
+      let pr,pg,pb;
+      if(fm<0.01){
+        const s=ha*light;pr=6+rc*s*.3;pg=6+gc*s*.3;pb=12+bc*s*.3;
+      } else if(av<th){
+        const p=(1-av/th)*light*depthShade;
+        const b2=fm*p+(1-fm)*ha,g=Math.pow(Math.min(1,b2),0.5);
+        pr=rc*g+(255-rc)*g*.2;pg=gc*g+(255-gc)*g*.2;pb=bc*g+(255-bc)*g*.2;
+      } else {
+        const cl=fm*.85,rs=ha*(1-cl)*light;
+        pr=6+rc*rs*.3;pg=6+gc*rs*.3;pb=12+bc*rs*.3;
+      }
+      // Rim glow on tube edge
+      const rim=Math.pow(tubeDist/r,6)*fm*0.4;
+      pr+=rc*rim*.3;pg+=gc*rim*.3;pb+=bc*rim*.3;
+
+      d[i4]=~~Math.min(255,pr);d[i4+1]=~~Math.min(255,pg);d[i4+2]=~~Math.min(255,pb);d[i4+3]=255;
+    }
+  }
+  ctx.putImageData(id,0,0);
+}
+// ═══════════════════════════════════════
+function drawOscilloscope(ctx,w,h,channels,bands,coherence,color){
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle='#060810';ctx.fillRect(0,0,w,h);
+
+  // Status bar
+  ctx.fillStyle='#0c1018';ctx.fillRect(0,0,w,20);
+  ctx.font='bold 11px sans-serif';ctx.fillStyle='#50D4B0';ctx.textAlign='left';
+  ctx.fillText('⚡ Live Multi-Channel EEG',8,14);
+  if(channels){
+    ctx.fillStyle='#4A7C59';ctx.textAlign='right';
+    ctx.font='10px sans-serif';
+    ctx.fillText('● STREAMING 4 CH  256Hz',w-8,14);
+  } else {
+    ctx.fillStyle='#3a3030';ctx.textAlign='center';
+    ctx.font='13px sans-serif';
+    ctx.fillText('Connect Muse 2 for live EEG',w/2,h/2);
+    return;
+  }
+
+  const topY=24;
+  const drawH=h-topY-8;
+  const laneH=drawH/4;
+  const spread=1-coherence*0.65;
+
+  for(let ci=0;ci<4;ci++){
+    const ch=CH_NAMES[ci];
+    const data=channels[ch];
+    if(!data||!data.length) continue;
+
+    const len=data.length;
+    let maxAmp=1;
+    for(let i=0;i<len;i++){const a=Math.abs(data[i]);if(a>maxAmp)maxAmp=a;}
+
+    const normalCenter=topY+laneH*ci+laneH*0.55;
+    const globalCenter=topY+drawH/2;
+    const laneCenter=normalCenter*spread+globalCenter*(1-spread);
+
+    // Separator
+    if(ci>0&&spread>0.3){
+      ctx.strokeStyle='#1a152066';ctx.lineWidth=0.5;
+      ctx.beginPath();ctx.moveTo(0,topY+laneH*ci);ctx.lineTo(w,topY+laneH*ci);ctx.stroke();
+    }
+
+    // Channel label — crisp, readable
+    const labelY=laneCenter-laneH*0.32*spread;
+    ctx.font='bold 11px sans-serif';
+    ctx.fillStyle=CH_COLORS[ci];
+    ctx.textAlign='left';
+    ctx.fillText(CH_LABELS[ci],8,Math.max(topY+12,labelY));
+
+    // Waveform
+    ctx.beginPath();
+    ctx.strokeStyle=CH_COLORS[ci];
+    ctx.lineWidth=1.5;
+    const amp=laneH*0.3*spread+drawH*0.15*(1-spread);
+    for(let i=0;i<len;i++){
+      const x=(i/len)*w;
+      const y=laneCenter-(data[i]/maxAmp)*amp;
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+
+  // Coherence convergence indicator
+  if(coherence>0.3){
+    ctx.fillStyle=color+(~~(Math.min(180,coherence*200))).toString(16).padStart(2,'0');
+    ctx.font='bold 12px sans-serif';ctx.textAlign='center';
+    ctx.fillText('◉ COHERENCE SYNC '+~~(coherence*100)+'%',w/2,h-6);
+  }
+}
+
+let animT=0,animId=null;
+function startAnim(){
+  if(animId)return;
+  function loop(){animT+=16;try{drawCanvases();}catch(e){}animId=requestAnimationFrame(loop);}
+  loop();
+}
+function drawCanvases(){
+  const rx=F[neuro.rxIdx];
+
+  // Cymatics canvas — sphere, flat, or torus
+  const cc=document.getElementById('cv-cym');
+  if(cc){const ctx=cc.getContext('2d');
+    const sf=neuro.connected?rx:F[app.selIdx];
+    const form=neuro.connected?neuro.coherence:0.85;
+    if(app.cymView==='sphere'){
+      drawCymSphere(ctx,cc.width,cc.height,sf.f,sf.c,animT,form,
+        app.cymViewAngle,app.cymZoom,app.cymDepth,app.cymRotate,app.cymRotSpeed,app.cymSnapAngle);
+    } else if(app.cymView==='torus'){
+      drawCymTorus(ctx,cc.width,cc.height,sf.f,sf.c,animT,form,
+        app.cymViewAngle,app.cymZoom,app.cymDepth,app.cymRotate,app.cymRotSpeed,app.cymSnapAngle);
+    } else {
+      // Flat plate — compute rotation from controls
+      let flatRot;
+      if(app.cymSnapAngle>=0) flatRot=app.cymSnapAngle*Math.PI/180;
+      else if(app.cymRotate) flatRot=animT*0.0003*app.cymRotSpeed;
+      else flatRot=0;
+      drawChladni(ctx,cc.width,cc.height,sf.f,sf.c,animT,form,flatRot);
+    }
+  }
+
+  // Biofield canvas (standard)
+  const bc=document.getElementById('cv-bio');
+  if(bc)drawBiofield(bc.getContext('2d'),bc.width,bc.height,neuro.bands,neuro.coherence,animT,rx.c);
+
+  // Golden flower canvas (standard)
+  const gf=document.getElementById('cv-gf');
+  if(gf)drawChladni(gf.getContext('2d'),gf.width,gf.height,rx.f,rx.c,animT,app.gfFormation);
+
+  // Oscilloscope — HiDPI setup for crisp text
+  const osc=document.getElementById('cv-osc');
+  if(osc){
+    const dpr=window.devicePixelRatio||1;
+    const rect=osc.getBoundingClientRect();
+    const needW=Math.round(rect.width*dpr);
+    const needH=Math.round(rect.height*dpr);
+    // Only resize if dimensions changed (avoids clearing every frame)
+    if(osc.width!==needW||osc.height!==needH){
+      osc.width=needW;
+      osc.height=needH;
+    }
+    const ctx=osc.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    drawOscilloscope(ctx,rect.width,rect.height,neuro.channels,neuro.bands,neuro.coherence,rx.c);
+  }
+
+  // 3D Cymatics gallery canvases
+  F.forEach((fr,i)=>{
+    const gc=document.getElementById('cv-gal-'+i);
+    if(gc)drawChladni(gc.getContext('2d'),gc.width,gc.height,fr.f,fr.c,animT,.85);
+  });
+}
+
+// ═══════════════════════════════════════
+// 10. RENDER — Only on tab switch or structural change
+// ═══════════════════════════════════════
+function togHTML(lbl,on,fn,c){
+  return `<button class="tog" onclick="${fn}"><div class="tog-t" style="background:${on?c+'44':'var(--bdr)'};border:1px solid ${on?c:'#2a2030'}"><div class="tog-k" style="background:${on?c:'#3a3030'};left:${on?'19px':'2px'};box-shadow:${on?'0 0 6px '+c+'66':'none'}"></div></div><span class="tog-l" style="color:${on?'#c0b8a8':'var(--mut)'}">${lbl}</span></button>`;
+}
+function museBarHTML(){
+  const cols={idle:'#3a3030',searching:'#C47A14',connecting:'#C47A14',connected:'#4A7C59',error:'#C45C5C',disconnected:'#3a3030'};
+  const txt={idle:'Ready',searching:'Searching...',connecting:'Connecting...',connected:'Connected',error:'Failed — try again',disconnected:'Disconnected'};
+  const isOn=neuro.connected;
+  return `<div class="muse-bar"><div class="muse-dot" style="background:${cols[neuro.status]}"></div><span class="muse-txt">Muse 2: ${txt[neuro.status]||neuro.status}</span>
+  <button class="muse-btn" style="border-color:${isOn?'#C45C5C':'var(--gld)'};color:${isOn?'#C45C5C':'var(--gld)'}" onclick="${isOn?'muse.disconnect()':'muse.connect()'}">
+  ${isOn?'Disconnect':neuro.status==='searching'||neuro.status==='connecting'?'...':'Connect'}</button></div>`;
+}
+
+function render(){
+  const rx=F[neuro.rxIdx];let h='';
+
+  if(app.tab==='home'){
+    h+=museBarHTML();
+    h+=`<div class="rx" id="rx-card" style="border-color:${rx.c}33"><div class="card-h">YOUR BIOFIELD NEEDS NOW</div>
+    <div class="rx-freq" id="rx-freq" style="color:${rx.c}">${rx.f} Hz</div>
+    <div class="rx-name" id="rx-name">${rx.sc} — ${rx.kw}</div>
+    <div class="rx-state" id="rx-state" style="border:1px solid ${rx.c}44;color:${rx.c}">${neuro.rxState}</div>
+    <div class="rx-reason" id="rx-reason">${neuro.rxReason}</div></div>`;
+    h+=`<div class="coh-wrap"><div class="coh-ring" id="coh-ring"><div class="coh-val" id="coh-val" style="color:${rx.c}">${~~(neuro.coherence*100)}</div><div class="coh-lbl">COHERENCE</div><div class="coh-trend" id="coh-trend">— Stable</div></div></div>`;
+    h+=`<div class="bands">${BN.map((b,i)=>`<div class="band"><div class="band-w"><div class="band-b" id="bb-${b}" style="height:${neuro.bands[b]*100}%;background:${BC[i]}"></div><div class="band-v" id="bv-${b}">${~~(neuro.bands[b]*100)}%</div></div><div class="band-n">${BL[i]}</div><div class="band-h">${BH[i]}Hz</div></div>`).join('')}</div>`;
+    // Aetheria Position — where you register on the 27-frequency scale
+    h+=`<div class="card" id="aetheria-pos-card" style="padding:10px">
+      <div class="card-h">YOUR AETHERIA POSITION</div>
+      <div style="display:flex;gap:1px;margin:6px 0;height:18px;border-radius:4px;overflow:hidden" id="aetheria-pos-bar">
+        ${F.map((fr,i)=>{
+          const isHere=i===neuro.rxIdx;
+          return `<div id="ap-${i}" style="flex:1;background:${isHere?fr.c:fr.c+'22'};position:relative;transition:background .5s${isHere?';box-shadow:0 0 8px '+fr.c:''}">
+            ${isHere?'<div style="position:absolute;top:-2px;left:50%;transform:translateX(-50%);font-size:6px;color:#fff">▼</div>':''}
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--dim);margin-bottom:6px">
+        <span>174Hz GUT</span><span>2178Hz SOURCE</span><span>6336Hz SUMMIT</span>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:11px;color:#8a7b6b" id="ap-regime">—</div>
+        <div style="font-size:18px;font-weight:300;margin:2px 0" id="ap-freq" style="color:${rx.c}">${rx.f} Hz</div>
+        <div style="font-size:12px" id="ap-name" style="color:${rx.c}">${rx.sc} — ${rx.kw}</div>
+        <div style="font-size:11px;color:#8a7b6b;margin-top:2px" id="ap-geo">${rx.geo}</div>
+        <div style="font-size:10px;margin-top:4px" id="ap-state" style="color:${rx.c}">${neuro.rxState}</div>
+        <div style="font-size:10px;color:#5a4a3a;margin-top:2px" id="ap-pos">Position ${neuro.rxIdx+1} of 27</div>
+      </div>
+    </div>`;
+    // Aetheria Frequency Signature — before/after diagnostic
+    if(neuro.connected||neuro.baseline){
+      const bl=neuro.baseline;
+      const es=neuro.endstate;
+      h+=`<div class="card" style="padding:10px">
+        <div class="card-h">YOUR AETHERIA FREQUENCY SIGNATURE</div>`;
+      if(neuro.captureCountdown>0){
+        // Capture in progress
+        h+=`<div style="text-align:center;padding:12px 0">
+          <div style="font-size:14px;color:var(--gld)" id="cap-countdown">Capturing... ${neuro.captureCountdown}s</div>
+          <div style="font-size:10px;color:#6a5a4a;margin-top:4px">Stay still and relaxed. Averaging your brainwave signature.</div>
+          <div style="width:100%;height:3px;background:var(--bdr);border-radius:2px;margin-top:8px"><div style="height:100%;background:var(--gld);border-radius:2px;width:${(1-neuro.captureCountdown/15)*100}%;transition:width 1s"></div></div>
+        </div>`;
+      } else {
+        // Show signatures
+        h+=`<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:start">`;
+        // Before
+        h+=`<div style="text-align:center">
+          <div style="font-size:9px;color:var(--mut);letter-spacing:.1em;margin-bottom:4px">BEFORE</div>`;
+        if(bl){
+          const bf=F[bl.position];
+          // Mini band bars
+          h+=`<div style="display:flex;gap:1px;height:30px;margin:4px 0;border-radius:2px;overflow:hidden">
+            ${BN.map((b,i)=>`<div style="flex:1;background:${BC[i]};position:relative"><div style="position:absolute;bottom:0;width:100%;height:${bl.bands[b]*100}%;background:${BC[i]}"></div><div style="position:absolute;top:0;width:100%;height:${(1-bl.bands[b])*100}%;background:#0a0810cc"></div></div>`).join('')}
+          </div>`;
+          h+=`<div style="font-size:9px;color:#5a4a3a">${BN.map((b,i)=>~~(bl.bands[b]*100)).join(' / ')}</div>`;
+          h+=`<div style="font-size:18px;font-weight:300;color:${bf.c};margin-top:3px">${bf.f}Hz</div>`;
+          h+=`<div style="font-size:10px;color:${bf.c}">${bf.geo}</div>`;
+          h+=`<div style="font-size:9px;color:#6a5a4a">${bl.dominant} ${bl.dominantPct}%</div>`;
+          h+=`<div style="font-size:9px;color:#5a4a3a">Coh: ${~~(bl.coherence*100)}%</div>`;
+          h+=`<div style="font-size:8px;color:#4a3a2a">Pos ${bl.position+1}/27</div>`;
+        } else {
+          h+=`<div style="font-size:11px;color:#4a3a2a">Capturing in<br>${neuro.connected?'a moment...':'—'}</div>`;
+        }
+        h+=`</div>`;
+        // Arrow
+        const moved=bl&&es?(es.position-bl.position):0;
+        h+=`<div style="text-align:center;padding-top:30px">
+          <div style="font-size:20px;color:var(--dim)">→</div>
+          ${bl&&es?`<div style="font-size:12px;font-weight:300;margin-top:4px;color:${moved>0?'#4A7C59':moved<0?'#C45C5C':'var(--dim)'}">${moved>0?'+'+moved:moved===0?'—':moved}</div>`:''}
+        </div>`;
+        // After
+        h+=`<div style="text-align:center">
+          <div style="font-size:9px;color:var(--mut);letter-spacing:.1em;margin-bottom:4px">AFTER</div>`;
+        if(es){
+          const ef=F[es.position];
+          h+=`<div style="display:flex;gap:1px;height:30px;margin:4px 0;border-radius:2px;overflow:hidden">
+            ${BN.map((b,i)=>`<div style="flex:1;position:relative"><div style="position:absolute;bottom:0;width:100%;height:${es.bands[b]*100}%;background:${BC[i]}"></div><div style="position:absolute;top:0;width:100%;height:${(1-es.bands[b])*100}%;background:#0a0810cc"></div></div>`).join('')}
+          </div>`;
+          h+=`<div style="font-size:9px;color:#5a4a3a">${BN.map((b,i)=>~~(es.bands[b]*100)).join(' / ')}</div>`;
+          h+=`<div style="font-size:18px;font-weight:300;color:${ef.c};margin-top:3px">${ef.f}Hz</div>`;
+          h+=`<div style="font-size:10px;color:${ef.c}">${ef.geo}</div>`;
+          h+=`<div style="font-size:9px;color:#6a5a4a">${es.dominant} ${es.dominantPct}%</div>`;
+          h+=`<div style="font-size:9px;color:#5a4a3a">Coh: ${~~(es.coherence*100)}%</div>`;
+          h+=`<div style="font-size:8px;color:#4a3a2a">Pos ${es.position+1}/27</div>`;
+        } else if(neuro.connected){
+          h+=`<button onclick="startCapture('end')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:6px 12px;border-radius:4px;font-size:10px;font-family:inherit;margin-top:8px">Capture Now</button>`;
+        } else {
+          h+=`<div style="font-size:11px;color:#4a3a2a">—</div>`;
+        }
+        h+=`</div></div>`;
+        // Recapture buttons
+        if(bl&&neuro.connected){
+          h+=`<div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
+            <button onclick="startCapture('baseline')" style="background:transparent;border:1px solid var(--bdr);color:var(--sub);padding:4px 10px;border-radius:4px;font-size:9px;font-family:inherit">Recapture Before</button>
+            <button onclick="startCapture('end')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:4px 10px;border-radius:4px;font-size:9px;font-family:inherit">Capture After</button>
+          </div>`;
+        }
+      }
+      h+=`</div>`;
+    }
+    // EEG Oscilloscope
+    h+=`<div class="card" style="padding:4px"><canvas id="cv-osc" style="width:100%;height:180px;border-radius:4px"></canvas></div>`;
+    h+=`<div class="ctrl-row">${togHTML(app.oscOn?'<span id="osc-label">Playing '+rx.f+'Hz</span>':'Oscillator',app.oscOn,'toggleOsc()',rx.c)}</div>`;
+    if(app.oscOn){h+=`<div class="osc-info" id="osc-info" style="border:1px solid ${rx.c}33;background:${rx.c}08;color:#6a5a4a">Playing: <span style="color:${rx.c}">${audio._playable(rx.f).toFixed(1)}Hz</span> ${rx.f>=2000?'(sub-bass — felt)':'(sine)'}${neuro.connected?' · <span style="color:#A840B8">Following prescription</span>':''}</div>`;}
+    h+=`<div class="card" id="hex-card"><div class="card-h" id="hex-title">I CHING — HEXAGRAM ${rx.hx}</div><div style="display:flex;gap:16px;align-items:center"><div id="hex-svg">${hexSVG(rx.ut,rx.lt,rx.c,80)}</div><div><div class="hex-num" id="hex-name" style="color:${rx.c}">${rx.hn}</div><div class="hex-chi" id="hex-chi">${rx.hc}</div><div style="font-size:12px;color:var(--mut);margin-top:4px" id="hex-tri">${TRI[rx.ut].s} ${TRI[rx.ut].n} over ${TRI[rx.lt].s} ${TRI[rx.lt].n}</div></div></div><div style="font-size:12px;color:#6a5a4a;margin-top:8px;line-height:1.6" id="hex-desc">${rx.hw}</div></div>`;
+    h+=`<div class="ft-link"><a href="https://aetheria432.com" target="_blank">Open Aetheria432.com →</a></div>`;
+  }
+
+  if(app.tab==='cymatics'){
+    const sf=neuro.connected?rx:F[app.selIdx];
+    // Control panel overlay
+    h+=`<div class="cym-overlay ${app.cymPanel?'open':''}" onclick="cymTogglePanel()"></div>`;
+    h+=`<div class="cym-panel ${app.cymPanel?'open':''}">
+      <button class="cym-panel-close" onclick="cymTogglePanel()">✕</button>
+      <h3>VIEW MODE</h3>
+      <div class="cym-snap">
+        <button class="${app.cymView==='sphere'?'on':''}" onclick="cymSet('cymView','sphere')">Sphere</button>
+        <button class="${app.cymView==='torus'?'on':''}" onclick="cymSet('cymView','torus')">Torus</button>
+        <button class="${app.cymView==='flat'?'on':''}" onclick="cymSet('cymView','flat')">Flat</button>
+      </div>
+
+      <h3>ROTATION</h3>
+      <div class="cym-snap">
+        <button class="${app.cymRotate&&app.cymSnapAngle<0?'on':''}" onclick="cymSet('cymRotate',true);cymSet('cymSnapAngle',-1)">Auto</button>
+        <button class="${!app.cymRotate&&app.cymSnapAngle<0?'on':''}" onclick="cymSet('cymRotate',false);cymSet('cymSnapAngle',-1)">Off</button>
+      </div>
+      <div class="cym-snap">
+        <button class="${app.cymSnapAngle===0?'on':''}" onclick="cymSnap(0)">0°</button>
+        <button class="${app.cymSnapAngle===90?'on':''}" onclick="cymSnap(90)">90°</button>
+        <button class="${app.cymSnapAngle===180?'on':''}" onclick="cymSnap(180)">180°</button>
+        <button class="${app.cymSnapAngle===270?'on':''}" onclick="cymSnap(270)">270°</button>
+      </div>
+
+      <h3>ROTATION SPEED</h3>
+      <input type="range" class="cym-slider" min="0.1" max="2" step="0.1" value="${app.cymRotSpeed}"
+        style="accent-color:${sf.c}" oninput="cymSet('cymRotSpeed',+this.value)">
+
+      <h3>VIEW ANGLE (TILT)</h3>
+      <input type="range" class="cym-slider" min="0" max="1" step="0.05" value="${app.cymViewAngle}"
+        style="accent-color:${sf.c}" oninput="cymSet('cymViewAngle',+this.value)">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--dim)"><span>Pole</span><span>Equator</span></div>
+
+      <h3>ZOOM</h3>
+      <input type="range" class="cym-slider" min="0.5" max="1.5" step="0.05" value="${app.cymZoom}"
+        style="accent-color:${sf.c}" oninput="cymSet('cymZoom',+this.value)">
+
+      <h3>PATTERN DEPTH</h3>
+      <input type="range" class="cym-slider" min="0" max="1" step="0.05" value="${app.cymDepth}"
+        style="accent-color:${sf.c}" oninput="cymSet('cymDepth',+this.value)">
+
+      <h3>FREQUENCY INFO</h3>
+      <div id="cym-panel-info" style="font-size:11px;color:#8a7b6b;line-height:1.6">
+        <span style="color:${sf.c}">${sf.f} Hz</span> — ${sf.kw}<br>
+        ${sf.sc} · ${sf.geo}<br>
+        Digital Root: ${(sf.f%9)||9}<br>
+        Hex ${sf.hx} ${sf.hn} (${sf.hc})
+      </div>
+    </div>`;
+
+    // Main display area
+    h+=museBarHTML();
+    h+=`<div style="position:relative">
+      <button class="cym-open-btn" onclick="cymTogglePanel()">☰ Controls</button>
+      <div class="canvas-ctr"><canvas id="cv-cym" width="280" height="280" style="width:280px;height:280px"></canvas></div>
+    </div>`;
+    h+=`<div style="text-align:center;margin-bottom:8px">
+      <div id="cym-freq" style="font-size:32px;font-weight:300;color:${sf.c}">${sf.f} Hz</div>
+      <div id="cym-name" style="font-size:14px;color:#c0b8a8">${sf.sc} — ${sf.kw}</div>
+      <div id="cym-geo" style="font-size:11px;color:${sf.c}88;margin-top:2px">${sf.geo}</div>
+      <div id="cym-root" style="font-size:10px;color:var(--dim);margin-top:2px">Root ${(sf.f%9)||9} · Hex ${sf.hx} ${sf.hn}</div>
+    </div>`;
+    if(neuro.connected){
+      h+=`<div class="ins" style="border-color:#A840B844">Brain-driven: coherence shapes formation. Scattered sand → sacred geometry.</div>`;
+    }
+    // Scrollable gallery of all 27 with sacred geometry labels
+    h+=`<div class="card-h" style="margin-top:6px">ALL 27 — SCROLL TO EXPLORE</div>`;
+    h+=`<div class="cym-gallery" id="cym-gallery">`;
+    F.forEach((fr,i)=>{
+      const isActive=neuro.connected?(i===neuro.rxIdx):(i===app.selIdx);
+      h+=`<div class="cym-card ${isActive?'active':''}" style="border-color:${isActive?fr.c:'var(--bdr)'}" onclick="selFreq(${i})">
+        <canvas id="cv-gal-${i}" width="80" height="80" style="width:80px;height:80px"></canvas>
+        <div class="cym-freq" style="color:${fr.c}">${fr.f}Hz</div>
+        <div class="cym-name">${fr.geo}</div>
+      </div>`;
+    });
+    h+=`</div>`;
+    h+=`<div class="ctrl-row">${togHTML(app.oscOn?'Playing':'Oscillator',app.oscOn,'toggleOsc()',sf.c)}</div>`;
+    // I Ching
+    h+=`<div class="card" id="cym-hex-card"><div class="card-h" id="cym-hex-title">HEXAGRAM ${sf.hx} — ${sf.hn}</div>
+    <div style="display:flex;gap:12px;align-items:center">
+    <div id="cym-hex-svg">${hexSVG(sf.ut,sf.lt,sf.c,60)}</div>
+    <div><div style="font-size:16px" id="cym-hex-name" style="color:${sf.c}">${sf.hn}</div><div style="font-size:11px;color:#8a7b6b" id="cym-hex-chi">${sf.hc}</div>
+    <div style="font-size:10px;color:var(--dim);margin-top:3px" id="cym-hex-tri">${TRI[sf.ut].s} ${TRI[sf.ut].n} / ${TRI[sf.lt].s} ${TRI[sf.lt].n}</div></div></div>
+    <div style="font-size:11px;color:#6a5a4a;margin-top:6px;line-height:1.5" id="cym-hex-desc">${sf.hw}</div></div>`;
+  }
+
+  if(app.tab==='biofield'){
+    h+=museBarHTML();
+    h+=`<div class="canvas-ctr"><canvas id="cv-bio" width="220" height="220" style="width:220px;height:220px;border-radius:50%"></canvas></div>`;
+    h+=`<div class="coh-wrap"><div class="coh-ring" id="coh-ring2"><div class="coh-val" id="coh-val2" style="color:${rx.c}">${~~(neuro.coherence*100)}</div><div class="coh-lbl">COHERENCE</div></div></div>`;
+    h+=`<div class="bands">${BN.map((b,i)=>`<div class="band"><div class="band-w"><div class="band-b" id="bb2-${b}" style="height:${neuro.bands[b]*100}%;background:${BC[i]}"></div></div><div class="band-n">${BL[i]}</div></div>`).join('')}</div>`;
+    h+=`<div class="ins" style="border-color:var(--pur)">Delta (core) → Gamma (boundary). Ring brightness = band power. Coherence lines when bands synchronize.</div>`;
+  }
+
+  if(app.tab==='flower'){
+    const sf=rx;
+    const regimeNames=['','GUT — Building the Instrument','HEART — Playing the Instrument','HEAD — Mastering the Instrument'];
+    const regimeColors=['','#C47A14','#C43A6A','#5048C4'];
+    h+=`<div class="canvas-ctr"><canvas id="cv-gf" width="220" height="220" style="width:220px;height:220px"></canvas></div>`;
+    if(app.gfPhase===0){
+      h+=`<div style="text-align:center"><div style="font-size:16px;color:#c0b090;margin-bottom:6px">太乙金華宗旨</div>
+      <div style="font-size:13px;color:var(--gld);margin-bottom:4px">The Secret of the Golden Flower</div>
+      <div style="font-size:12px;color:#6a5a4a;line-height:1.7;max-width:340px;margin:0 auto 16px">
+      27 breaths. 3 sets of 9. Each breath: inhale 3, hold 6, exhale 9.<br><br>
+      Set 1 — GUT: bilateral coherence<br>
+      Set 2 — HEART: toroidal dynamics<br>
+      Set 3 — HEAD: full field coherence<br><br>
+      One breath per frequency. 27 breaths, 27 frequencies. 8 minutes 6 seconds. The flower blooms.
+      </div>
+      <button class="gf-btn" onclick="startGF()">Begin Circulation</button></div>`;
+    }else if(app.gfPhase===1){
+      const phaseLabels=['INHALE — 3','HOLD — 6','EXHALE — 9'];
+      const phaseColors=[sf.c,'#7B50D4','#5048C4'];
+      const phaseScales=[1.3,1.3,0.8];
+      const bp=app.gfBreathPhase;
+      const rc=regimeColors[app.gfSet]||sf.c;
+      h+=`<div style="text-align:center">
+      <div style="font-size:11px;color:${rc};letter-spacing:.1em;margin-bottom:8px">${regimeNames[app.gfSet]||''}</div>
+      <div class="gf-circle" id="gf-circ" style="background:radial-gradient(circle,${phaseColors[bp]}${bp===0?'44':bp===1?'33':'11'} 0%,transparent 70%);border:2px solid ${phaseColors[bp]}${bp<2?'66':'33'};transform:scale(${phaseScales[bp]})"></div>
+      <div style="font-size:18px;color:${phaseColors[bp]};margin-top:12px;letter-spacing:.08em;font-weight:300" id="gf-phase">${phaseLabels[bp]}</div>
+      <div style="font-size:12px;color:#8a7b6b;margin-top:6px" id="gf-cnt">Breath ${app.gfBreathTotal} of 27 · Set ${app.gfSet} Round ${app.gfRound} Cycle ${app.gfCycle}</div>
+
+      <div style="display:flex;gap:2px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+      ${Array.from({length:27}).map((_,i)=>{
+        const setIdx=Math.floor(i/9);
+        const setColor=regimeColors[setIdx+1];
+        const done=i<app.gfBreathTotal;
+        const current=i===app.gfBreathTotal-1;
+        return `<div class="gf-dot-27" style="width:8px;height:8px;border-radius:50%;background:${done?setColor:setColor+'22'};${current?'box-shadow:0 0 6px '+setColor:''}"></div>`;
+      }).join('')}
+      </div>
+
+      <div style="display:flex;justify-content:center;gap:4px;margin-top:8px">
+        <span style="font-size:9px;color:${regimeColors[1]}">● GUT</span>
+        <span style="font-size:9px;color:${regimeColors[2]}">● HEART</span>
+        <span style="font-size:9px;color:${regimeColors[3]}">● HEAD</span>
+      </div>
+      </div>`;
+    }else if(app.gfPhase===2){
+      h+=`<div style="text-align:center"><div style="font-size:16px;color:${sf.c};margin-bottom:8px;letter-spacing:.05em">The flower is blooming...</div>
+      <div style="font-size:12px;color:#6a5a4a">27 breaths complete. 27 frequencies tuned. The field organizes.</div></div>`;
+    }else{
+      h+=`<div style="text-align:center"><div style="font-size:22px;color:${sf.c};margin-bottom:8px">金華 — The Golden Flower</div>
+      <div style="font-size:13px;color:#8a7b6b;margin-bottom:4px">8 minutes 6 seconds. 486 seconds. Digital root: 9.</div>
+      <div style="font-size:12px;color:#6a5a4a;line-height:1.7;max-width:340px;margin:0 auto 16px">
+      From scattered sand, sacred geometry. Three sets tuned three regimes. GUT grounded the body. HEART opened the field. HEAD dissolved the boundary. The flower was always there. The breath revealed it.</div>
+      <button class="gf-btn" style="border-color:${sf.c}33;color:#6a5a4a" onclick="resetGF()">Begin Again</button></div>`;
+    }
+  }
+
+  if(app.tab==='history'){
+    // Raw EEG data recorder
+    if(neuro.connected){
+      h+=`<div class="card" style="padding:10px">
+        <div class="card-h">RAW EEG DATA RECORDER</div>
+        <div style="display:flex;gap:8px;align-items:center;justify-content:center">`;
+      if(neuro.recording){
+        h+=`<div style="width:8px;height:8px;border-radius:50%;background:#C45C5C;animation:pulse 1s infinite"></div>
+          <span style="font-size:12px;color:#C45C5C">Recording · ${neuro.recordedData.length} samples</span>
+          <button onclick="toggleRecord()" style="background:transparent;border:1px solid #C45C5C;color:#C45C5C;padding:5px 12px;border-radius:4px;font-size:10px;font-family:inherit">Stop</button>`;
+      } else {
+        h+=`<button onclick="toggleRecord()" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:5px 12px;border-radius:4px;font-size:10px;font-family:inherit">● Start Recording</button>`;
+      }
+      if(neuro.recordedData.length>0&&!neuro.recording){
+        h+=`<button onclick="exportRaw('csv')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:5px 12px;border-radius:4px;font-size:10px;font-family:inherit">Export CSV</button>
+          <button onclick="exportRaw('json')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:5px 12px;border-radius:4px;font-size:10px;font-family:inherit">Export JSON</button>`;
+      }
+      h+=`</div>
+        <div style="font-size:9px;color:#5a4a3a;text-align:center;margin-top:4px">Records every EEG sample (~4Hz) with timestamp, all 5 bands, coherence, and prescription state.</div>
+      </div>`;
+    }
+    if(!app.sessions.length&&!neuro.connected){h+=`<div style="text-align:center;padding:40px 0;color:var(--sub)"><div style="font-size:18px;margin-bottom:8px">No sessions yet</div><div style="font-size:12px">Connect Muse 2 to begin.</div></div>`;}
+    else if(app.sessions.length){h+=`<div class="card-h" style="margin-bottom:12px">${app.sessions.length} SESSION${app.sessions.length>1?'S':''}</div>`;
+    app.sessions.forEach(s=>{const d=new Date(s.date);const mins=Math.floor(s.duration/60),secs=s.duration%60;
+    let sigHTML='';
+    if(s.baseline&&s.endstate){
+      const bfC=F[s.baseline.pos]?.c||'var(--gld)';
+      const efC=F[s.endstate.pos]?.c||'var(--gld)';
+      const moved=s.endstate.pos-s.baseline.pos;
+      sigHTML=`<div style="display:flex;gap:6px;align-items:center;margin-top:4px;font-size:10px">
+        <span style="color:${bfC}">${F[s.baseline.pos]?.f||'?'}Hz ${F[s.baseline.pos]?.geo||''}</span>
+        <span style="color:var(--dim)">→</span>
+        <span style="color:${efC}">${F[s.endstate.pos]?.f||'?'}Hz ${F[s.endstate.pos]?.geo||''}</span>
+        ${moved!==0?`<span style="color:${moved>0?'#4A7C59':'#C45C5C'}">${moved>0?'↑+'+moved:'↓'+moved}</span>`:''}
+      </div>`;
+    } else if(s.baseline){
+      const bfC=F[s.baseline.pos]?.c||'var(--gld)';
+      sigHTML=`<div style="font-size:10px;color:${bfC};margin-top:4px">Start: ${F[s.baseline.pos]?.f||'?'}Hz ${F[s.baseline.pos]?.geo||''}</div>`;
+    }
+    h+=`<div class="session"><div class="session-date">${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div><div class="session-coh" style="color:var(--gld)">Avg: ${s.avgCoh}% · Peak: ${s.peakCoh}%</div><div class="session-rx">Duration: ${mins}m ${secs}s · Rx: ${s.rxFreqs.map(f=>f+'Hz').join(', ')}</div>${sigHTML}<div class="session-bar"><div class="session-fill" style="width:${s.avgCoh}%;background:linear-gradient(90deg,var(--pur),var(--gld))"></div></div></div>`;});
+    h+=`<div style="display:flex;gap:6px;margin-top:8px">
+      <button onclick="exportData('json')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:8px 0;border-radius:4px;font-size:10px;flex:1;font-family:inherit">Export JSON</button>
+      <button onclick="exportData('csv')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:8px 0;border-radius:4px;font-size:10px;flex:1;font-family:inherit">Export CSV</button>
+      <button onclick="clearHist()" style="background:transparent;border:1px solid #C45C5C33;color:#C45C5C;padding:8px 0;border-radius:4px;font-size:10px;flex:1;font-family:inherit">Clear</button>
+    </div>`;}
+  }
+
+  document.getElementById('content').innerHTML=h;
+  startAnim(); // Ensures canvas loop is running (won't restart if already going)
+}
+
+// ═══════════════════════════════════════
+// 11. GLOBAL HANDLERS
+// ═══════════════════════════════════════
+let gfTimer=null;
+
+window.go=function(tab){
+  app.tab=tab;
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  render();
+};
+
+window.toggleOsc=function(){
+  app.oscOn=!app.oscOn;
+  if(app.oscOn){
+    audio.start(neuro.connected ? neuro.rxIdx : app.selIdx);
+  }else{
+    audio.stop();
+  }
+  render();
+};
+
+window.selFreq=function(i){
+  app.selIdx=i;
+  if(app.oscOn&&!neuro.connected) audio.setFrequency(i);
+  render();
+  setTimeout(()=>{
+    const card=document.querySelector('.cym-card.active');
+    if(card) card.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  },50);
+};
+
+window.cymTogglePanel=function(){app.cymPanel=!app.cymPanel;render();};
+window.startCapture=startCapture;
+
+window.toggleRecord=function(){
+  neuro.recording=!neuro.recording;
+  if(neuro.recording){
+    neuro.recordedData=[];
+    console.log('[Record] Started raw EEG recording');
+  } else {
+    console.log('[Record] Stopped.',neuro.recordedData.length,'samples captured');
+  }
+  render();
+};
+
+window.exportRaw=function(fmt){
+  if(!neuro.recordedData.length){alert('No recorded data.');return;}
+  const ts=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+  const dur=neuro.recordedData.length>1?
+    ((neuro.recordedData[neuro.recordedData.length-1].t-neuro.recordedData[0].t)/1000).toFixed(1):'0';
+  let blob,filename;
+
+  if(fmt==='json'){
+    const json=JSON.stringify({
+      export_date:new Date().toISOString(),
+      system:'Aetheria RCT — Raw EEG Recording',
+      duration_seconds:parseFloat(dur),
+      sample_count:neuro.recordedData.length,
+      sample_rate_approx:'~4 Hz (Muse 2 FFT output)',
+      bands_note:'Log-PSD normalized (0-1 scale). Delta/Theta/Alpha/Beta/Gamma.',
+      coherence_note:'Alpha+Theta power / total power ratio (0-1).',
+      frequency_table:F.map((f,i)=>({pos:i,freq:f.f,keyword:f.kw,geometry:f.geo})),
+      samples:neuro.recordedData
+    },null,2);
+    blob=new Blob([json],{type:'application/json'});
+    filename=`aetheria_raw_eeg_${ts}.json`;
+  } else {
+    const headers='timestamp,elapsed_sec,delta,theta,alpha,beta,gamma,coherence,rx_index,rx_freq,rx_state';
+    const t0=neuro.recordedData[0].t;
+    const rows=neuro.recordedData.map(s=>
+      [s.t,((s.t-t0)/1000).toFixed(2),s.d,s.th,s.a,s.b,s.g,s.coh,s.rx,F[s.rx]?.f||'','"'+s.st+'"'].join(',')
+    );
+    const csv=headers+'\n'+rows.join('\n');
+    blob=new Blob([csv],{type:'text/csv'});
+    filename=`aetheria_raw_eeg_${ts}.csv`;
+  }
+
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  console.log('[Export] Raw EEG',fmt.toUpperCase(),neuro.recordedData.length,'samples →',filename);
+};
+window.cymSet=function(k,v){app[k]=v;render();};
+window.cymSnap=function(deg){app.cymSnapAngle=deg;app.cymRotate=false;render();};
+
+window.clearHist=function(){app.sessions=[];try{localStorage.removeItem('rct-sessions');}catch(e){}render();};
+
+window.exportData=function(fmt){
+  if(!app.sessions.length){alert('No sessions to export.');return;}
+  let blob,filename;
+  const ts=new Date().toISOString().replace(/[:.]/g,'-').slice(0,19);
+
+  if(fmt==='json'){
+    // Full data with frequency lookup enrichment
+    const enriched=app.sessions.map(s=>({
+      ...s,
+      baseline_freq:s.baseline?F[s.baseline.pos]?.f:null,
+      baseline_geo:s.baseline?F[s.baseline.pos]?.geo:null,
+      endstate_freq:s.endstate?F[s.endstate.pos]?.f:null,
+      endstate_geo:s.endstate?F[s.endstate.pos]?.geo:null,
+      positions_moved:s.baseline&&s.endstate?s.endstate.pos-s.baseline.pos:null,
+    }));
+    const json=JSON.stringify({
+      export_date:new Date().toISOString(),
+      system:'Aetheria Resonant Coherence Training',
+      version:'1.0',
+      frequencies:F.map((f,i)=>({position:i+1,freq:f.f,keyword:f.kw,script:f.sc,geometry:f.geo,hexagram:f.hx,hexagram_name:f.hn,color:f.c})),
+      sessions:enriched
+    },null,2);
+    blob=new Blob([json],{type:'application/json'});
+    filename=`aetheria_rct_data_${ts}.json`;
+  } else {
+    // CSV with flattened columns
+    const headers=['date','duration_sec','avg_coherence','peak_coherence','rx_frequencies',
+      'baseline_pos','baseline_freq','baseline_geo','baseline_dominant','baseline_coh',
+      'endstate_pos','endstate_freq','endstate_geo','endstate_dominant','endstate_coh',
+      'positions_moved'];
+    const rows=app.sessions.map(s=>[
+      s.date,
+      s.duration,
+      s.avgCoh,
+      s.peakCoh,
+      '"'+s.rxFreqs.join(';')+'"',
+      s.baseline?s.baseline.pos+1:'',
+      s.baseline?F[s.baseline.pos]?.f:'',
+      s.baseline?F[s.baseline.pos]?.geo:'',
+      s.baseline?s.baseline.dom:'',
+      s.baseline?s.baseline.coh:'',
+      s.endstate?s.endstate.pos+1:'',
+      s.endstate?F[s.endstate.pos]?.f:'',
+      s.endstate?F[s.endstate.pos]?.geo:'',
+      s.endstate?s.endstate.dom:'',
+      s.endstate?s.endstate.coh:'',
+      s.baseline&&s.endstate?s.endstate.pos-s.baseline.pos:'',
+    ].join(','));
+    const csv=headers.join(',')+'\n'+rows.join('\n');
+    blob=new Blob([csv],{type:'text/csv'});
+    filename=`aetheria_rct_data_${ts}.csv`;
+  }
+
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  console.log('[Export]',fmt.toUpperCase(),app.sessions.length,'sessions →',filename);
+};
+
+window.startGF=function(){
+  // Reset all state
+  app.gfPhase=1; app.gfSet=1; app.gfRound=1; app.gfCycle=1;
+  app.gfBreathTotal=1; app.gfBreathPhase=0; app.gfInhale=true; app.gfFormation=0;
+  render();
+
+  // Timing: 3s inhale, 6s hold, 9s exhale = 18s per breath
+  const INHALE=3000, HOLD=6000, EXHALE=9000, BREATH=18000;
+  let breathElapsed=0; // ms within current breath
+  clearInterval(gfTimer);
+
+  gfTimer=setInterval(()=>{
+    breathElapsed+=100;
+
+    // Determine phase within this breath
+    if(breathElapsed<=INHALE){
+      app.gfBreathPhase=0; // inhale
+    }else if(breathElapsed<=INHALE+HOLD){
+      app.gfBreathPhase=1; // hold
+    }else if(breathElapsed<=BREATH){
+      app.gfBreathPhase=2; // exhale
+    }
+
+    // Formation builds gradually across all 27 breaths
+    app.gfFormation=Math.min(1, (app.gfBreathTotal-1)/27 + (breathElapsed/BREATH)/27);
+
+    // Update UI elements directly (no render)
+    const c=F[neuro.rxIdx].c;
+    const regimeColors=['','#C47A14','#C43A6A','#5048C4'];
+    const phaseLabels=['INHALE — 3','HOLD — 6','EXHALE — 9'];
+    const phaseColors=[c,'#7B50D4','#5048C4'];
+    const phaseScales=[1.3,1.3,0.8];
+    const bp=app.gfBreathPhase;
+
+    const circ=document.getElementById('gf-circ');
+    if(circ){
+      circ.style.transform=`scale(${phaseScales[bp]})`;
+      circ.style.background=`radial-gradient(circle,${phaseColors[bp]}${bp===0?'44':bp===1?'33':'11'} 0%,transparent 70%)`;
+      circ.style.borderColor=phaseColors[bp]+(bp<2?'66':'33');
+    }
+    const phase=document.getElementById('gf-phase');
+    if(phase){phase.textContent=phaseLabels[bp];phase.style.color=phaseColors[bp];}
+    const cnt=document.getElementById('gf-cnt');
+    if(cnt)cnt.textContent=`Breath ${app.gfBreathTotal} of 27 · Set ${app.gfSet} Round ${app.gfRound} Cycle ${app.gfCycle}`;
+
+    // Update dot indicators
+    document.querySelectorAll('.gf-dot-27').forEach((d,i)=>{
+      const setIdx=Math.floor(i/9);
+      const sc=regimeColors[setIdx+1];
+      const done=i<app.gfBreathTotal;
+      const current=i===app.gfBreathTotal-1;
+      d.style.background=done?sc:sc+'22';
+      d.style.boxShadow=current?'0 0 6px '+sc:'none';
+    });
+
+    // Breath complete?
+    if(breathElapsed>=BREATH){
+      breathElapsed=0;
+
+      // Advance counters
+      app.gfCycle++;
+      if(app.gfCycle>3){app.gfCycle=1;app.gfRound++;}
+      if(app.gfRound>3){app.gfRound=1;app.gfSet++;}
+      app.gfBreathTotal++;
+
+      // All 27 complete?
+      if(app.gfBreathTotal>27){
+        clearInterval(gfTimer);
+        app.gfPhase=2;
+        app.gfFormation=0.85;
+        render();
+        // Bloom animation
+        let f=0.85;
+        gfTimer=setInterval(()=>{
+          f+=0.003;
+          app.gfFormation=Math.min(f,1);
+          if(f>=1){clearInterval(gfTimer);app.gfPhase=3;render();}
+        },16);
+      }
+    }
+  },100);
+};
+
+window.resetGF=function(){
+  clearInterval(gfTimer);
+  app.gfPhase=0;app.gfSet=0;app.gfRound=0;app.gfCycle=0;
+  app.gfBreathTotal=0;app.gfBreathPhase=0;app.gfFormation=0;
+  render();
+};
+
+// ═══════════════════════════════════════
+// 12. BOOT
+// ═══════════════════════════════════════
+try{const s=localStorage.getItem('rct-sessions');if(s)app.sessions=JSON.parse(s);}catch(e){}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('SW:',e));
+render();
+console.log('[Aetheria RCT] Booted. Pipeline: Muse → onMuseData → prescribe → audio.setFrequency → updateUI');
+</script>
+</body>
+</html>
