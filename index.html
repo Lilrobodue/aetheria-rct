@@ -2102,23 +2102,13 @@ window.closeGuide=function(){
   try{localStorage.setItem('rct-guide-seen','1');}catch(e){}
 };
 
-// Disclaimer — show on first visit
+// Disclaimer — show EVERY visit
 window.acceptDisclaimer=function(){
-  try{localStorage.setItem('rct-disclaimer-accepted','1');}catch(e){}
   document.getElementById('disclaimer').style.display='none';
-  // Show guide after accepting disclaimer (first visit)
+  // Show guide after disclaimer on first visit
   try{if(!localStorage.getItem('rct-guide-seen'))openGuide();}catch(e){}
 };
-try{
-  if(!localStorage.getItem('rct-disclaimer-accepted')){
-    document.getElementById('disclaimer').style.display='flex';
-  } else {
-    // Returning user — show guide if they haven't seen it yet
-    try{if(!localStorage.getItem('rct-guide-seen'))openGuide();}catch(e){}
-  }
-}catch(e){
-  document.getElementById('disclaimer').style.display='flex';
-}
+document.getElementById('disclaimer').style.display='flex';
 
 try{const s=localStorage.getItem('rct-sessions');if(s)app.sessions=JSON.parse(s);}catch(e){}
 if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('SW:',e));
