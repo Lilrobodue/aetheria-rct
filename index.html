@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#1a1030">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta http-equiv="Permissions-Policy" content="bluetooth=(self)">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.svg">
 <link rel="apple-touch-icon" href="icons/icon-192.svg">
@@ -808,9 +807,6 @@ class MuseBLE{
           onMuseStatus('no-bluetooth');return;
         }
       }
-      // Verify Bluetooth adapter is available
-      const available=await navigator.bluetooth.getAvailability().catch(()=>true);
-      if(!available){onMuseStatus('bt-off');return;}
       // Clean up any previous connection
       this._cleanup();
       this.reset();
@@ -1375,8 +1371,8 @@ function togHTML(lbl,on,fn,c){
   return `<button class="tog" onclick="${fn}"><div class="tog-t" style="background:${on?c+'44':'var(--bdr)'};border:1px solid ${on?c:'#2a2030'}"><div class="tog-k" style="background:${on?c:'#3a3030'};left:${on?'19px':'2px'};box-shadow:${on?'0 0 6px '+c+'66':'none'}"></div></div><span class="tog-l" style="color:${on?'#c0b8a8':'var(--mut)'}">${lbl}</span></button>`;
 }
 function museBarHTML(){
-  const cols={idle:'#3a3030',searching:'#C47A14',connecting:'#C47A14',connected:'#4A7C59',error:'#C45C5C',disconnected:'#3a3030',unsupported:'#C45C5C','pwa-blocked':'#C47A14','no-bluetooth':'#C45C5C','bt-off':'#C47A14'};
-  const txt={idle:'Ready',searching:'Searching...',connecting:'Connecting...',connected:'Connected',error:'Failed — try again',disconnected:'Disconnected',unsupported:'Not supported on iOS','pwa-blocked':'Open in browser for Bluetooth','no-bluetooth':'Browser lacks Bluetooth support','bt-off':'Turn on Bluetooth'};
+  const cols={idle:'#3a3030',searching:'#C47A14',connecting:'#C47A14',connected:'#4A7C59',error:'#C45C5C',disconnected:'#3a3030',unsupported:'#C45C5C','pwa-blocked':'#C47A14','no-bluetooth':'#C45C5C'};
+  const txt={idle:'Ready',searching:'Searching...',connecting:'Connecting...',connected:'Connected',error:'Failed — try again',disconnected:'Disconnected',unsupported:'Not supported on iOS','pwa-blocked':'Open in browser for Bluetooth','no-bluetooth':'Browser lacks Bluetooth support'};
   const isOn=neuro.connected;
   return `<div class="muse-bar"><div class="muse-dot" style="background:${cols[neuro.status]}"></div><span class="muse-txt">Muse 2: ${txt[neuro.status]||neuro.status}</span>
   <button class="muse-btn" style="border-color:${isOn?'#C45C5C':'var(--gld)'};color:${isOn?'#C45C5C':'var(--gld)'}" onclick="${neuro.status==='pwa-blocked'?'openInBrowser()':isOn?'muse.disconnect()':'muse.connect()'}">

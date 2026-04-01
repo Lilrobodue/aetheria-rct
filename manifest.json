@@ -22,8 +22,5 @@
     }
   ],
   "categories": ["health", "medical", "lifestyle"],
-  "lang": "en",
-  "permissions_policy": {
-    "bluetooth": ["self"]
-  }
+  "lang": "en"
 }
