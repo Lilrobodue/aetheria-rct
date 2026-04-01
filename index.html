@@ -17,7 +17,7 @@
 body{background:var(--bg);color:var(--txt);font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh;min-height:100dvh;overflow:hidden;display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0}
 button{font-family:inherit;cursor:pointer}
 .app{flex:1;display:flex;flex-direction:column;min-height:0}
-.header{background:radial-gradient(ellipse at 50% 0%,#120a18,var(--bg) 70%);padding:env(safe-area-inset-top,8px) 16px 8px;text-align:center;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.header{background:radial-gradient(ellipse at 50% 0%,#120a18,var(--bg) 70%);padding:env(safe-area-inset-top,8px) 16px 8px;text-align:center;border-bottom:1px solid var(--bdr);flex-shrink:0;position:relative}
 .hd-brand{letter-spacing:.4em;font-size:7px;color:var(--sub);text-transform:uppercase}
 .hd-title{font-size:18px;font-weight:300;background:linear-gradient(135deg,var(--gld),var(--gld2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.08em}
 .hd-sub{font-size:9px;color:var(--sub);margin-top:1px}
@@ -72,6 +72,11 @@ button{font-family:inherit;cursor:pointer}
 .ft-link{text-align:center;padding:10px 0;font-size:10px}
 .ft-link a{color:var(--sub);text-decoration:none}
 .osc-info{border-radius:6px;padding:6px 10px;margin-bottom:10px;text-align:center;font-size:11px;transition:all .5s}
+.vol-row{display:flex;align-items:center;gap:10px;padding:2px 12px 8px;margin-bottom:10px}
+.vol-row label{font-size:10px;color:var(--sub);letter-spacing:.05em;white-space:nowrap}
+.vol-row input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:3px;background:var(--bdr);border-radius:2px;outline:none}
+.vol-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gld);cursor:pointer}
+.vol-pct{font-size:10px;color:var(--mut);min-width:28px;text-align:right;font-family:monospace}
 /* Cymatics gallery */
 .cym-gallery{display:flex;gap:10px;overflow-x:auto;padding:8px 4px 12px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
 .cym-gallery::-webkit-scrollbar{height:3px}
@@ -97,6 +102,25 @@ button{font-family:inherit;cursor:pointer}
 /* Aetheria position indicator */
 .aetheria-pos-card{transition:border-color .5s}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* Guide overlay */
+.guide-overlay{position:fixed;inset:0;background:#000000dd;z-index:90;display:flex;align-items:center;justify-content:center;padding:12px;backdrop-filter:blur(8px)}
+.guide-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;max-width:520px;width:100%;max-height:88vh;display:flex;flex-direction:column}
+.guide-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bdr);flex-shrink:0}
+.guide-header h2{font-size:15px;color:var(--gld);letter-spacing:.08em;margin:0}
+.guide-close{background:transparent;border:none;color:var(--sub);font-size:20px;padding:0 4px;cursor:pointer}
+.guide-body{overflow-y:auto;padding:16px 20px 24px;-webkit-overflow-scrolling:touch}
+.guide-section{margin-bottom:20px}
+.guide-section h3{font-size:12px;color:var(--gld);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--bdr)}
+.guide-section p{font-size:11.5px;color:#8a7b6b;line-height:1.7;margin-bottom:8px}
+.guide-section strong{color:var(--txt)}
+.guide-section .quote{font-style:italic;color:var(--sub);border-left:2px solid var(--gld);padding-left:10px;margin:10px 0}
+.guide-regime{border:1px solid var(--bdr);border-radius:6px;padding:10px;margin-bottom:8px;background:var(--bg3)}
+.guide-regime h4{font-size:11px;letter-spacing:.06em;margin-bottom:4px}
+.guide-regime p{font-size:10.5px;margin-bottom:4px}
+.guide-freq-row{display:flex;justify-content:space-between;font-size:10px;color:var(--sub);padding:2px 0;border-bottom:1px solid #1a152008}
+.guide-freq-row span:first-child{color:var(--txt);font-family:monospace}
+.guide-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:transparent;border:1px solid var(--bdr);color:var(--sub);width:26px;height:26px;border-radius:50%;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5}
+.guide-btn:hover{border-color:var(--gld);color:var(--gld)}
 /* Disclaimer modal */
 .disclaimer-overlay{position:fixed;inset:0;background:#000000cc;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)}
 .disclaimer-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:24px 20px;max-width:480px;max-height:85vh;overflow-y:auto;width:100%}
@@ -114,6 +138,7 @@ button{font-family:inherit;cursor:pointer}
     <div class="hd-brand">Aetheria432.com</div>
     <div class="hd-title">RESONANT COHERENCE TRAINING</div>
     <div class="hd-sub" id="hd-sub">Connect Muse 2 to begin</div>
+    <button class="guide-btn" onclick="openGuide()" title="Guide">?</button>
   </div>
   <div class="content" id="content"></div>
   <div class="nav">
@@ -141,6 +166,108 @@ button{font-family:inherit;cursor:pointer}
     • This app is not a replacement for professional healthcare</p>
     <p style="font-size:10px;color:#5a4a3a;margin-top:6px">Aetheria: Resonant Coherence Training · © 2026 Joseph Lewis / Aetheria · GPL v3 · <a href="https://aetheria432.com" style="color:var(--sub)">Aetheria432.com</a></p>
     <button class="disclaimer-accept" onclick="acceptDisclaimer()">I Understand and Accept</button>
+  </div>
+</div>
+<!-- Guide overlay -->
+<div class="guide-overlay" id="guide" style="display:none" onclick="if(event.target===this)closeGuide()">
+  <div class="guide-box">
+    <div class="guide-header">
+      <h2>Aetheria Guide</h2>
+      <button class="guide-close" onclick="closeGuide()">&#x2715;</button>
+    </div>
+    <div class="guide-body">
+
+      <div class="guide-section">
+        <h3>How to Use This App</h3>
+        <p><strong>1. Connect your Muse 2</strong> — Tap the Connect button on the Home tab. Make sure your headband is on and Bluetooth is enabled.</p>
+        <p><strong>2. Your brain is read</strong> — EEG data streams across 5 bands (Delta, Theta, Alpha, Beta, Gamma). The app diagnoses your current neurological state and prescribes a frequency.</p>
+        <p><strong>3. Listen</strong> — The oscillator plays your prescribed frequency as a sine tone. Use the toggle to turn it on/off and the volume slider to adjust. It won't restart by itself once you turn it off.</p>
+        <p><strong>4. Explore the tabs</strong> — <strong>Home</strong>: live prescription and EEG oscilloscope. <strong>Cymatics</strong>: 3D sacred geometry. <strong>Biofield</strong>: toroidal energy visualization. <strong>Flower</strong>: 27-breath meditation. <strong>History</strong>: session logs.</p>
+        <p><strong>No Muse?</strong> You can explore without one. Go to Cymatics, tap any frequency, and toggle the oscillator to hear it.</p>
+      </div>
+
+      <div class="guide-section">
+        <h3>Sympathetic Resonance</h3>
+        <p class="quote">"Aetheria operates on the principle of Sympathetic Resonance — the idea that external vibrations can influence internal biological and energetic states. We align the Mathematical (Sound), the Biological (Body), and the Archetypal (Spirit)."</p>
+        <p class="quote">"You are the instrument. The music is the tuning fork."</p>
+      </div>
+
+      <div class="guide-section">
+        <h3>The 27-Frequency Architecture</h3>
+        <p>The 27 frequencies represent an <strong>evolution of the Solfeggio Scale</strong>, organized as a bi-phasic system: <strong>Seed</strong> and <strong>Bloom</strong>.</p>
+        <p><strong>Phase 1: The Seed (174–963 Hz)</strong> — The traditional 9 Solfeggio frequencies. Static structure, grounded foundation. All gaps reduce to digit sum = 3. This is the unchanging base from which everything grows.</p>
+        <p><strong>Phase 2: The Bloom (1206–6336 Hz)</strong> — At 963 Hz the system awakens into dynamic expansion. Two generator constants drive the growth: <strong>243</strong> (3&#x2075;) for the Heart regime and <strong>354</strong> for the Head regime. This is the living, evolving expression of potential.</p>
+        <p>The transition at 963 Hz is the awakening point — where static seed becomes dynamic bloom. The compression points at 396→417 Hz and 639→741 Hz are not errors; they allow the Seed to remain stable before it blossoms.</p>
+      </div>
+
+      <div class="guide-section">
+        <h3>The Physics of 432Hz</h3>
+        <p>Standard music tunes to A=440Hz. Aetheria retunes to <strong>A=432Hz</strong>, a pitch mathematically consistent with the Golden Ratio and Fibonacci sequences found in nature — shells, galaxies, plant growth. This alignment reduces subconscious listening fatigue and harmonizes audio with the natural harmonic series.</p>
+      </div>
+
+      <div class="guide-section">
+        <h3>The 3 Regimes of Consciousness</h3>
+
+        <div class="guide-regime" style="border-color:#C45C5C33">
+          <h4 style="color:#C45C5C">GUT Regime — Physical Foundation (174–963 Hz)</h4>
+          <p>Body systems: digestive, nervous, skeletal, reproductive. Focus: grounding, healing, security.</p>
+          <div class="guide-freq-row"><span>174 Hz</span><span>Foundation, pain relief</span></div>
+          <div class="guide-freq-row"><span>285 Hz</span><span>Tissue repair, quantum cognition</span></div>
+          <div class="guide-freq-row"><span>396 Hz</span><span>Liberating fear and guilt</span></div>
+          <div class="guide-freq-row"><span>417 Hz</span><span>Facilitating change</span></div>
+          <div class="guide-freq-row"><span>528 Hz</span><span>Transformation, DNA repair</span></div>
+          <div class="guide-freq-row"><span>639 Hz</span><span>Harmonizing relationships</span></div>
+          <div class="guide-freq-row"><span>741 Hz</span><span>Awakening intuition</span></div>
+          <div class="guide-freq-row"><span>852 Hz</span><span>Spiritual order</span></div>
+          <div class="guide-freq-row"><span>963 Hz</span><span>Divine consciousness, pineal activation</span></div>
+        </div>
+
+        <div class="guide-regime" style="border-color:#50D4B033">
+          <h4 style="color:#50D4B0">HEART Regime — Emotional &amp; Energetic Body (1206–3150 Hz)</h4>
+          <p>Body systems: cardiovascular, respiratory, immune. Focus: love, compassion, connection. Generator constant: <strong>+243</strong> (Orders 4–6).</p>
+          <div class="guide-freq-row"><span>1206 Hz</span><span>Gateway integration</span></div>
+          <div class="guide-freq-row"><span>1449 Hz</span><span>Harmonic bridging</span></div>
+          <div class="guide-freq-row"><span>1692 Hz</span><span>Heart completion</span></div>
+          <div class="guide-freq-row"><span>1935 Hz</span><span>Stellar alignment</span></div>
+          <div class="guide-freq-row"><span>2178 Hz</span><span>Quantum consciousness</span></div>
+          <div class="guide-freq-row"><span>2421 Hz</span><span>Dimensional awareness</span></div>
+          <div class="guide-freq-row"><span>2664 Hz</span><span>Universal love</span></div>
+          <div class="guide-freq-row"><span>2907 Hz</span><span>Divine source connection</span></div>
+          <div class="guide-freq-row"><span>3150 Hz</span><span>Unity consciousness bridge</span></div>
+        </div>
+
+        <div class="guide-regime" style="border-color:#7B50D433">
+          <h4 style="color:#7B50D4">HEAD Regime — Mental &amp; Spiritual Body (3504–6336 Hz)</h4>
+          <p>Body systems: neurological, endocrine, consciousness centers. Focus: clarity, wisdom, transcendence. Generator constant: <strong>+354</strong> (Orders 7–9).</p>
+          <div class="guide-freq-row"><span>3504 Hz</span><span>Mental clarity</span></div>
+          <div class="guide-freq-row"><span>3858 Hz</span><span>Sacred geometry</span></div>
+          <div class="guide-freq-row"><span>4212 Hz</span><span>Consciousness mastery</span></div>
+          <div class="guide-freq-row"><span>4566 Hz</span><span>Soul star connection</span></div>
+          <div class="guide-freq-row"><span>4920 Hz</span><span>Spirit realm access</span></div>
+          <div class="guide-freq-row"><span>5274 Hz</span><span>Universal mind access</span></div>
+          <div class="guide-freq-row"><span>5628 Hz</span><span>Galactic consciousness</span></div>
+          <div class="guide-freq-row"><span>5982 Hz</span><span>Divine source portal</span></div>
+          <div class="guide-freq-row"><span>6336 Hz</span><span>SOURCE embodiment</span></div>
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <h3>Sacred Geometry</h3>
+        <p>Each of the 27 frequencies is paired with a <strong>sacred geometric form</strong> — from the Seed of Life (174 Hz) through Metatron's Cube (528 Hz) to the Unified Field (6336 Hz). These forms are not decorative; they represent the geometric signature of each frequency's vibrational pattern, visible in the Cymatics tab as 3D Chladni patterns.</p>
+      </div>
+
+      <div class="guide-section">
+        <h3>The Mathematics</h3>
+        <p><strong>Nadi distribution:</strong> 72,000 ÷ 27 = 2,666.666... (infinite repeating). The .666... represents infinite flow — we honor the infinite nature.</p>
+        <p><strong>Generator constants:</strong> 243 = 27 × 9 = 3&#x2075; (Heart regime). 354 → digit sum 3 (Head regime).</p>
+        <p class="quote">"If you only knew the magnificence of 3, 6, and 9, you would have the key to the universe." — Nikola Tesla</p>
+      </div>
+
+      <div class="guide-section" style="margin-bottom:0">
+        <p style="text-align:center;font-size:10px;color:var(--dim)">Tap the <strong style="color:var(--sub)">?</strong> button in the header to reopen this guide at any time.</p>
+      </div>
+
+    </div>
   </div>
 </div>
 <script>
@@ -194,7 +321,24 @@ const BN=['delta','theta','alpha','beta','gamma'],BL=['Delta','Theta','Alpha','B
 // 1. AUDIO ENGINE — Singleton, never destroyed
 // ═══════════════════════════════════════
 class AudioEngine {
-  constructor(){this.ctx=null;this.osc=null;this.gain=null;this.playing=false;this.currentFreqIdx=-1;}
+  constructor(){
+    this.ctx=null;this.osc=null;this.gain=null;this.playing=false;this.currentFreqIdx=-1;
+    // Volume: 0-1 range, default 1% (0.01)
+    try{this.volume=parseFloat(localStorage.getItem('rct-volume'))||0.01;}catch(e){this.volume=0.01;}
+  }
+
+  _vol(freqIdx){
+    const base=F[freqIdx].f>=2000?0.35:0.18;
+    return base*this.volume;
+  }
+
+  setVolume(v){
+    this.volume=Math.max(0,Math.min(1,v));
+    try{localStorage.setItem('rct-volume',this.volume);}catch(e){}
+    if(this.playing&&this.gain&&this.ctx){
+      this.gain.gain.linearRampToValueAtTime(this._vol(this.currentFreqIdx),this.ctx.currentTime+0.1);
+    }
+  }
 
   start(freqIdx){
     if(this.playing) this.stop();
@@ -205,13 +349,12 @@ class AudioEngine {
       this.osc.type='sine';
       const pf=this._playable(F[freqIdx].f);
       this.osc.frequency.setValueAtTime(pf,this.ctx.currentTime);
-      const vol=F[freqIdx].f>=2000?0.35:0.18;
       this.gain.gain.setValueAtTime(0,this.ctx.currentTime);
-      this.gain.gain.linearRampToValueAtTime(vol,this.ctx.currentTime+0.5);
+      this.gain.gain.linearRampToValueAtTime(this._vol(freqIdx),this.ctx.currentTime+0.5);
       this.osc.connect(this.gain);this.gain.connect(this.ctx.destination);
       this.osc.start();
       this.playing=true;this.currentFreqIdx=freqIdx;
-      console.log('[AudioEngine] Started at',F[freqIdx].f,'Hz → playable',pf.toFixed(1),'Hz');
+      console.log('[AudioEngine] Started at',F[freqIdx].f,'Hz → playable',pf.toFixed(1),'Hz','vol',this.volume);
     }catch(e){console.error('[AudioEngine] Start failed:',e);}
   }
 
@@ -219,9 +362,8 @@ class AudioEngine {
   setFrequency(freqIdx){
     if(!this.playing||!this.osc||!this.ctx||freqIdx===this.currentFreqIdx)return;
     const pf=this._playable(F[freqIdx].f);
-    const vol=F[freqIdx].f>=2000?0.35:0.18;
     this.osc.frequency.linearRampToValueAtTime(pf,this.ctx.currentTime+0.3);
-    this.gain.gain.linearRampToValueAtTime(vol,this.ctx.currentTime+0.3);
+    this.gain.gain.linearRampToValueAtTime(this._vol(freqIdx),this.ctx.currentTime+0.3);
     this.currentFreqIdx=freqIdx;
     console.log('[AudioEngine] Changed to',F[freqIdx].f,'Hz → playable',pf.toFixed(1),'Hz');
   }
@@ -277,6 +419,7 @@ const neuro = {
 const app = {
   tab: 'home',
   oscOn: false,
+  oscUserOff: false, // true once user manually turns off oscillator
   selIdx: 13, // manual frequency selection
   sessions: [],
   // Cymatics controls
@@ -506,8 +649,8 @@ function onMuseData(data){
       '| Bands: d='+~~(pr.delta*100)+'% t='+~~(pr.theta*100)+'% a='+~~(pr.alpha*100)+'% b='+~~(pr.beta*100)+'% g='+~~(pr.gamma*100)+'%',
       '| Coh:'+~~(neuro.coherence*100)+'%');
 
-    // Auto-start oscillator on first Muse prescription
-    if(neuro.connected && !app.oscOn){
+    // Auto-start oscillator only on FIRST Muse prescription (not after user turned it off)
+    if(neuro.connected && !app.oscOn && !app.oscUserOff){
       app.oscOn=true;
       audio.start(neuro.rxIdx);
       console.log('[Audio] Auto-started with Muse prescription');
@@ -536,6 +679,7 @@ function onMuseStatus(status){
     neuro.baseline = null;
     neuro.endstate = null;
     rxHoldUntil = 0;
+    app.oscUserOff = false; // allow auto-start for new session
     // Auto-capture baseline after 5 seconds (let signal settle)
     setTimeout(()=>{if(neuro.connected) startCapture('baseline');},5000);
   }
@@ -1379,6 +1523,12 @@ function museBarHTML(){
   ${isOn?'Disconnect':neuro.status==='searching'||neuro.status==='connecting'?'...':neuro.status==='pwa-blocked'?'Open Browser':neuro.status==='unsupported'||neuro.status==='no-bluetooth'?'Unsupported':'Connect'}</button></div>`;
 }
 
+function volSliderHTML(){
+  const pct=Math.round(audio.volume*100);
+  return `<div class="vol-row"><label>Volume</label><input type="range" min="0" max="100" value="${pct}" oninput="setVol(this.value)"><span class="vol-pct">${pct}%</span></div>`;
+}
+window.setVol=function(v){audio.setVolume(v/100);const el=document.querySelector('.vol-pct');if(el)el.textContent=Math.round(v)+'%';};
+
 function render(){
   const rx=F[neuro.rxIdx];let h='';
 
@@ -1489,6 +1639,7 @@ function render(){
     h+=`<div class="card" style="padding:4px"><canvas id="cv-osc" style="width:100%;height:180px;border-radius:4px"></canvas></div>`;
     h+=`<div class="ctrl-row">${togHTML(app.oscOn?'<span id="osc-label">Playing '+rx.f+'Hz</span>':'Oscillator',app.oscOn,'toggleOsc()',rx.c)}</div>`;
     if(app.oscOn){h+=`<div class="osc-info" id="osc-info" style="border:1px solid ${rx.c}33;background:${rx.c}08;color:#6a5a4a">Playing: <span style="color:${rx.c}">${audio._playable(rx.f).toFixed(1)}Hz</span> ${rx.f>=2000?'(sub-bass — felt)':'(sine)'}${neuro.connected?' · <span style="color:#A840B8">Following prescription</span>':''}</div>`;}
+    h+=volSliderHTML();
     h+=`<div class="card" id="hex-card"><div class="card-h" id="hex-title">I CHING — HEXAGRAM ${rx.hx}</div><div style="display:flex;gap:16px;align-items:center"><div id="hex-svg">${hexSVG(rx.ut,rx.lt,rx.c,80)}</div><div><div class="hex-num" id="hex-name" style="color:${rx.c}">${rx.hn}</div><div class="hex-chi" id="hex-chi">${rx.hc}</div><div style="font-size:12px;color:var(--mut);margin-top:4px" id="hex-tri">${TRI[rx.ut].s} ${TRI[rx.ut].n} over ${TRI[rx.lt].s} ${TRI[rx.lt].n}</div></div></div><div style="font-size:12px;color:#6a5a4a;margin-top:8px;line-height:1.6" id="hex-desc">${rx.hw}</div></div>`;
     h+=`<div class="ft-link"><a href="https://aetheria432.com" target="_blank">Open Aetheria432.com →</a></div>`;
   }
@@ -1572,6 +1723,7 @@ function render(){
     });
     h+=`</div>`;
     h+=`<div class="ctrl-row">${togHTML(app.oscOn?'Playing':'Oscillator',app.oscOn,'toggleOsc()',sf.c)}</div>`;
+    h+=volSliderHTML();
     // I Ching
     h+=`<div class="card" id="cym-hex-card"><div class="card-h" id="cym-hex-title">HEXAGRAM ${sf.hx} — ${sf.hn}</div>
     <div style="display:flex;gap:12px;align-items:center">
@@ -1710,8 +1862,10 @@ window.go=function(tab){
 window.toggleOsc=function(){
   app.oscOn=!app.oscOn;
   if(app.oscOn){
+    app.oscUserOff=false;
     audio.start(neuro.connected ? neuro.rxIdx : app.selIdx);
   }else{
+    app.oscUserOff=true;
     audio.stop();
   }
   render();
@@ -1941,14 +2095,26 @@ window.resetGF=function(){
 // ═══════════════════════════════════════
 // 12. BOOT
 // ═══════════════════════════════════════
+// Guide
+window.openGuide=function(){document.getElementById('guide').style.display='flex';};
+window.closeGuide=function(){
+  document.getElementById('guide').style.display='none';
+  try{localStorage.setItem('rct-guide-seen','1');}catch(e){}
+};
+
 // Disclaimer — show on first visit
 window.acceptDisclaimer=function(){
   try{localStorage.setItem('rct-disclaimer-accepted','1');}catch(e){}
   document.getElementById('disclaimer').style.display='none';
+  // Show guide after accepting disclaimer (first visit)
+  try{if(!localStorage.getItem('rct-guide-seen'))openGuide();}catch(e){}
 };
 try{
   if(!localStorage.getItem('rct-disclaimer-accepted')){
     document.getElementById('disclaimer').style.display='flex';
+  } else {
+    // Returning user — show guide if they haven't seen it yet
+    try{if(!localStorage.getItem('rct-guide-seen'))openGuide();}catch(e){}
   }
 }catch(e){
   document.getElementById('disclaimer').style.display='flex';
