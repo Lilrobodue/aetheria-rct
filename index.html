@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#1a1030">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta http-equiv="Permissions-Policy" content="bluetooth=(self)">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.svg">
 <link rel="apple-touch-icon" href="icons/icon-192.svg">
@@ -723,28 +724,107 @@ const BAND_WIDTHS={delta:3,theta:4,alpha:5,beta:17,gamma:14}; // Hz width for PS
 class MuseBLE{
   constructor(){
     this.dev=null;
+    this._chars=[];       // track subscribed characteristics for cleanup
+    this._disconnHandler=null;
+    this._reconnecting=false;
+    this.reset();
+  }
+  reset(){
     this.buf={tp9:[],af7:[],af8:[],tp10:[]};
     this.channels={tp9:new Float32Array(256),af7:new Float32Array(256),af8:new Float32Array(256),tp10:new Float32Array(256)};
     this.bands={delta:0,theta:0,alpha:0,beta:0,gamma:0};
     this.psdRatios={delta:0,theta:0,alpha:0,beta:0,gamma:0};
     this.coh=0;this.cohHist=[];
   }
+  // Clean up old GATT connection and listeners
+  _cleanup(){
+    // Remove characteristic listeners
+    for(const ch of this._chars){
+      try{ch.removeEventListener('characteristicvaluechanged',ch._handler);}catch(e){}
+    }
+    this._chars=[];
+    // Remove disconnect listener from old device
+    if(this.dev&&this._disconnHandler){
+      try{this.dev.removeEventListener('gattserverdisconnected',this._disconnHandler);}catch(e){}
+    }
+    // Disconnect old GATT if still connected
+    if(this.dev){
+      try{if(this.dev.gatt.connected)this.dev.gatt.disconnect();}catch(e){}
+    }
+  }
+  async _setupGatt(){
+    const srv=await this.dev.gatt.connect();
+    const svc=await srv.getPrimaryService(0xFE8D);
+    const chs={'tp9':'273e0003-4c4d-454d-96be-f03bac821358','af7':'273e0004-4c4d-454d-96be-f03bac821358','af8':'273e0005-4c4d-454d-96be-f03bac821358','tp10':'273e0006-4c4d-454d-96be-f03bac821358'};
+    const ctrl=await svc.getCharacteristic('273e0001-4c4d-454d-96be-f03bac821358');
+    this._chars=[];
+    for(const[nm,uuid]of Object.entries(chs)){
+      const ch=await svc.getCharacteristic(uuid);
+      ch._handler=e=>this.parse(nm,e.target.value);
+      await ch.startNotifications();
+      ch.addEventListener('characteristicvaluechanged',ch._handler);
+      this._chars.push(ch);
+    }
+    await ctrl.writeValue(new TextEncoder().encode('v1'));
+    await new Promise(r=>setTimeout(r,100));
+    await ctrl.writeValue(new Uint8Array([0x02,0x64,0x0a]));
+    // Set up disconnect handler (with auto-reconnect)
+    this._disconnHandler=()=>this._onDisconnect();
+    this.dev.addEventListener('gattserverdisconnected',this._disconnHandler);
+    onMuseStatus('connected');
+  }
+  async _onDisconnect(){
+    onMuseStatus('disconnected');
+    // Auto-reconnect if we still have a device reference (unexpected disconnect)
+    if(this.dev&&!this._reconnecting){
+      this._reconnecting=true;
+      for(let attempt=1;attempt<=3;attempt++){
+        await new Promise(r=>setTimeout(r,1000*attempt)); // backoff: 1s, 2s, 3s
+        if(!this.dev)break; // user manually disconnected
+        try{
+          console.log(`[Muse] Reconnect attempt ${attempt}/3`);
+          onMuseStatus('connecting');
+          this.reset();
+          await this._setupGatt();
+          this._reconnecting=false;
+          return;
+        }catch(e){console.warn('[Muse] Reconnect failed:',e);}
+      }
+      this._reconnecting=false;
+      onMuseStatus('disconnected');
+    }
+  }
   async connect(){
     try{
+      // Check Web Bluetooth availability
+      if(!navigator.bluetooth){
+        const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+        const isPWA=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+        if(isIOS){
+          onMuseStatus('unsupported');return;
+        }else if(isPWA){
+          onMuseStatus('pwa-blocked');return;
+        }else{
+          onMuseStatus('no-bluetooth');return;
+        }
+      }
+      // Verify Bluetooth adapter is available
+      const available=await navigator.bluetooth.getAvailability().catch(()=>true);
+      if(!available){onMuseStatus('bt-off');return;}
+      // Clean up any previous connection
+      this._cleanup();
+      this.reset();
+      this._reconnecting=false;
       onMuseStatus('searching');
       this.dev=await navigator.bluetooth.requestDevice({filters:[{services:[0xFE8D]}]});
       onMuseStatus('connecting');
-      const srv=await this.dev.gatt.connect();
-      const svc=await srv.getPrimaryService(0xFE8D);
-      const chs={'tp9':'273e0003-4c4d-454d-96be-f03bac821358','af7':'273e0004-4c4d-454d-96be-f03bac821358','af8':'273e0005-4c4d-454d-96be-f03bac821358','tp10':'273e0006-4c4d-454d-96be-f03bac821358'};
-      const ctrl=await svc.getCharacteristic('273e0001-4c4d-454d-96be-f03bac821358');
-      for(const[nm,uuid]of Object.entries(chs)){const ch=await svc.getCharacteristic(uuid);await ch.startNotifications();ch.addEventListener('characteristicvaluechanged',e=>this.parse(nm,e.target.value));}
-      await ctrl.writeValue(new TextEncoder().encode('v1'));
-      await new Promise(r=>setTimeout(r,100));
-      await ctrl.writeValue(new Uint8Array([0x02,0x64,0x0a]));
-      onMuseStatus('connected');
-      this.dev.addEventListener('gattserverdisconnected',()=>onMuseStatus('disconnected'));
-    }catch(e){console.error('[Muse]',e);onMuseStatus('error');}
+      await this._setupGatt();
+    }catch(e){
+      console.error('[Muse]',e);
+      if(e.name==='NotFoundError')onMuseStatus('idle'); // User cancelled picker
+      else if(e.name==='SecurityError')onMuseStatus('pwa-blocked');
+      else onMuseStatus('error');
+    }
   }
   parse(ch,dv){
     const s=[];for(let i=2;i<dv.byteLength-1;i+=3){const a=dv.getUint8(i),b=dv.getUint8(i+1);if(i+2<dv.byteLength){const c=dv.getUint8(i+2);s.push(((a<<4)|(b>>4))-2048);s.push((((b&0x0F)<<8)|c)-2048);}}
@@ -817,9 +897,21 @@ class MuseBLE{
       channels:{tp9:this.channels.tp9,af7:this.channels.af7,af8:this.channels.af8,tp10:this.channels.tp10}
     });
   }
-  disconnect(){if(this.dev&&this.dev.gatt.connected)this.dev.gatt.disconnect();onMuseStatus('disconnected');}
+  disconnect(){
+    this._reconnecting=false; // prevent auto-reconnect
+    this._cleanup();
+    this.dev=null;
+    onMuseStatus('disconnected');
+  }
 }
 const muse = new MuseBLE();
+
+// Open current page in default browser (escapes PWA shell)
+function openInBrowser(){
+  const url=window.location.href;
+  // Android intent to open in Chrome/default browser
+  window.open(url,'_blank')||window.location.assign(url);
+}
 
 // ═══════════════════════════════════════
 // 7. SESSION TRACKING
@@ -1283,12 +1375,12 @@ function togHTML(lbl,on,fn,c){
   return `<button class="tog" onclick="${fn}"><div class="tog-t" style="background:${on?c+'44':'var(--bdr)'};border:1px solid ${on?c:'#2a2030'}"><div class="tog-k" style="background:${on?c:'#3a3030'};left:${on?'19px':'2px'};box-shadow:${on?'0 0 6px '+c+'66':'none'}"></div></div><span class="tog-l" style="color:${on?'#c0b8a8':'var(--mut)'}">${lbl}</span></button>`;
 }
 function museBarHTML(){
-  const cols={idle:'#3a3030',searching:'#C47A14',connecting:'#C47A14',connected:'#4A7C59',error:'#C45C5C',disconnected:'#3a3030'};
-  const txt={idle:'Ready',searching:'Searching...',connecting:'Connecting...',connected:'Connected',error:'Failed — try again',disconnected:'Disconnected'};
+  const cols={idle:'#3a3030',searching:'#C47A14',connecting:'#C47A14',connected:'#4A7C59',error:'#C45C5C',disconnected:'#3a3030',unsupported:'#C45C5C','pwa-blocked':'#C47A14','no-bluetooth':'#C45C5C','bt-off':'#C47A14'};
+  const txt={idle:'Ready',searching:'Searching...',connecting:'Connecting...',connected:'Connected',error:'Failed — try again',disconnected:'Disconnected',unsupported:'Not supported on iOS','pwa-blocked':'Open in browser for Bluetooth','no-bluetooth':'Browser lacks Bluetooth support','bt-off':'Turn on Bluetooth'};
   const isOn=neuro.connected;
   return `<div class="muse-bar"><div class="muse-dot" style="background:${cols[neuro.status]}"></div><span class="muse-txt">Muse 2: ${txt[neuro.status]||neuro.status}</span>
-  <button class="muse-btn" style="border-color:${isOn?'#C45C5C':'var(--gld)'};color:${isOn?'#C45C5C':'var(--gld)'}" onclick="${isOn?'muse.disconnect()':'muse.connect()'}">
-  ${isOn?'Disconnect':neuro.status==='searching'||neuro.status==='connecting'?'...':'Connect'}</button></div>`;
+  <button class="muse-btn" style="border-color:${isOn?'#C45C5C':'var(--gld)'};color:${isOn?'#C45C5C':'var(--gld)'}" onclick="${neuro.status==='pwa-blocked'?'openInBrowser()':isOn?'muse.disconnect()':'muse.connect()'}">
+  ${isOn?'Disconnect':neuro.status==='searching'||neuro.status==='connecting'?'...':neuro.status==='pwa-blocked'?'Open Browser':neuro.status==='unsupported'||neuro.status==='no-bluetooth'?'Unsupported':'Connect'}</button></div>`;
 }
 
 function render(){
