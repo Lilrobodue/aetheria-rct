@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aetheria-rct-v3';
+const CACHE_NAME = 'aetheria-rct-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -21,8 +21,13 @@ self.addEventListener('activate', e => {
   );
 });
 
+// Network-first: try fresh copy, fall back to cache for offline use
 self.addEventListener('fetch', e => {
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).catch(() => caches.match('./index.html')))
+    fetch(e.request).then(response => {
+      const clone = response.clone();
+      caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+      return response;
+    }).catch(() => caches.match(e.request).then(cached => cached || caches.match('./index.html')))
   );
 });
