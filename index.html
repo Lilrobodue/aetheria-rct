@@ -12,71 +12,71 @@
 <title>Aetheria: Resonant Coherence Training</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&display=swap');
-:root{--bg:#06060c;--bg2:#0a0810;--bg3:#0f0a14;--bdr:#1a1520;--dim:#3a3030;--mut:#4a4030;--sub:#5a4a3a;--txt:#e0d8cc;--gld:#d4a574;--gld2:#f0d4a8;--pur:#5048C4;--vio:#7B50D4;--mag:#A840B8}
+:root{--bg:#06060c;--bg2:#0a0810;--bg3:#0f0a14;--bdr:#1a1520;--dim:#5a4a42;--mut:#8a7a6a;--sub:#8a7a68;--txt:#ede6da;--gld:#d4a574;--gld2:#f0d4a8;--pur:#5048C4;--vio:#7B50D4;--mag:#A840B8}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh;min-height:100dvh;overflow:hidden;display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0}
 button{font-family:inherit;cursor:pointer}
 .app{flex:1;display:flex;flex-direction:column;min-height:0}
 .header{background:radial-gradient(ellipse at 50% 0%,#120a18,var(--bg) 70%);padding:env(safe-area-inset-top,8px) 16px 8px;text-align:center;border-bottom:1px solid var(--bdr);flex-shrink:0;position:relative}
-.hd-brand{letter-spacing:.4em;font-size:7px;color:var(--sub);text-transform:uppercase}
-.hd-title{font-size:18px;font-weight:300;background:linear-gradient(135deg,var(--gld),var(--gld2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.08em}
-.hd-sub{font-size:9px;color:var(--sub);margin-top:1px}
+.hd-brand{letter-spacing:.4em;font-size:10px;color:var(--sub);text-transform:uppercase}
+.hd-title{font-size:19px;font-weight:300;background:linear-gradient(135deg,var(--gld),var(--gld2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.08em}
+.hd-sub{font-size:11px;color:var(--sub);margin-top:1px}
 .content{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 14px 80px;-webkit-overflow-scrolling:touch;min-height:0}
 .nav{position:fixed;bottom:0;left:0;right:0;background:#0a0814ee;border-top:1px solid var(--bdr);display:flex;padding:4px 4px env(safe-area-inset-bottom,4px);z-index:20;backdrop-filter:blur(10px)}
-.nav-btn{flex:1;background:transparent;border:none;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0;font-size:8px;letter-spacing:.05em;transition:color .2s}
+.nav-btn{flex:1;background:transparent;border:none;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0;font-size:10px;letter-spacing:.05em;transition:color .2s}
 .nav-btn.on{color:var(--gld)}
 .nav-ico{font-size:16px}
 .card{background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;padding:12px;margin-bottom:10px}
-.card-h{font-size:10px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
+.card-h{font-size:11px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px}
 .muse-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border:1px solid var(--bdr);border-radius:8px;margin-bottom:10px}
 .muse-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;transition:background .3s}
-.muse-txt{flex:1;font-size:12px;color:#8a7b6b}
-.muse-btn{background:transparent;padding:5px 14px;border-radius:4px;font-size:11px;letter-spacing:.05em}
+.muse-txt{flex:1;font-size:13px;color:#9a8b7b}
+.muse-btn{background:transparent;padding:5px 14px;border-radius:4px;font-size:12px;letter-spacing:.05em}
 .rx{background:linear-gradient(135deg,#0a0814,#0c0a18);border:1px solid var(--bdr);border-radius:10px;padding:14px 16px;text-align:center;margin-bottom:10px;transition:border-color .5s}
 .rx-freq{font-size:40px;font-weight:300;letter-spacing:.05em;transition:color .5s}
-.rx-name{font-size:14px;margin-top:2px;color:#c0b8a8;transition:color .3s}
-.rx-state{display:inline-block;padding:2px 12px;border-radius:12px;font-size:10px;margin-top:6px;letter-spacing:.06em;transition:all .5s}
-.rx-reason{font-size:11px;color:#6a5a4a;margin-top:8px;line-height:1.5}
+.rx-name{font-size:15px;margin-top:2px;color:#d0c8b8;transition:color .3s}
+.rx-state{display:inline-block;padding:2px 12px;border-radius:12px;font-size:11px;margin-top:6px;letter-spacing:.06em;transition:all .5s}
+.rx-reason{font-size:12px;color:#8a7a6a;margin-top:8px;line-height:1.6}
 .bands{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:10px}
 .band{text-align:center}
 .band-w{height:50px;background:var(--bg2);border-radius:4px;position:relative;overflow:hidden;margin-bottom:3px}
 .band-b{position:absolute;bottom:0;width:100%;border-radius:4px 4px 0 0;transition:height .2s}
-.band-v{position:absolute;top:3px;left:0;right:0;font-size:9px;color:#fff;text-align:center;opacity:.8}
-.band-n{font-size:9px;color:var(--mut)}.band-h{font-size:7px;color:var(--dim)}
+.band-v{position:absolute;top:3px;left:0;right:0;font-size:10px;color:#fff;text-align:center;opacity:.85}
+.band-n{font-size:10px;color:var(--mut)}.band-h{font-size:10px;color:var(--dim)}
 .coh-wrap{display:flex;justify-content:center;margin-bottom:10px}
 .coh-ring{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;border:2px solid var(--bdr);transition:all .5s}
 .coh-val{font-size:26px;font-weight:300;transition:color .5s}
-.coh-lbl{font-size:8px;letter-spacing:.08em;color:#6a5a4a}
-.coh-trend{font-size:9px;margin-top:1px}
+.coh-lbl{font-size:10px;letter-spacing:.08em;color:#8a7a6a}
+.coh-trend{font-size:10px;margin-top:1px}
 .ctrl-row{display:flex;justify-content:center;gap:16px;padding:8px 0;border-top:1px solid var(--bdr);margin-bottom:10px;flex-wrap:wrap}
 .tog{display:flex;align-items:center;gap:8px;background:transparent;border:none;padding:4px 0}
 .tog-t{width:36px;height:20px;border-radius:10px;position:relative;transition:all .3s}
 .tog-k{width:14px;height:14px;border-radius:50%;position:absolute;top:2px;transition:all .3s}
-.tog-l{font-size:11px;letter-spacing:.04em}
+.tog-l{font-size:12px;letter-spacing:.04em}
 .canvas-ctr{display:flex;justify-content:center;margin-bottom:10px}
 .canvas-ctr canvas{border-radius:50%}
 .fgrid{display:grid;grid-template-columns:repeat(9,1fr);gap:2px;margin-bottom:10px}
-.fcell{aspect-ratio:1;border-radius:3px;border:1.5px solid var(--bdr);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:7px;font-family:monospace}
-.ins{background:#0c0810;border-left:2px solid;border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:10px;font-size:11px;color:#6a5a4a;line-height:1.6}
+.fcell{aspect-ratio:1;border-radius:3px;border:1.5px solid var(--bdr);background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:8px;font-family:monospace}
+.ins{background:#0c0810;border-left:2px solid;border-radius:0 6px 6px 0;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#8a7a6a;line-height:1.7}
 .gf-circle{width:90px;height:90px;border-radius:50%;margin:0 auto;transition:all .8s ease-in-out}
 .gf-dots{display:flex;gap:4px;justify-content:center;margin-top:8px}
 .gf-dot{width:8px;height:8px;border-radius:50%;transition:background .3s}
 .gf-dot-27{transition:background .3s,box-shadow .3s}
 .gf-btn{background:transparent;border:1px solid var(--gld);color:var(--gld);padding:8px 24px;border-radius:6px;font-size:13px;letter-spacing:.08em;margin-top:12px}
 .session{background:var(--bg2);border:1px solid var(--bdr);border-radius:6px;padding:10px;margin-bottom:6px}
-.session-date{font-size:9px;color:var(--dim)}
-.session-coh{font-size:14px;font-weight:300;margin-top:2px}
-.session-rx{font-size:11px;color:#8a7b6b;margin-top:3px}
+.session-date{font-size:11px;color:var(--dim)}
+.session-coh{font-size:15px;font-weight:300;margin-top:2px}
+.session-rx{font-size:12px;color:#9a8b7b;margin-top:3px}
 .session-bar{height:3px;background:var(--bdr);border-radius:2px;margin-top:6px;overflow:hidden}
 .session-fill{height:100%;border-radius:2px}
-.ft-link{text-align:center;padding:10px 0;font-size:10px}
+.ft-link{text-align:center;padding:10px 0;font-size:11px}
 .ft-link a{color:var(--sub);text-decoration:none}
-.osc-info{border-radius:6px;padding:6px 10px;margin-bottom:10px;text-align:center;font-size:11px;transition:all .5s}
+.osc-info{border-radius:6px;padding:6px 10px;margin-bottom:10px;text-align:center;font-size:12px;transition:all .5s}
 .vol-row{display:flex;align-items:center;gap:10px;padding:2px 12px 8px;margin-bottom:10px}
-.vol-row label{font-size:10px;color:var(--sub);letter-spacing:.05em;white-space:nowrap}
+.vol-row label{font-size:11px;color:var(--sub);letter-spacing:.05em;white-space:nowrap}
 .vol-row input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:3px;background:var(--bdr);border-radius:2px;outline:none}
 .vol-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:var(--gld);cursor:pointer}
-.vol-pct{font-size:10px;color:var(--mut);min-width:28px;text-align:right;font-family:monospace}
+.vol-pct{font-size:11px;color:var(--mut);min-width:28px;text-align:right;font-family:monospace}
 /* Cymatics gallery */
 .cym-gallery{display:flex;gap:10px;overflow-x:auto;padding:8px 4px 12px;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory}
 .cym-gallery::-webkit-scrollbar{height:3px}
@@ -84,17 +84,17 @@ button{font-family:inherit;cursor:pointer}
 .cym-card{flex:0 0 auto;width:100px;text-align:center;cursor:pointer;scroll-snap-align:center;padding:6px;border-radius:8px;border:1.5px solid var(--bdr);background:var(--bg2);transition:border-color .3s,transform .2s}
 .cym-card.active{transform:scale(1.05)}
 .cym-card canvas{border-radius:50%}
-.cym-freq{font-size:10px;margin-top:4px;font-family:monospace}
-.cym-name{font-size:9px;color:var(--sub);margin-top:2px}
+.cym-freq{font-size:11px;margin-top:4px;font-family:monospace}
+.cym-name{font-size:10px;color:var(--sub);margin-top:2px}
 /* Cymatics control panel */
 .cym-panel{position:fixed;left:0;top:0;bottom:0;width:220px;background:#08060eee;border-right:1px solid var(--bdr);padding:50px 14px 14px;z-index:30;transform:translateX(-100%);transition:transform .3s ease;overflow-y:auto;backdrop-filter:blur(12px)}
 .cym-panel.open{transform:translateX(0)}
 .cym-panel-close{position:absolute;top:8px;right:8px;background:transparent;border:none;color:var(--sub);font-size:20px;padding:4px 8px}
-.cym-panel h3{font-size:10px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;margin:12px 0 6px}
+.cym-panel h3{font-size:11px;color:var(--mut);letter-spacing:.1em;text-transform:uppercase;margin:12px 0 6px}
 .cym-slider{width:100%;margin:4px 0 8px;-webkit-appearance:none;height:3px;background:var(--bdr);border-radius:2px;outline:none}
 .cym-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;cursor:pointer}
 .cym-snap{display:flex;gap:4px;margin:4px 0 10px;flex-wrap:wrap}
-.cym-snap button{background:var(--bg2);border:1px solid var(--bdr);color:var(--sub);padding:4px 8px;border-radius:4px;font-size:10px;font-family:inherit}
+.cym-snap button{background:var(--bg2);border:1px solid var(--bdr);color:var(--sub);padding:4px 8px;border-radius:4px;font-size:11px;font-family:inherit}
 .cym-snap button.on{border-color:var(--gld);color:var(--gld)}
 .cym-overlay{position:fixed;inset:0;background:#00000066;z-index:25;display:none}
 .cym-overlay.open{display:block}
@@ -106,30 +106,56 @@ button{font-family:inherit;cursor:pointer}
 .guide-overlay{position:fixed;inset:0;background:#000000dd;z-index:90;display:flex;align-items:center;justify-content:center;padding:12px;backdrop-filter:blur(8px)}
 .guide-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;max-width:520px;width:100%;max-height:88vh;display:flex;flex-direction:column}
 .guide-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--bdr);flex-shrink:0}
-.guide-header h2{font-size:15px;color:var(--gld);letter-spacing:.08em;margin:0}
+.guide-header h2{font-size:16px;color:var(--gld);letter-spacing:.08em;margin:0}
 .guide-close{background:transparent;border:none;color:var(--sub);font-size:20px;padding:0 4px;cursor:pointer}
 .guide-body{overflow-y:auto;padding:16px 20px 24px;-webkit-overflow-scrolling:touch}
 .guide-section{margin-bottom:20px}
-.guide-section h3{font-size:12px;color:var(--gld);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--bdr)}
-.guide-section p{font-size:11.5px;color:#8a7b6b;line-height:1.7;margin-bottom:8px}
+.guide-section h3{font-size:13px;color:var(--gld);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--bdr)}
+.guide-section p{font-size:13px;color:#9a8b7b;line-height:1.8;margin-bottom:8px}
 .guide-section strong{color:var(--txt)}
 .guide-section .quote{font-style:italic;color:var(--sub);border-left:2px solid var(--gld);padding-left:10px;margin:10px 0}
 .guide-regime{border:1px solid var(--bdr);border-radius:6px;padding:10px;margin-bottom:8px;background:var(--bg3)}
-.guide-regime h4{font-size:11px;letter-spacing:.06em;margin-bottom:4px}
-.guide-regime p{font-size:10.5px;margin-bottom:4px}
-.guide-freq-row{display:flex;justify-content:space-between;font-size:10px;color:var(--sub);padding:2px 0;border-bottom:1px solid #1a152008}
+.guide-regime h4{font-size:12px;letter-spacing:.06em;margin-bottom:4px}
+.guide-regime p{font-size:12px;margin-bottom:4px}
+.guide-freq-row{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);padding:2px 0;border-bottom:1px solid #1a152008}
 .guide-freq-row span:first-child{color:var(--txt);font-family:monospace}
 .guide-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:transparent;border:1px solid var(--bdr);color:var(--sub);width:26px;height:26px;border-radius:50%;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5}
 .guide-btn:hover{border-color:var(--gld);color:var(--gld)}
 /* Disclaimer modal */
 .disclaimer-overlay{position:fixed;inset:0;background:#000000cc;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(6px)}
 .disclaimer-box{background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:24px 20px;max-width:480px;max-height:85vh;overflow-y:auto;width:100%}
-.disclaimer-box h2{font-size:16px;color:var(--gld);text-align:center;letter-spacing:.08em;margin-bottom:12px}
-.disclaimer-box p{font-size:11px;color:#8a7b6b;line-height:1.7;margin-bottom:10px}
+.disclaimer-box h2{font-size:17px;color:var(--gld);text-align:center;letter-spacing:.08em;margin-bottom:12px}
+.disclaimer-box p{font-size:13px;color:#9a8b7b;line-height:1.8;margin-bottom:10px}
 .disclaimer-box .warn{color:#C45C5C;font-weight:600}
-.disclaimer-accept{display:block;width:100%;background:transparent;border:1px solid var(--gld);color:var(--gld);padding:12px;border-radius:6px;font-size:13px;font-family:inherit;letter-spacing:.06em;margin-top:14px;cursor:pointer}
+.disclaimer-accept{display:block;width:100%;background:transparent;border:1px solid var(--gld);color:var(--gld);padding:12px;border-radius:6px;font-size:14px;font-family:inherit;letter-spacing:.06em;margin-top:14px;cursor:pointer}
 .disclaimer-accept:hover{background:var(--gld);color:var(--bg)}
-@media(max-width:400px){.rx-freq{font-size:32px}.bands{gap:3px}.band-w{height:40px}.coh-ring{width:64px;height:64px}.coh-val{font-size:22px}}
+/* Links tab */
+.links-section{font-size:10px;color:var(--dim);letter-spacing:.15em;text-transform:uppercase;text-align:center;margin:24px 0 10px;position:relative}
+.links-section::before,.links-section::after{content:'';position:absolute;top:50%;width:50px;height:1px;background:var(--bdr)}
+.links-section::before{right:calc(50% + 50px)}
+.links-section::after{left:calc(50% + 50px)}
+.lnk{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:13px 14px;margin-bottom:8px;text-decoration:none;color:var(--txt);transition:all .25s;position:relative;overflow:hidden}
+.lnk:hover{border-color:var(--gld);transform:translateY(-1px);box-shadow:0 4px 20px #d4a57410}
+.lnk:active{transform:translateY(0)}
+.lnk::after{content:'→';position:absolute;right:14px;color:var(--dim);font-size:13px;transition:all .25s}
+.lnk:hover::after{color:var(--gld);right:10px}
+.lnk-ico{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.lnk h3{font-size:14px;font-weight:500;letter-spacing:.03em;margin-bottom:1px}
+.lnk p{font-size:12px;color:var(--sub);line-height:1.4}
+.lnk-gold{background:linear-gradient(135deg,#d4a57422,#d4a57408);border:1px solid #d4a57433}
+.lnk-pur{background:linear-gradient(135deg,#7B50D422,#7B50D408);border:1px solid #7B50D433}
+.lnk-mag{background:linear-gradient(135deg,#A840B822,#A840B808);border:1px solid #A840B833}
+.lnk-blu{background:linear-gradient(135deg,#5048C422,#5048C408);border:1px solid #5048C433}
+.lnk-grn{background:linear-gradient(135deg,#4A7C5922,#4A7C5908);border:1px solid #4A7C5933}
+.lnk-coral{background:linear-gradient(135deg,#C43A6A22,#C43A6A08);border:1px solid #C43A6A33}
+.lnk-ora{background:linear-gradient(135deg,#C47A1422,#C47A1408);border:1px solid #C47A1433}
+.sim-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.sim-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:14px;text-decoration:none;color:var(--txt);transition:all .25s;text-align:center}
+.sim-card:hover{border-color:var(--blu);transform:translateY(-1px);box-shadow:0 4px 20px #5048C410}
+.sim-card .sim-icon{font-size:22px;margin-bottom:5px}
+.sim-card h3{font-size:12px;font-weight:500;line-height:1.3;letter-spacing:.02em}
+.sim-card p{font-size:10px;color:var(--dim);margin-top:3px}
+@media(max-width:400px){.rx-freq{font-size:32px}.bands{gap:3px}.band-w{height:40px}.coh-ring{width:64px;height:64px}.coh-val{font-size:22px}.sim-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -147,6 +173,7 @@ button{font-family:inherit;cursor:pointer}
     <button class="nav-btn" data-tab="biofield" onclick="go('biofield')"><span class="nav-ico">◎</span>Biofield</button>
     <button class="nav-btn" data-tab="flower" onclick="go('flower')"><span class="nav-ico">✿</span>Flower</button>
     <button class="nav-btn" data-tab="history" onclick="go('history')"><span class="nav-ico">☰</span>History</button>
+    <button class="nav-btn" data-tab="links" onclick="go('links')"><span class="nav-ico">◈</span>Links</button>
   </div>
 </div>
 <!-- Disclaimer Modal -->
@@ -164,7 +191,7 @@ button{font-family:inherit;cursor:pointer}
     • EEG readings are approximate and for personal exploration only<br>
     • Frequency prescriptions are experimental, not clinical<br>
     • This app is not a replacement for professional healthcare</p>
-    <p style="font-size:10px;color:#5a4a3a;margin-top:6px">Aetheria: Resonant Coherence Training · © 2026 Joseph Lewis / Aetheria · GPL v3 · <a href="https://aetheria432.com" style="color:var(--sub)">Aetheria432.com</a></p>
+    <p style="font-size:10px;color:#8a7a6a;margin-top:6px">Aetheria: Resonant Coherence Training · © 2026 Joseph Lewis / Aetheria · GPL v3 · <a href="https://aetheria432.com" style="color:var(--sub)">Aetheria432.com</a></p>
     <button class="disclaimer-accept" onclick="acceptDisclaimer()">I Understand and Accept</button>
   </div>
 </div>
@@ -1512,7 +1539,7 @@ function drawCanvases(){
 // 10. RENDER — Only on tab switch or structural change
 // ═══════════════════════════════════════
 function togHTML(lbl,on,fn,c){
-  return `<button class="tog" onclick="${fn}"><div class="tog-t" style="background:${on?c+'44':'var(--bdr)'};border:1px solid ${on?c:'#2a2030'}"><div class="tog-k" style="background:${on?c:'#3a3030'};left:${on?'19px':'2px'};box-shadow:${on?'0 0 6px '+c+'66':'none'}"></div></div><span class="tog-l" style="color:${on?'#c0b8a8':'var(--mut)'}">${lbl}</span></button>`;
+  return `<button class="tog" onclick="${fn}"><div class="tog-t" style="background:${on?c+'44':'var(--bdr)'};border:1px solid ${on?c:'#2a2030'}"><div class="tog-k" style="background:${on?c:'#3a3030'};left:${on?'19px':'2px'};box-shadow:${on?'0 0 6px '+c+'66':'none'}"></div></div><span class="tog-l" style="color:${on?'#d0c8b8':'var(--mut)'}">${lbl}</span></button>`;
 }
 function museBarHTML(){
   const cols={idle:'#3a3030',searching:'#C47A14',connecting:'#C47A14',connected:'#4A7C59',error:'#C45C5C',disconnected:'#3a3030',unsupported:'#C45C5C','pwa-blocked':'#C47A14','no-bluetooth':'#C45C5C'};
@@ -1552,16 +1579,16 @@ function render(){
           </div>`;
         }).join('')}
       </div>
-      <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--dim);margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);margin-bottom:6px">
         <span>174Hz GUT</span><span>2178Hz SOURCE</span><span>6336Hz SUMMIT</span>
       </div>
       <div style="text-align:center">
-        <div style="font-size:11px;color:#8a7b6b" id="ap-regime">—</div>
+        <div style="font-size:11px;color:#9a8b7b" id="ap-regime">—</div>
         <div style="font-size:18px;font-weight:300;margin:2px 0" id="ap-freq" style="color:${rx.c}">${rx.f} Hz</div>
         <div style="font-size:12px" id="ap-name" style="color:${rx.c}">${rx.sc} — ${rx.kw}</div>
-        <div style="font-size:11px;color:#8a7b6b;margin-top:2px" id="ap-geo">${rx.geo}</div>
+        <div style="font-size:11px;color:#9a8b7b;margin-top:2px" id="ap-geo">${rx.geo}</div>
         <div style="font-size:10px;margin-top:4px" id="ap-state" style="color:${rx.c}">${neuro.rxState}</div>
-        <div style="font-size:10px;color:#5a4a3a;margin-top:2px" id="ap-pos">Position ${neuro.rxIdx+1} of 27</div>
+        <div style="font-size:10px;color:#8a7a6a;margin-top:2px" id="ap-pos">Position ${neuro.rxIdx+1} of 27</div>
       </div>
     </div>`;
     // Aetheria Frequency Signature — before/after diagnostic
@@ -1574,7 +1601,7 @@ function render(){
         // Capture in progress
         h+=`<div style="text-align:center;padding:12px 0">
           <div style="font-size:14px;color:var(--gld)" id="cap-countdown">Capturing... ${neuro.captureCountdown}s</div>
-          <div style="font-size:10px;color:#6a5a4a;margin-top:4px">Stay still and relaxed. Averaging your brainwave signature.</div>
+          <div style="font-size:10px;color:#8a7a6a;margin-top:4px">Stay still and relaxed. Averaging your brainwave signature.</div>
           <div style="width:100%;height:3px;background:var(--bdr);border-radius:2px;margin-top:8px"><div style="height:100%;background:var(--gld);border-radius:2px;width:${(1-neuro.captureCountdown/15)*100}%;transition:width 1s"></div></div>
         </div>`;
       } else {
@@ -1582,21 +1609,21 @@ function render(){
         h+=`<div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:start">`;
         // Before
         h+=`<div style="text-align:center">
-          <div style="font-size:9px;color:var(--mut);letter-spacing:.1em;margin-bottom:4px">BEFORE</div>`;
+          <div style="font-size:10px;color:var(--mut);letter-spacing:.1em;margin-bottom:4px">BEFORE</div>`;
         if(bl){
           const bf=F[bl.position];
           // Mini band bars
           h+=`<div style="display:flex;gap:1px;height:30px;margin:4px 0;border-radius:2px;overflow:hidden">
             ${BN.map((b,i)=>`<div style="flex:1;background:${BC[i]};position:relative"><div style="position:absolute;bottom:0;width:100%;height:${bl.bands[b]*100}%;background:${BC[i]}"></div><div style="position:absolute;top:0;width:100%;height:${(1-bl.bands[b])*100}%;background:#0a0810cc"></div></div>`).join('')}
           </div>`;
-          h+=`<div style="font-size:9px;color:#5a4a3a">${BN.map((b,i)=>~~(bl.bands[b]*100)).join(' / ')}</div>`;
+          h+=`<div style="font-size:10px;color:#8a7a6a">${BN.map((b,i)=>~~(bl.bands[b]*100)).join(' / ')}</div>`;
           h+=`<div style="font-size:18px;font-weight:300;color:${bf.c};margin-top:3px">${bf.f}Hz</div>`;
           h+=`<div style="font-size:10px;color:${bf.c}">${bf.geo}</div>`;
-          h+=`<div style="font-size:9px;color:#6a5a4a">${bl.dominant} ${bl.dominantPct}%</div>`;
-          h+=`<div style="font-size:9px;color:#5a4a3a">Coh: ${~~(bl.coherence*100)}%</div>`;
-          h+=`<div style="font-size:8px;color:#4a3a2a">Pos ${bl.position+1}/27</div>`;
+          h+=`<div style="font-size:10px;color:#8a7a6a">${bl.dominant} ${bl.dominantPct}%</div>`;
+          h+=`<div style="font-size:10px;color:#8a7a6a">Coh: ${~~(bl.coherence*100)}%</div>`;
+          h+=`<div style="font-size:8px;color:#7a6a5a">Pos ${bl.position+1}/27</div>`;
         } else {
-          h+=`<div style="font-size:11px;color:#4a3a2a">Capturing in<br>${neuro.connected?'a moment...':'—'}</div>`;
+          h+=`<div style="font-size:11px;color:#7a6a5a">Capturing in<br>${neuro.connected?'a moment...':'—'}</div>`;
         }
         h+=`</div>`;
         // Arrow
@@ -1607,29 +1634,29 @@ function render(){
         </div>`;
         // After
         h+=`<div style="text-align:center">
-          <div style="font-size:9px;color:var(--mut);letter-spacing:.1em;margin-bottom:4px">AFTER</div>`;
+          <div style="font-size:10px;color:var(--mut);letter-spacing:.1em;margin-bottom:4px">AFTER</div>`;
         if(es){
           const ef=F[es.position];
           h+=`<div style="display:flex;gap:1px;height:30px;margin:4px 0;border-radius:2px;overflow:hidden">
             ${BN.map((b,i)=>`<div style="flex:1;position:relative"><div style="position:absolute;bottom:0;width:100%;height:${es.bands[b]*100}%;background:${BC[i]}"></div><div style="position:absolute;top:0;width:100%;height:${(1-es.bands[b])*100}%;background:#0a0810cc"></div></div>`).join('')}
           </div>`;
-          h+=`<div style="font-size:9px;color:#5a4a3a">${BN.map((b,i)=>~~(es.bands[b]*100)).join(' / ')}</div>`;
+          h+=`<div style="font-size:10px;color:#8a7a6a">${BN.map((b,i)=>~~(es.bands[b]*100)).join(' / ')}</div>`;
           h+=`<div style="font-size:18px;font-weight:300;color:${ef.c};margin-top:3px">${ef.f}Hz</div>`;
           h+=`<div style="font-size:10px;color:${ef.c}">${ef.geo}</div>`;
-          h+=`<div style="font-size:9px;color:#6a5a4a">${es.dominant} ${es.dominantPct}%</div>`;
-          h+=`<div style="font-size:9px;color:#5a4a3a">Coh: ${~~(es.coherence*100)}%</div>`;
-          h+=`<div style="font-size:8px;color:#4a3a2a">Pos ${es.position+1}/27</div>`;
+          h+=`<div style="font-size:10px;color:#8a7a6a">${es.dominant} ${es.dominantPct}%</div>`;
+          h+=`<div style="font-size:10px;color:#8a7a6a">Coh: ${~~(es.coherence*100)}%</div>`;
+          h+=`<div style="font-size:8px;color:#7a6a5a">Pos ${es.position+1}/27</div>`;
         } else if(neuro.connected){
           h+=`<button onclick="startCapture('end')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:6px 12px;border-radius:4px;font-size:10px;font-family:inherit;margin-top:8px">Capture Now</button>`;
         } else {
-          h+=`<div style="font-size:11px;color:#4a3a2a">—</div>`;
+          h+=`<div style="font-size:11px;color:#7a6a5a">—</div>`;
         }
         h+=`</div></div>`;
         // Recapture buttons
         if(bl&&neuro.connected){
           h+=`<div style="display:flex;gap:8px;justify-content:center;margin-top:8px">
-            <button onclick="startCapture('baseline')" style="background:transparent;border:1px solid var(--bdr);color:var(--sub);padding:4px 10px;border-radius:4px;font-size:9px;font-family:inherit">Recapture Before</button>
-            <button onclick="startCapture('end')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:4px 10px;border-radius:4px;font-size:9px;font-family:inherit">Capture After</button>
+            <button onclick="startCapture('baseline')" style="background:transparent;border:1px solid var(--bdr);color:var(--sub);padding:4px 10px;border-radius:4px;font-size:10px;font-family:inherit">Recapture Before</button>
+            <button onclick="startCapture('end')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:4px 10px;border-radius:4px;font-size:10px;font-family:inherit">Capture After</button>
           </div>`;
         }
       }
@@ -1638,10 +1665,10 @@ function render(){
     // EEG Oscilloscope
     h+=`<div class="card" style="padding:4px"><canvas id="cv-osc" style="width:100%;height:180px;border-radius:4px"></canvas></div>`;
     h+=`<div class="ctrl-row">${togHTML(app.oscOn?'<span id="osc-label">Playing '+rx.f+'Hz</span>':'Oscillator',app.oscOn,'toggleOsc()',rx.c)}</div>`;
-    if(app.oscOn){h+=`<div class="osc-info" id="osc-info" style="border:1px solid ${rx.c}33;background:${rx.c}08;color:#6a5a4a">Playing: <span style="color:${rx.c}">${audio._playable(rx.f).toFixed(1)}Hz</span> ${rx.f>=2000?'(sub-bass — felt)':'(sine)'}${neuro.connected?' · <span style="color:#A840B8">Following prescription</span>':''}</div>`;}
+    if(app.oscOn){h+=`<div class="osc-info" id="osc-info" style="border:1px solid ${rx.c}33;background:${rx.c}08;color:#8a7a6a">Playing: <span style="color:${rx.c}">${audio._playable(rx.f).toFixed(1)}Hz</span> ${rx.f>=2000?'(sub-bass — felt)':'(sine)'}${neuro.connected?' · <span style="color:#A840B8">Following prescription</span>':''}</div>`;}
     h+=volSliderHTML();
-    h+=`<div class="card" id="hex-card"><div class="card-h" id="hex-title">I CHING — HEXAGRAM ${rx.hx}</div><div style="display:flex;gap:16px;align-items:center"><div id="hex-svg">${hexSVG(rx.ut,rx.lt,rx.c,80)}</div><div><div class="hex-num" id="hex-name" style="color:${rx.c}">${rx.hn}</div><div class="hex-chi" id="hex-chi">${rx.hc}</div><div style="font-size:12px;color:var(--mut);margin-top:4px" id="hex-tri">${TRI[rx.ut].s} ${TRI[rx.ut].n} over ${TRI[rx.lt].s} ${TRI[rx.lt].n}</div></div></div><div style="font-size:12px;color:#6a5a4a;margin-top:8px;line-height:1.6" id="hex-desc">${rx.hw}</div></div>`;
-    h+=`<div class="ft-link"><a href="https://aetheria432.com" target="_blank">Open Aetheria432.com →</a></div>`;
+    h+=`<div class="card" id="hex-card"><div class="card-h" id="hex-title">I CHING — HEXAGRAM ${rx.hx}</div><div style="display:flex;gap:16px;align-items:center"><div id="hex-svg">${hexSVG(rx.ut,rx.lt,rx.c,80)}</div><div><div class="hex-num" id="hex-name" style="color:${rx.c}">${rx.hn}</div><div class="hex-chi" id="hex-chi">${rx.hc}</div><div style="font-size:12px;color:var(--mut);margin-top:4px" id="hex-tri">${TRI[rx.ut].s} ${TRI[rx.ut].n} over ${TRI[rx.lt].s} ${TRI[rx.lt].n}</div></div></div><div style="font-size:12px;color:#8a7a6a;margin-top:8px;line-height:1.6" id="hex-desc">${rx.hw}</div></div>`;
+    h+=`<div class="ft-link"><a href="javascript:void(0)" onclick="go('links')">Links & Resources →</a></div>`;
   }
 
   if(app.tab==='cymatics'){
@@ -1676,7 +1703,7 @@ function render(){
       <h3>VIEW ANGLE (TILT)</h3>
       <input type="range" class="cym-slider" min="0" max="1" step="0.05" value="${app.cymViewAngle}"
         style="accent-color:${sf.c}" oninput="cymSet('cymViewAngle',+this.value)">
-      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--dim)"><span>Pole</span><span>Equator</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim)"><span>Pole</span><span>Equator</span></div>
 
       <h3>ZOOM</h3>
       <input type="range" class="cym-slider" min="0.5" max="1.5" step="0.05" value="${app.cymZoom}"
@@ -1687,7 +1714,7 @@ function render(){
         style="accent-color:${sf.c}" oninput="cymSet('cymDepth',+this.value)">
 
       <h3>FREQUENCY INFO</h3>
-      <div id="cym-panel-info" style="font-size:11px;color:#8a7b6b;line-height:1.6">
+      <div id="cym-panel-info" style="font-size:11px;color:#9a8b7b;line-height:1.6">
         <span style="color:${sf.c}">${sf.f} Hz</span> — ${sf.kw}<br>
         ${sf.sc} · ${sf.geo}<br>
         Digital Root: ${(sf.f%9)||9}<br>
@@ -1703,7 +1730,7 @@ function render(){
     </div>`;
     h+=`<div style="text-align:center;margin-bottom:8px">
       <div id="cym-freq" style="font-size:32px;font-weight:300;color:${sf.c}">${sf.f} Hz</div>
-      <div id="cym-name" style="font-size:14px;color:#c0b8a8">${sf.sc} — ${sf.kw}</div>
+      <div id="cym-name" style="font-size:14px;color:#d0c8b8">${sf.sc} — ${sf.kw}</div>
       <div id="cym-geo" style="font-size:11px;color:${sf.c}88;margin-top:2px">${sf.geo}</div>
       <div id="cym-root" style="font-size:10px;color:var(--dim);margin-top:2px">Root ${(sf.f%9)||9} · Hex ${sf.hx} ${sf.hn}</div>
     </div>`;
@@ -1728,9 +1755,9 @@ function render(){
     h+=`<div class="card" id="cym-hex-card"><div class="card-h" id="cym-hex-title">HEXAGRAM ${sf.hx} — ${sf.hn}</div>
     <div style="display:flex;gap:12px;align-items:center">
     <div id="cym-hex-svg">${hexSVG(sf.ut,sf.lt,sf.c,60)}</div>
-    <div><div style="font-size:16px" id="cym-hex-name" style="color:${sf.c}">${sf.hn}</div><div style="font-size:11px;color:#8a7b6b" id="cym-hex-chi">${sf.hc}</div>
+    <div><div style="font-size:16px" id="cym-hex-name" style="color:${sf.c}">${sf.hn}</div><div style="font-size:11px;color:#9a8b7b" id="cym-hex-chi">${sf.hc}</div>
     <div style="font-size:10px;color:var(--dim);margin-top:3px" id="cym-hex-tri">${TRI[sf.ut].s} ${TRI[sf.ut].n} / ${TRI[sf.lt].s} ${TRI[sf.lt].n}</div></div></div>
-    <div style="font-size:11px;color:#6a5a4a;margin-top:6px;line-height:1.5" id="cym-hex-desc">${sf.hw}</div></div>`;
+    <div style="font-size:11px;color:#8a7a6a;margin-top:6px;line-height:1.5" id="cym-hex-desc">${sf.hw}</div></div>`;
   }
 
   if(app.tab==='biofield'){
@@ -1749,7 +1776,7 @@ function render(){
     if(app.gfPhase===0){
       h+=`<div style="text-align:center"><div style="font-size:16px;color:#c0b090;margin-bottom:6px">太乙金華宗旨</div>
       <div style="font-size:13px;color:var(--gld);margin-bottom:4px">The Secret of the Golden Flower</div>
-      <div style="font-size:12px;color:#6a5a4a;line-height:1.7;max-width:340px;margin:0 auto 16px">
+      <div style="font-size:12px;color:#8a7a6a;line-height:1.7;max-width:340px;margin:0 auto 16px">
       27 breaths. 3 sets of 9. Each breath: inhale 3, hold 6, exhale 9.<br><br>
       Set 1 — GUT: bilateral coherence<br>
       Set 2 — HEART: toroidal dynamics<br>
@@ -1767,7 +1794,7 @@ function render(){
       <div style="font-size:11px;color:${rc};letter-spacing:.1em;margin-bottom:8px">${regimeNames[app.gfSet]||''}</div>
       <div class="gf-circle" id="gf-circ" style="background:radial-gradient(circle,${phaseColors[bp]}${bp===0?'44':bp===1?'33':'11'} 0%,transparent 70%);border:2px solid ${phaseColors[bp]}${bp<2?'66':'33'};transform:scale(${phaseScales[bp]})"></div>
       <div style="font-size:18px;color:${phaseColors[bp]};margin-top:12px;letter-spacing:.08em;font-weight:300" id="gf-phase">${phaseLabels[bp]}</div>
-      <div style="font-size:12px;color:#8a7b6b;margin-top:6px" id="gf-cnt">Breath ${app.gfBreathTotal} of 27 · Set ${app.gfSet} Round ${app.gfRound} Cycle ${app.gfCycle}</div>
+      <div style="font-size:12px;color:#9a8b7b;margin-top:6px" id="gf-cnt">Breath ${app.gfBreathTotal} of 27 · Set ${app.gfSet} Round ${app.gfRound} Cycle ${app.gfCycle}</div>
 
       <div style="display:flex;gap:2px;justify-content:center;margin-top:12px;flex-wrap:wrap">
       ${Array.from({length:27}).map((_,i)=>{
@@ -1780,20 +1807,20 @@ function render(){
       </div>
 
       <div style="display:flex;justify-content:center;gap:4px;margin-top:8px">
-        <span style="font-size:9px;color:${regimeColors[1]}">● GUT</span>
-        <span style="font-size:9px;color:${regimeColors[2]}">● HEART</span>
-        <span style="font-size:9px;color:${regimeColors[3]}">● HEAD</span>
+        <span style="font-size:10px;color:${regimeColors[1]}">● GUT</span>
+        <span style="font-size:10px;color:${regimeColors[2]}">● HEART</span>
+        <span style="font-size:10px;color:${regimeColors[3]}">● HEAD</span>
       </div>
       </div>`;
     }else if(app.gfPhase===2){
       h+=`<div style="text-align:center"><div style="font-size:16px;color:${sf.c};margin-bottom:8px;letter-spacing:.05em">The flower is blooming...</div>
-      <div style="font-size:12px;color:#6a5a4a">27 breaths complete. 27 frequencies tuned. The field organizes.</div></div>`;
+      <div style="font-size:12px;color:#8a7a6a">27 breaths complete. 27 frequencies tuned. The field organizes.</div></div>`;
     }else{
       h+=`<div style="text-align:center"><div style="font-size:22px;color:${sf.c};margin-bottom:8px">金華 — The Golden Flower</div>
-      <div style="font-size:13px;color:#8a7b6b;margin-bottom:4px">8 minutes 6 seconds. 486 seconds. Digital root: 9.</div>
-      <div style="font-size:12px;color:#6a5a4a;line-height:1.7;max-width:340px;margin:0 auto 16px">
+      <div style="font-size:13px;color:#9a8b7b;margin-bottom:4px">8 minutes 6 seconds. 486 seconds. Digital root: 9.</div>
+      <div style="font-size:12px;color:#8a7a6a;line-height:1.7;max-width:340px;margin:0 auto 16px">
       From scattered sand, sacred geometry. Three sets tuned three regimes. GUT grounded the body. HEART opened the field. HEAD dissolved the boundary. The flower was always there. The breath revealed it.</div>
-      <button class="gf-btn" style="border-color:${sf.c}33;color:#6a5a4a" onclick="resetGF()">Begin Again</button></div>`;
+      <button class="gf-btn" style="border-color:${sf.c}33;color:#8a7a6a" onclick="resetGF()">Begin Again</button></div>`;
     }
   }
 
@@ -1815,7 +1842,7 @@ function render(){
           <button onclick="exportRaw('json')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:5px 12px;border-radius:4px;font-size:10px;font-family:inherit">Export JSON</button>`;
       }
       h+=`</div>
-        <div style="font-size:9px;color:#5a4a3a;text-align:center;margin-top:4px">Records every EEG sample (~4Hz) with timestamp, all 5 bands, coherence, and prescription state.</div>
+        <div style="font-size:10px;color:#8a7a6a;text-align:center;margin-top:4px">Records every EEG sample (~4Hz) with timestamp, all 5 bands, coherence, and prescription state.</div>
       </div>`;
     }
     if(!app.sessions.length&&!neuro.connected){h+=`<div style="text-align:center;padding:40px 0;color:var(--sub)"><div style="font-size:18px;margin-bottom:8px">No sessions yet</div><div style="font-size:12px">Connect Muse 2 to begin.</div></div>`;}
@@ -1842,6 +1869,54 @@ function render(){
       <button onclick="exportData('csv')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:8px 0;border-radius:4px;font-size:10px;flex:1;font-family:inherit">Export CSV</button>
       <button onclick="clearHist()" style="background:transparent;border:1px solid #C45C5C33;color:#C45C5C;padding:8px 0;border-radius:4px;font-size:10px;flex:1;font-family:inherit">Clear</button>
     </div>`;}
+  }
+
+  if(app.tab==='links'){
+    h+=`<div style="text-align:center;padding:8px 0 4px">
+      <div style="font-size:20px;font-weight:300;color:var(--gld);letter-spacing:.12em">AETHERIA</div>
+      <div style="font-size:12px;color:var(--sub);font-style:italic;margin-top:2px">Healing the world heART</div>
+      <div style="width:50px;height:1px;background:linear-gradient(90deg,transparent,var(--gld),transparent);margin:10px auto"></div>
+      <div style="font-size:11px;color:var(--dim)">Created by Joseph & Alisha Lewis</div>
+      <div style="font-size:11px;color:var(--dim)">Air Force Veterans · Mountain Home, Idaho</div>
+    </div>`;
+
+    h+=`<div class="links-section">Apps & Tools</div>`;
+    h+=`<a class="lnk" href="https://aetheria432.com" target="_blank"><div class="lnk-ico lnk-gold">🎵</div><div><h3>Aetheria 432Hz Player</h3><p>27-frequency harmonic healing system</p></div></a>`;
+    h+=`<a class="lnk" href="https://aetheriarct.com" target="_blank"><div class="lnk-ico lnk-pur">🧠</div><div><h3>Aetheria RCT</h3><p>Muse 2 EEG neuro-adaptive coherence training</p></div></a>`;
+
+    h+=`<div class="links-section">Books</div>`;
+    h+=`<a class="lnk" href="https://a.co/d/079tM297" target="_blank"><div class="lnk-ico lnk-mag">📕</div><div><h3>Aetheria</h3><p>The frequency healing system — foundational text</p></div></a>`;
+    h+=`<a class="lnk" href="https://a.co/d/0c83ZGEu" target="_blank"><div class="lnk-ico lnk-blu">📘</div><div><h3>The Golden Thread</h3><p>One equation across all scales — E=hf as universal key</p></div></a>`;
+    h+=`<a class="lnk" href="https://a.co/d/0ckEN0Qs" target="_blank"><div class="lnk-ico lnk-ora">📙</div><div><h3>Cosmic Rhythms</h3><p>How sun, moon & earth shape your biology</p></div></a>`;
+    h+=`<a class="lnk" href="https://a.co/d/04Y1pUtE" target="_blank"><div class="lnk-ico lnk-coral">📖</div><div><h3>SFB — A TBI Guide</h3><p>Navigating traumatic brain injury recovery</p></div></a>`;
+
+    h+=`<div class="links-section">Music</div>`;
+    h+=`<a class="lnk" href="https://open.spotify.com/artist/4CXB2ctrUCvInDQkKDhw4q" target="_blank"><div class="lnk-ico lnk-grn">🎧</div><div><h3>Aetheria on Spotify</h3><p>Frequency-tuned healing music — 432Hz</p></div></a>`;
+
+    h+=`<div class="links-section">Interactive Simulations</div>`;
+    h+=`<div class="sim-grid">
+      <a class="sim-card" href="https://lilrobodue.github.io/Lewis-Vortex-Model/" target="_blank"><div class="sim-icon">🌀</div><h3>Lewis Vortex Model</h3><p>Formation Theory</p></a>
+      <a class="sim-card" href="https://lilrobodue.github.io/Unified-Scale-Navigator/" target="_blank"><div class="sim-icon">🔬</div><h3>Unified Scale Navigator</h3><p>Quantum to cosmic</p></a>
+      <a class="sim-card" href="https://lilrobodue.github.io/HRV-Coherence-Visualizer/" target="_blank"><div class="sim-icon">💓</div><h3>HRV Coherence Visualizer</h3><p>Heart rate variability</p></a>
+      <a class="sim-card" href="https://lilrobodue.github.io/Schumann-Biology-Simulator/" target="_blank"><div class="sim-icon">🌍</div><h3>Schumann Biology Simulator</h3><p>Earth's resonance</p></a>
+      <a class="sim-card" href="https://lilrobodue.github.io/Cellular-Voltage-Frequency-Model/" target="_blank"><div class="sim-icon">⚡</div><h3>Cellular Voltage Model</h3><p>Frequency & cell health</p></a>
+      <a class="sim-card" href="https://lilrobodue.github.io/Galactic-Scale-Vortex-Formation/" target="_blank"><div class="sim-icon">🌌</div><h3>Galactic Vortex Formation</h3><p>Cosmic scale structure</p></a>
+    </div>`;
+
+    h+=`<div class="links-section">Community & Social</div>`;
+    h+=`<a class="lnk" href="https://discord.gg/ddR3MfgCsM" target="_blank"><div class="lnk-ico lnk-blu">💬</div><div><h3>Th3 L0unG3 — Discord</h3><p>365+ healing frequency songs · community · resources</p></div></a>`;
+    h+=`<a class="lnk" href="https://www.youtube.com/@Aetheria432" target="_blank"><div class="lnk-ico lnk-coral">▶</div><div><h3>YouTube</h3><p>Aetheria content, demos, and explorations</p></div></a>`;
+    h+=`<a class="lnk" href="https://x.com/TheyCallmeJobo" target="_blank"><div class="lnk-ico lnk-ora">𝕏</div><div><h3>X / Twitter</h3><p>@TheyCallmeJobo — thoughts, updates, frequencies</p></div></a>`;
+
+    h+=`<div class="links-section">Contact</div>`;
+    h+=`<a class="lnk" href="mailto:Aetheria432@pm.me"><div class="lnk-ico lnk-gold">✉</div><div><h3>Aetheria432@pm.me</h3><p>Questions, collaborations, research inquiries</p></div></a>`;
+
+    h+=`<div style="text-align:center;padding:20px 0 10px">
+      <div style="font-size:13px">🙏</div>
+      <div style="font-size:11px;color:var(--dim);margin-top:4px">Healing the world heART</div>
+      <div style="font-size:11px;color:var(--dim)">© 2026 Joseph & Alisha Lewis / Aetheria</div>
+      <div style="font-size:10px;color:var(--dim);margin-top:6px">27 frequencies · 432 Hz · 3-6-9</div>
+    </div>`;
   }
 
   document.getElementById('content').innerHTML=h;
