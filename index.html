@@ -355,7 +355,7 @@ class AudioEngine {
   }
 
   _vol(freqIdx){
-    const base=F[freqIdx].f>=2000?0.35:0.18;
+    const base=F[freqIdx].f>963?0.35:0.18;
     return base*this.volume;
   }
 
@@ -406,7 +406,7 @@ class AudioEngine {
     console.log('[AudioEngine] Stopped');
   }
 
-  _playable(f){let x=f;if(x>=2000)while(x>250)x/=2;return x;}
+  _playable(f){let x=f;if(x>963)while(x>250)x/=2;return x;}
 }
 
 // THE singleton
@@ -808,7 +808,7 @@ function updateUI(){
   const oscInfo=document.getElementById('osc-info');
   if(oscInfo&&app.oscOn){
     const pf=audio._playable(rx.f);
-    oscInfo.innerHTML='Playing: <span style="color:'+rx.c+'">'+pf.toFixed(1)+'Hz</span> '+(rx.f>=2000?'(sub-bass — felt)':'(sine)')+
+    oscInfo.innerHTML='Playing: <span style="color:'+rx.c+'">'+pf.toFixed(1)+'Hz</span> '+(rx.f>963?'(sub-bass — felt)':'(sine)')+
       (neuro.connected?' · <span style="color:#A840B8">Following prescription</span>':'');
     oscInfo.style.borderColor=rx.c+'33';
     oscInfo.style.background=rx.c+'08';
@@ -1665,7 +1665,7 @@ function render(){
     // EEG Oscilloscope
     h+=`<div class="card" style="padding:4px"><canvas id="cv-osc" style="width:100%;height:180px;border-radius:4px"></canvas></div>`;
     h+=`<div class="ctrl-row">${togHTML(app.oscOn?'<span id="osc-label">Playing '+rx.f+'Hz</span>':'Oscillator',app.oscOn,'toggleOsc()',rx.c)}</div>`;
-    if(app.oscOn){h+=`<div class="osc-info" id="osc-info" style="border:1px solid ${rx.c}33;background:${rx.c}08;color:#8a7a6a">Playing: <span style="color:${rx.c}">${audio._playable(rx.f).toFixed(1)}Hz</span> ${rx.f>=2000?'(sub-bass — felt)':'(sine)'}${neuro.connected?' · <span style="color:#A840B8">Following prescription</span>':''}</div>`;}
+    if(app.oscOn){h+=`<div class="osc-info" id="osc-info" style="border:1px solid ${rx.c}33;background:${rx.c}08;color:#8a7a6a">Playing: <span style="color:${rx.c}">${audio._playable(rx.f).toFixed(1)}Hz</span> ${rx.f>963?'(sub-bass — felt)':'(sine)'}${neuro.connected?' · <span style="color:#A840B8">Following prescription</span>':''}</div>`;}
     h+=volSliderHTML();
     h+=`<div class="card" id="hex-card"><div class="card-h" id="hex-title">I CHING — HEXAGRAM ${rx.hx}</div><div style="display:flex;gap:16px;align-items:center"><div id="hex-svg">${hexSVG(rx.ut,rx.lt,rx.c,80)}</div><div><div class="hex-num" id="hex-name" style="color:${rx.c}">${rx.hn}</div><div class="hex-chi" id="hex-chi">${rx.hc}</div><div style="font-size:12px;color:var(--mut);margin-top:4px" id="hex-tri">${TRI[rx.ut].s} ${TRI[rx.ut].n} over ${TRI[rx.lt].s} ${TRI[rx.lt].n}</div></div></div><div style="font-size:12px;color:#8a7a6a;margin-top:8px;line-height:1.6" id="hex-desc">${rx.hw}</div></div>`;
     h+=`<div class="ft-link"><a href="javascript:void(0)" onclick="go('links')">Links & Resources →</a></div>`;
