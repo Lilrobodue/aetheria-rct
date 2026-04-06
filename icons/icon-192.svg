@@ -19,16 +19,10 @@
       <stop offset="100%" stop-color="#b8864e"/>
     </linearGradient>
   </defs>
-  <!-- Background -->
   <rect width="512" height="512" rx="108" fill="url(#bg)"/>
-  <!-- Ambient glow -->
   <circle cx="256" cy="236" r="200" fill="url(#glow)"/>
-  <!-- Main golden ring -->
   <circle cx="256" cy="236" r="116" fill="none" stroke="url(#ring-grad)" stroke-width="3.5" opacity="0.85"/>
-  <!-- Center A -->
-  <text x="256" y="260" text-anchor="middle" font-family="Georgia,serif" font-size="108" fill="url(#gold)" font-weight="300" letter-spacing="2">A</text>
-  <!-- 432 -->
-  <text x="256" y="300" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="#7B50D4" letter-spacing="5" font-weight="400">432</text>
-  <!-- RCT at bottom -->
-  <text x="256" y="420" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="#d4a574" letter-spacing="14" opacity="0.65" font-weight="300">RCT</text>
+  <text x="256" y="262" text-anchor="middle" font-family="Georgia,serif" font-size="108" fill="url(#gold)" font-weight="300">A</text>
+  <text x="256" y="302" text-anchor="middle" font-family="Georgia,serif" font-size="30" fill="#7B50D4" letter-spacing="5" font-weight="400">432</text>
+  <text x="256" y="422" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="#d4a574" letter-spacing="14" opacity="0.65" font-weight="300">RCT</text>
 </svg>
