@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aetheria-rct-v9';
+const CACHE_NAME = 'aetheria-rct-v2.0.1';
 const ASSETS = [
   './',
   './index.html',
