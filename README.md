@@ -80,7 +80,7 @@ This is a Progressive Web App. Visit the hosted page, then:
 
 ## Credits
 
-Created by **Joseph (Jobo) Lewis** — Air Force EOD veteran, TBI survivor, creator of the Aetheria frequency healing system.
+Created by **(Jobo)** — Air Force EOD veteran, TBI survivor, creator of the Aetheria frequency healing system.
 
 Built with love by the Lewis family: Jobo, Alisha, and Selah.
 
@@ -90,6 +90,6 @@ Built with love by the Lewis family: Jobo, Alisha, and Selah.
 
 This project is licensed under the **GNU General Public License v3.0** — free to use, study, modify, and share. Any derivative work must also be open source under GPL v3. See [LICENSE](LICENSE) for details.
 
-The Aetheria frequency system, Techgnosis scripts, and associated intellectual property are © Joseph Lewis / Aetheria.
+The Aetheria frequency system, Techgnosis scripts, and associated intellectual property are © Aetheria.
 
 💜 Healing the world heART
