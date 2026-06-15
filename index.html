@@ -316,6 +316,8 @@ button{font-family:inherit;cursor:pointer}
   </div>
 </div>
 <script src="athena-core.js"></script>
+<script src="interval-analysis.js"></script>
+<script src="prescription-engine.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
 // ARCHITECTURE (following Perplexity's analysis):
@@ -1354,6 +1356,36 @@ function endSession(){
     sess.fnirs=fnirsSummary;
     if(neuro.heartRate)sess.heartRate=neuro.heartRate;
   }
+  // Interval analysis + duration protocol for the prescribed-frequency journey
+  try{
+    if(typeof IntervalAnalysis!=='undefined'&&sess.rxFreqs.length){
+      const IA=IntervalAnalysis;
+      const peaks=sess.rxFreqs.map(hz=>({hz}));
+      const a=IA.analyzeIntervals(peaks);
+      const regime=a.summary.regime||journeyRegime(sess.rxFreqs);
+      const mins=Math.round(dur/60);
+      const ev=IA.evaluateDuration(regime,mins);
+      sess.intervalAnalysis={
+        coherenceScore:a.coherenceScore,
+        classification:a.classification.label,
+        ratio369:a.summary.ratio369,
+        aetheriaIntervalCount:a.summary.aetheriaIntervalCount,
+        harmonicRatioCount:a.summary.harmonicRatioCount,
+        dominantRegime:a.summary.regime,
+        intervalPairs:a.fingerprint.totalIntervals,
+        allIntervals:a.intervals.map(i=>({gap:Math.round(i.gap),ratio:Math.round(i.ratio*1000)/1000,gapIs369:i.gapIs369,aetheria:i.aetheriaInterval.match,harmonic:i.harmonicRatio.match})),
+      };
+      sess.duration={
+        actual:mins,
+        recommended:ev.protocol.optimal,
+        minimum:ev.protocol.min,
+        regime:regime,
+        protocolStatus:ev.status,
+        protocolMet:ev.met,
+        note:ev.label,
+      };
+    }
+  }catch(e){console.warn('[Interval] session analysis failed',e);}
   app.sessions.unshift(sess);
   if(app.sessions.length>50)app.sessions=app.sessions.slice(0,50);
   try{localStorage.setItem('rct-sessions',JSON.stringify(app.sessions));}catch(e){}
@@ -2002,6 +2034,90 @@ function volSliderHTML(){
 }
 window.setVol=function(v){audio.setVolume(v/100);const el=document.querySelector('.vol-pct');if(el)el.textContent=Math.round(v)+'%';};
 
+// ─── INTERVAL ANALYSIS + DURATION (shared interval-analysis.js) ───
+// In RCT there is no audio-track input — instead we analyze the harmonic
+// coherence of the session's PRESCRIBED-FREQUENCY journey (the path the
+// EEG-driven prescription walks through the 27-frequency system).
+function rxRegime(idx){return idx<9?'GUT':idx<18?'HEART':'HEAD';}
+function freqRegime(hz){return hz<=963?'GUT':hz<=3150?'HEART':'HEAD';}
+
+function rxJourneyPeaks(){
+  // Unique prescribed frequencies across this session, in order encountered
+  const set=[],seen=new Set();
+  (neuro.rxHistory||[]).forEach(i=>{const fr=F[i];if(fr&&!seen.has(fr.f)){seen.add(fr.f);set.push({hz:fr.f});}});
+  if(!set.length&&F[neuro.rxIdx])set.push({hz:F[neuro.rxIdx].f});
+  return set;
+}
+
+// Dominant regime of a frequency journey by majority of its peaks
+function journeyRegime(freqs){
+  const c={GUT:0,HEART:0,HEAD:0};
+  freqs.forEach(hz=>c[freqRegime(hz)]++);
+  let best='GUT',v=-1;for(const k in c){if(c[k]>v){v=c[k];best=k;}}
+  return best;
+}
+
+function intervalPanelInner(){
+  if(typeof IntervalAnalysis==='undefined')return `<div class="card-h">INTERVAL ANALYSIS</div><div style="font-size:11px;color:var(--sub)">Analysis module not loaded.</div>`;
+  const IA=IntervalAnalysis;
+  const peaks=rxJourneyPeaks();
+  const regime=peaks.length?journeyRegime(peaks.map(p=>p.hz)):rxRegime(neuro.rxIdx);
+  const proto=IA.recommendDuration(regime);
+
+  // Advisory duration timer (color-coded vs the regime protocol)
+  let timerHTML='';
+  if(neuro.connected&&neuro.sessionStart){
+    const elapsedMin=(Date.now()-neuro.sessionStart)/60000;
+    const em=Math.floor(elapsedMin),es=Math.floor((elapsedMin-em)*60);
+    let col,statusTxt;
+    if(elapsedMin<proto.min){col='#C45C5C';statusTxt='Building — under '+proto.min+' min minimum';}
+    else if(elapsedMin<proto.optimal){col='#D4A030';statusTxt='Approaching optimal ('+proto.optimal+' min)';}
+    else{col='#4A7C59';statusTxt='Optimal reached — continue as long as feels right';}
+    const pct=Math.min(100,(elapsedMin/proto.optimal)*100);
+    timerHTML=`<div style="margin-top:8px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--sub)"><span>${regime} regime · ${proto.min}–${proto.max} min</span><span style="color:${col};font-size:13px">${em}m ${es<10?'0':''}${es}s</span></div>
+      <div style="height:6px;background:var(--bdr);border-radius:3px;margin-top:3px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${col};transition:width 1s linear,background 1s"></div></div>
+      <div style="font-size:10px;color:${col};margin-top:2px">${statusTxt}</div>
+      <div style="font-size:9px;color:#7a6a5a;margin-top:1px">Advisory only — the timer never stops your session.</div>
+    </div>`;
+  }else{
+    timerHTML=`<div style="font-size:10px;color:var(--sub);margin-top:8px">${regime} regime recommendation: ${proto.min}–${proto.max} min (optimal ${proto.optimal}). ${proto.label}.</div>`;
+  }
+
+  if(peaks.length<2){
+    return `<div class="card-h">INTERVAL ANALYSIS</div>
+      <div style="font-size:11px;color:var(--sub);padding:4px 0;line-height:1.5">Building your frequency journey… a coherence score appears once your prescription has moved through two or more frequencies.</div>
+      <div class="card-h" style="margin-top:8px">DURATION PROTOCOL</div>${timerHTML}`;
+  }
+
+  const a=IA.analyzeIntervals(peaks);
+  const s=a.summary,cls=a.classification;
+  const r369=Math.round(s.ratio369*100);
+  return `<div class="card-h">INTERVAL ANALYSIS</div>
+    <div style="display:flex;align-items:center;gap:8px;margin:6px 0">
+      <div style="flex:1;height:10px;background:var(--bdr);border-radius:5px;overflow:hidden"><div style="height:100%;width:${s.score}%;background:linear-gradient(90deg,var(--pur),var(--gld));transition:width .5s"></div></div>
+      <div style="font-size:18px;font-weight:300;color:var(--gld);min-width:28px;text-align:right">${s.score}</div>
+    </div>
+    <div style="font-size:13px;margin-bottom:8px">${cls.icon} <span style="color:var(--gld)">${cls.label}</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;font-size:11px;color:#9a8b7b">
+      <div>3-6-9 Ratio: <span style="color:var(--sub)">${r369}%</span></div>
+      <div>Dominant Regime: <span style="color:var(--sub)">${s.regime||'—'}</span></div>
+      <div>Aetheria Intervals: <span style="color:var(--sub)">${s.aetheriaIntervalCount}</span></div>
+      <div>Harmonic Ratios: <span style="color:var(--sub)">${s.harmonicRatioCount}</span></div>
+      <div>Frequencies: <span style="color:var(--sub)">${peaks.length}</span></div>
+      <div>Interval Pairs: <span style="color:var(--sub)">${a.fingerprint.totalIntervals}</span></div>
+    </div>
+    <div class="card-h" style="margin-top:10px">DURATION PROTOCOL</div>${timerHTML}`;
+}
+
+// Live refresh of the interval panel + duration timer (1s cadence)
+setInterval(()=>{
+  if(app.tab==='home'){
+    const el=document.getElementById('interval-panel');
+    if(el)el.innerHTML=intervalPanelInner();
+  }
+},1000);
+
 function render(){
   const rx=F[neuro.rxIdx];let h='';
 
@@ -2039,6 +2155,8 @@ function render(){
         <div style="font-size:10px;color:#8a7a6a;margin-top:2px" id="ap-pos">Position ${neuro.rxIdx+1} of 27</div>
       </div>
     </div>`;
+    // Interval Analysis + Duration Protocol — coherence of the prescribed-frequency journey
+    h+=`<div class="card" id="interval-panel" style="padding:10px">${intervalPanelInner()}</div>`;
     // Aetheria Frequency Signature — before/after diagnostic
     if(neuro.connected||neuro.baseline){
       const bl=neuro.baseline;
@@ -2312,7 +2430,13 @@ function render(){
       const bfC=F[s.baseline.pos]?.c||'var(--gld)';
       sigHTML=`<div style="font-size:10px;color:${bfC};margin-top:4px">Start: ${F[s.baseline.pos]?.f||'?'}Hz ${F[s.baseline.pos]?.geo||''}</div>`;
     }
-    h+=`<div class="session"><div class="session-date">${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div><div class="session-coh" style="color:var(--gld)">Avg: ${s.avgCoh}% · Peak: ${s.peakCoh}%</div><div class="session-rx">Duration: ${mins}m ${secs}s · Rx: ${s.rxFreqs.map(f=>f+'Hz').join(', ')}</div>${sigHTML}<div class="session-bar"><div class="session-fill" style="width:${s.avgCoh}%;background:linear-gradient(90deg,var(--pur),var(--gld))"></div></div></div>`;});
+    let ixHTML='';
+    if(s.intervalAnalysis){
+      const ia=s.intervalAnalysis;
+      const protoTxt=s.duration?` · ${s.duration.protocolMet?'✓':'!'} ${s.duration.regime} ${s.duration.actual}/${s.duration.recommended}m`:'';
+      ixHTML=`<div style="font-size:10px;color:#9a8b7b;margin-top:4px">${ia.classification} · Coherence ${ia.coherenceScore} · 3-6-9 ${Math.round(ia.ratio369*100)}%${protoTxt}</div>`;
+    }
+    h+=`<div class="session"><div class="session-date">${d.toLocaleDateString()} ${d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div><div class="session-coh" style="color:var(--gld)">Avg: ${s.avgCoh}% · Peak: ${s.peakCoh}%</div><div class="session-rx">Duration: ${mins}m ${secs}s · Rx: ${s.rxFreqs.map(f=>f+'Hz').join(', ')}</div>${sigHTML}${ixHTML}<div class="session-bar"><div class="session-fill" style="width:${s.avgCoh}%;background:linear-gradient(90deg,var(--pur),var(--gld))"></div></div></div>`;});
     h+=`<div style="display:flex;gap:6px;margin-top:8px">
       <button onclick="exportData('json')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:8px 0;border-radius:4px;font-size:10px;flex:1;font-family:inherit">Export JSON</button>
       <button onclick="exportData('csv')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:8px 0;border-radius:4px;font-size:10px;flex:1;font-family:inherit">Export CSV</button>
@@ -2507,6 +2631,8 @@ window.exportData=function(fmt){
   } else {
     // CSV with flattened columns — includes fNIRS for Athena sessions
     const headers=['date','duration_sec','device_type','avg_coherence','peak_coherence','rx_frequencies',
+      'coherence_score','classification','ratio_369','dominant_regime','aetheria_intervals','harmonic_ratios',
+      'duration_min','duration_recommended','duration_regime','protocol_status','protocol_met',
       'baseline_pos','baseline_freq','baseline_geo','baseline_dominant','baseline_coh',
       'endstate_pos','endstate_freq','endstate_geo','endstate_dominant','endstate_coh',
       'positions_moved','heart_rate',
@@ -2520,6 +2646,17 @@ window.exportData=function(fmt){
         s.avgCoh,
         s.peakCoh,
         '"'+s.rxFreqs.join(';')+'"',
+        s.intervalAnalysis?s.intervalAnalysis.coherenceScore:'',
+        s.intervalAnalysis?s.intervalAnalysis.classification:'',
+        s.intervalAnalysis?s.intervalAnalysis.ratio369:'',
+        s.intervalAnalysis?(s.intervalAnalysis.dominantRegime||''):'',
+        s.intervalAnalysis?s.intervalAnalysis.aetheriaIntervalCount:'',
+        s.intervalAnalysis?s.intervalAnalysis.harmonicRatioCount:'',
+        s.duration?s.duration.actual:'',
+        s.duration?s.duration.recommended:'',
+        s.duration?s.duration.regime:'',
+        s.duration?s.duration.protocolStatus:'',
+        s.duration?s.duration.protocolMet:'',
         s.baseline?s.baseline.pos+1:'',
         s.baseline?F[s.baseline.pos]?.f:'',
         s.baseline?F[s.baseline.pos]?.geo:'',

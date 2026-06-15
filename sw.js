@@ -1,8 +1,11 @@
-const CACHE_NAME = 'aetheria-rct-v4';
+const CACHE_NAME = 'aetheria-rct-v5';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './athena-core.js',
+  './interval-analysis.js',
+  './prescription-engine.js',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
