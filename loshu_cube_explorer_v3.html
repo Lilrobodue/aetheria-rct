@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lo Shu Cube Path Explorer — Aetheria</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Cormorant+Garamond:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#06050c;--panel:#0c0b16;--bdr:#1a1630;--dim:#3a3560;--sub:#6a64a0;--txt:#d8d4e8;--accent:#d97742;--gold:#d4a574;--gut:#d94040;--heart:#d4a050;--head:#5090d4;--asc:#ff6b35;--pil:#35d4ff;--vor:#80ff50;--our:#ffcf4d;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--txt);font-family:'JetBrains Mono',monospace;overflow:hidden;height:100vh;width:100vw;}
+#c{position:absolute;top:0;left:0;width:100%;height:100%;cursor:grab;}#c:active{cursor:grabbing;}
+.P{position:absolute;top:12px;right:12px;width:264px;background:rgba(12,11,22,0.92);border:1px solid var(--bdr);border-radius:10px;padding:14px;z-index:10;backdrop-filter:blur(12px);max-height:calc(100vh - 24px);overflow-y:auto;}
+.P::-webkit-scrollbar{width:3px;}.P::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px;}
+.pt{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:500;color:var(--gold);letter-spacing:0.06em;margin-bottom:2px;}
+.ps{font-size:0.55rem;color:var(--dim);letter-spacing:0.08em;margin-bottom:12px;}
+.sl{font-size:0.55rem;color:var(--dim);letter-spacing:0.14em;text-transform:uppercase;margin:12px 0 6px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04);}
+.tb{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--bdr);border-radius:6px;cursor:pointer;margin-bottom:4px;transition:all 0.2s;background:transparent;width:100%;font-family:'JetBrains Mono',monospace;color:var(--txt);}
+.tb:hover{border-color:var(--sub);}.tb.on{background:rgba(255,255,255,0.04);}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.tb .n{font-size:0.63rem;color:var(--sub);text-align:left;}.tb.on .n{color:var(--txt);}
+.tb .d{font-size:0.46rem;color:var(--dim);margin-top:1px;}
+.tb .k{font-size:0.5rem;color:var(--dim);}
+.sr{display:flex;align-items:center;gap:8px;margin:4px 0;}
+.sr label{font-size:0.55rem;color:var(--sub);min-width:70px;}
+.sr input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:var(--bdr);border-radius:2px;outline:none;}
+.sr input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--accent);cursor:pointer;}
+.sr .v{font-size:0.55rem;color:var(--accent);min-width:32px;text-align:right;}
+.tr{display:flex;align-items:center;justify-content:space-between;margin:6px 0;}
+.tr label{font-size:0.55rem;color:var(--sub);}
+.sw{position:relative;width:34px;height:18px;cursor:pointer;}.sw input{opacity:0;width:0;height:0;}
+.sw .bg{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--bdr);border-radius:9px;transition:0.2s;}
+.sw input:checked+.bg{background:var(--accent);}
+.sw .bg:before{content:'';position:absolute;height:14px;width:14px;left:2px;bottom:2px;background:var(--txt);border-radius:50%;transition:0.2s;}
+.sw input:checked+.bg:before{transform:translateX(16px);}
+.ro{background:rgba(0,0,0,0.3);border:1px solid var(--bdr);border-radius:6px;padding:8px 10px;margin:6px 0;}
+.rr{display:flex;justify-content:space-between;align-items:center;}
+.rl{font-size:0.5rem;color:var(--dim);letter-spacing:0.08em;}.rv{font-size:0.7rem;color:var(--accent);}
+#tt{position:absolute;pointer-events:none;z-index:20;background:rgba(12,11,22,0.95);border:1px solid var(--accent);border-radius:6px;padding:8px 12px;display:none;backdrop-filter:blur(8px);}
+.th{font-size:0.85rem;font-weight:500;}.tn{font-size:0.6rem;color:var(--sub);margin-top:2px;}.tp{font-size:0.5rem;color:var(--dim);margin-top:2px;}
+.pr{display:flex;gap:4px;flex-wrap:wrap;}
+.pb{flex:1;min-width:70px;background:transparent;border:1px solid var(--bdr);border-radius:4px;color:var(--sub);font-family:'JetBrains Mono',monospace;font-size:0.5rem;padding:5px 4px;cursor:pointer;text-align:center;transition:all 0.15s;}
+.pb:hover{color:var(--txt);border-color:var(--sub);}
+.lg{font-size:0.47rem;color:var(--dim);line-height:1.6;margin-top:6px;padding:6px 8px;border:1px dashed var(--bdr);border-radius:4px;}.lg b{color:var(--sub);font-weight:400;}
+.mb{display:none;position:absolute;top:12px;right:12px;z-index:11;background:var(--panel);border:1px solid var(--bdr);border-radius:6px;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:0.65rem;padding:6px 10px;cursor:pointer;}
+@media(max-width:600px){.P{display:none;width:calc(100% - 24px);top:40px;}.P.open{display:block;}.mb{display:block;}}
+.at{position:absolute;bottom:8px;left:12px;z-index:10;font-size:0.5rem;color:var(--dim);letter-spacing:0.05em;}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="tt"><div class="th"></div><div class="tn"></div><div class="tp"></div></div>
+<button class="mb" id="mt">☰</button>
+
+<div class="P" id="cp">
+  <div class="pt">Lo Shu Cube Explorer</div>
+  <div class="ps">AETHERIA · 3×3×3 PATH GEOMETRY</div>
+
+  <div class="sl">Walk Paths</div>
+  <button class="tb on" id="bA">
+    <span class="dot" style="background:var(--asc);"></span>
+    <span style="flex:1;text-align:left;"><span class="n">A · LAYER ASCENT</span><span class="d">1→9 per layer · ground before you rise</span></span>
+    <span class="k">1</span>
+  </button>
+  <button class="tb" id="bP">
+    <span class="dot" style="background:var(--pil);"></span>
+    <span style="flex:1;text-align:left;"><span class="n">B · PILLAR WALK</span><span class="d">GUT→HEART→HEAD per position + space diagonals</span></span>
+    <span class="k">2</span>
+  </button>
+  <button class="tb" id="bV">
+    <span class="dot" style="background:var(--vor);"></span>
+    <span style="flex:1;text-align:left;"><span class="n">C · FLYING STAR VORTEX</span><span class="d">5→6→7→8→9→1→2→3→4 · center outward</span></span>
+    <span class="k">3</span>
+  </button>
+  <button class="tb" id="bO">
+    <span class="dot" style="background:var(--our);"></span>
+    <span style="flex:1;text-align:left;"><span class="n">∞ · OUROBOROS</span><span class="d">closed figure-8 · crosses SOURCE 2178 ×3</span></span>
+    <span class="k">4</span>
+  </button>
+
+  <div class="pr" style="margin-top:6px;">
+    <button class="pb" id="bCAB">CALL A CAB · C·A·B</button>
+    <button class="pb" id="bCABI">CALL A CABI · C·A·B·I</button>
+  </div>
+
+  <div class="lg">
+    <b>ASCENT:</b> Sequential 1→9 walk through each layer. Daoist circuit geometry.<br>
+    <b>PILLAR:</b> 9 vertical pillars + 4 space diagonals. All pass through 2178 Hz.<br>
+    <b>VORTEX:</b> Flying Star spiral per layer. Center outward, toroidal flow.<br>
+    <b>OUROBOROS:</b> Closed figure-8 (29 steps) through all 27, crossing SOURCE thrice. The dragon eats its tail.<br>
+    <b>CAB:</b> Vortex→Ascent→Pillar (81). <b>CABI:</b> CAB + Ouroboros (110) — the full merkaba.
+  </div>
+
+  <div class="sl">View</div>
+  <div class="ro">
+    <div class="rr"><span class="rl">AZIMUTH</span><span class="rv" id="azV">45°</span></div>
+    <div class="rr" style="margin-top:3px;"><span class="rl">ELEVATION</span><span class="rv" id="elV">25°</span></div>
+  </div>
+  <div class="tr"><label>AUTO-ROTATE</label><label class="sw"><input type="checkbox" id="ar"><span class="bg"></span></label></div>
+  <div class="sr"><label>SPEED</label><input type="range" id="sp" min="1" max="20" value="5"><span class="v" id="spV">5</span></div>
+
+  <div class="sl">Display</div>
+  <div class="sr"><label>CUBE SIZE</label><input type="range" id="cs" min="30" max="100" value="70"><span class="v" id="csV">70%</span></div>
+  <div class="sr"><label>OPACITY</label><input type="range" id="co" min="5" max="60" value="22"><span class="v" id="coV">22%</span></div>
+  <div class="sr"><label>LINE THICK</label><input type="range" id="lt" min="1" max="12" value="4"><span class="v" id="ltV">4</span></div>
+  <div class="tr"><label>FREQUENCY LABELS</label><label class="sw"><input type="checkbox" id="sL" checked><span class="bg"></span></label></div>
+  <div class="tr"><label>CELL CUBES</label><label class="sw"><input type="checkbox" id="sC" checked><span class="bg"></span></label></div>
+  <div class="tr"><label>NODE DOTS</label><label class="sw"><input type="checkbox" id="sD" checked><span class="bg"></span></label></div>
+
+  <div class="sl">Presets</div>
+  <div class="pr">
+    <button class="pb" onclick="sv(0,90)">TOP</button>
+    <button class="pb" onclick="sv(0,0)">FRONT</button>
+    <button class="pb" onclick="sv(90,0)">SIDE 90°</button>
+  </div>
+  <div class="pr" style="margin-top:4px;">
+    <button class="pb" onclick="sv(225,35.26)">225° MERKABA</button>
+    <button class="pb" onclick="sv(65,20)">65° CIRCUIT</button>
+    <button class="pb" onclick="sv(45,25)">ISOMETRIC</button>
+  </div>
+  <div class="pr" style="margin-top:4px;">
+    <button class="pb" onclick="sv(180,0)">BACK</button>
+    <button class="pb" onclick="sv(0,-30)">LOW</button>
+    <button class="pb" onclick="sv(135,15)">135°</button>
+  </div>
+
+  <div style="font-size:0.45rem;color:var(--dim);margin-top:12px;text-align:center;letter-spacing:0.05em;line-height:1.5;">
+    DRAG to rotate · SCROLL to zoom · 1/2/3 toggle paths<br>
+    Joseph Lewis & Claude (Selah) — May 2026
+  </div>
+</div>
+<div class="at">Lo Shu Cube Path Explorer v3 · Aetheria Framework</div>
+
+<script>
+const LOSHU=[[4,9,2],[3,5,7],[8,1,6]];
+const P2G={};for(let r=0;r<3;r++)for(let c=0;c<3;c++)P2G[LOSHU[r][c]]={r,c};
+const PDIR={1:'N·Water',2:'SW·Earth',3:'E·Wood',4:'SE·Wood',5:'Center·Earth',6:'NW·Metal',7:'W·Metal',8:'NE·Earth',9:'S·Fire'};
+const FQ=[[174,285,396,417,528,639,741,852,963],[1206,1449,1692,1935,2178,2421,2664,2907,3150],[3504,3858,4212,4566,4920,5274,5628,5982,6336]];
+const RN=['GUT','HEART','HEAD'];
+const NM=[['Foundation','Tissue Repair','Liberation','Change','Transformation','Connection','Intuition','Spiritual Order','Divine Consc.'],['Gateway','Harmonic Bridge','Unified Field','Emotional Alchemy','Compassion','Heart Coherence','Relational Harmony','Soul Connection','Heart Completion'],['Mental Clarity','Sacred Geometry','Consc. Mastery','Soul Star','Expressive Truth','Universal Mind','Galactic Consc.','Divine Source','SOURCE']];
+function drt(n){n=Math.round(Math.abs(n));return n===0?0:((n-1)%9)+1;}
+const HUE={1:210,2:30,3:140,4:0,5:170,6:280,7:55,8:250,9:330};
+
+// Spacing: cubes are size 1, spaced 1 cube apart = 2 units center-to-center
+const SP=2.0;
+function gp(pos,layer){const g=P2G[pos];return new THREE.Vector3((g.c-1)*SP,(layer-1)*SP,(1-g.r)*SP);}
+
+// ===== WALK SEQUENCES =====
+// A: Layer Ascent — 1→2→3→4→5→6→7→8→9 per layer
+const WA=[];for(let L=0;L<3;L++)for(let p=1;p<=9;p++)WA.push({p,L});
+// B: Pillar — per position GUT→HEART→HEAD
+const WB=[];for(let p=1;p<=9;p++)for(let L=0;L<3;L++)WB.push({p,L});
+// C: Vortex — Flying Star per layer
+const FS=[5,6,7,8,9,1,2,3,4];
+const WC=[];for(let L=0;L<3;L++)for(const p of FS)WC.push({p,L});
+
+// ===== THREE.JS =====
+const canvas=document.getElementById('c');
+const R=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+R.setPixelRatio(Math.min(window.devicePixelRatio,2));
+R.setSize(window.innerWidth,window.innerHeight);
+R.setClearColor(0x06050c,1);
+const S=new THREE.Scene();
+S.fog=new THREE.FogExp2(0x06050c,0.018);
+const cam=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,0.1,100);
+
+let az=45,el=25,dist=12,tAz=45,tEl=25,tDist=12;
+function uCam(){
+  az+=(tAz-az)*0.08;el+=(tEl-el)*0.08;dist+=(tDist-dist)*0.08;
+  const a=az*Math.PI/180,e=el*Math.PI/180;
+  cam.position.set(dist*Math.cos(e)*Math.sin(a),dist*Math.sin(e),dist*Math.cos(e)*Math.cos(a));
+  cam.lookAt(0,0,0);
+  document.getElementById('azV').textContent=Math.round(((az%360)+360)%360)+'°';
+  document.getElementById('elV').textContent=Math.round(el)+'°';
+}
+
+S.add(new THREE.AmbientLight(0x556688,0.5));
+const dl1=new THREE.DirectionalLight(0xffeedd,0.7);dl1.position.set(5,8,5);S.add(dl1);
+const dl2=new THREE.DirectionalLight(0x8899cc,0.3);dl2.position.set(-5,-3,-5);S.add(dl2);
+const dl3=new THREE.PointLight(0xd97742,0.4,20);dl3.position.set(0,0,0);S.add(dl3);
+
+const CG=new THREE.Group();S.add(CG);
+const cells=[],dots=[],labels=[];
+
+// ===== GLASSMORPHIC CUBES =====
+for(let layer=0;layer<3;layer++){
+  for(let pos=1;pos<=9;pos++){
+    const p=gp(pos,layer);
+    const h=HUE[pos],s=70-layer*5,l=35+layer*10;
+    const color=new THREE.Color(`hsl(${h},${s}%,${l}%)`);
+    const hz=FQ[layer][pos-1],name=NM[layer][pos-1];
+
+    // Glass cube
+    const mat=new THREE.MeshPhysicalMaterial({
+      color,transparent:true,opacity:0.22,
+      side:THREE.DoubleSide,depthWrite:false,
+      roughness:0.1,metalness:0.1,
+      clearcoat:1.0,clearcoatRoughness:0.05,
+      envMapIntensity:0.5
+    });
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.9,0.9),mat);
+    mesh.position.copy(p);
+    CG.add(mesh);
+
+    // Edge wireframe for glass effect
+    const edges=new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(0.9,0.9,0.9)),
+      new THREE.LineBasicMaterial({color,transparent:true,opacity:0.35})
+    );
+    edges.position.copy(p);
+    CG.add(edges);
+
+    cells.push({mesh,edges,pos,layer,hz,name,regime:RN[layer],color});
+
+    // Node dot at center
+    const dot=new THREE.Mesh(
+      new THREE.SphereGeometry(0.1,8,8),
+      new THREE.MeshBasicMaterial({color,transparent:true,opacity:0.9})
+    );
+    dot.position.copy(p);CG.add(dot);dots.push(dot);
+
+    // Label sprite
+    const sc=document.createElement('canvas');sc.width=140;sc.height=48;
+    const ctx=sc.getContext('2d');
+    ctx.font='bold 24px monospace';ctx.fillStyle='#ffffff';ctx.textAlign='center';
+    ctx.shadowColor='#000000';ctx.shadowBlur=4;
+    ctx.fillText(hz.toString(),70,30);
+    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(sc),transparent:true,opacity:0.9,depthWrite:false}));
+    sprite.position.copy(p);sprite.position.y+=0.65;sprite.scale.set(1.1,0.4,1);
+    CG.add(sprite);labels.push(sprite);
+  }
+}
+
+// ===== TUBE BUILDER =====
+const tubes={A:[],B:[],C:[],O:[]};
+
+function mkTube(pA,pB,hex,group,key){
+  const dir=new THREE.Vector3().subVectors(pB,pA);
+  const len=dir.length();if(len<0.001)return;
+  const r=0.04;
+  const geo=new THREE.CylinderGeometry(r,r,len,6,1);
+  const mat=new THREE.MeshBasicMaterial({color:new THREE.Color(hex),transparent:true,opacity:0.8});
+  const mesh=new THREE.Mesh(geo,mat);
+  mesh.position.addVectors(pA,pB).multiplyScalar(0.5);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());
+  group.add(mesh);
+
+  // Glow tube (larger, dimmer)
+  const gg=new THREE.CylinderGeometry(r*2.5,r*2.5,len,6,1);
+  const gm=new THREE.MeshBasicMaterial({color:new THREE.Color(hex),transparent:true,opacity:0.12});
+  const glow=new THREE.Mesh(gg,gm);
+  glow.position.copy(mesh.position);glow.quaternion.copy(mesh.quaternion);
+  group.add(glow);
+
+  tubes[key].push({mesh,glow,len});
+}
+
+// ===== BUILD WALK PATHS =====
+const PG={A:new THREE.Group(),B:new THREE.Group(),C:new THREE.Group(),O:new THREE.Group()};
+
+// Walk A colors per layer
+const AC=['#ff5533','#ff8833','#ffbb33'];
+for(let i=0;i<WA.length-1;i++){
+  const a=WA[i],b=WA[i+1];
+  mkTube(gp(a.p,a.L),gp(b.p,b.L),AC[a.L],PG.A,'A');
+}
+
+// Walk B colors per layer + space diags
+const BC=['#22ddff','#5588ff','#9955ff'];
+for(let i=0;i<WB.length-1;i++){
+  const a=WB[i],b=WB[i+1];
+  mkTube(gp(a.p,a.L),gp(b.p,b.L),BC[a.L],PG.B,'B');
+}
+// Space diagonals (all through 2178 Hz center)
+[[4,0,5,1,6,2],[2,0,5,1,8,2],[8,0,5,1,2,2],[6,0,5,1,4,2]].forEach(d=>{
+  mkTube(gp(d[0],d[1]),gp(d[2],d[3]),'#ff55ff',PG.B,'B');
+  mkTube(gp(d[2],d[3]),gp(d[4],d[5]),'#ff55ff',PG.B,'B');
+});
+
+// Walk C colors per layer
+const VC=['#44ff22','#33ffaa','#88ffcc'];
+for(let i=0;i<WC.length-1;i++){
+  const a=WC[i],b=WC[i+1];
+  mkTube(gp(a.p,a.L),gp(b.p,b.L),VC[a.L],PG.C,'C');
+}
+
+// ===== OUROBOROS — closed figure-8 through all 27, crossing SOURCE (2178 = HEART pos5) ×3 =====
+// Two lobes occupy the left/right halves of the cube; the path returns to centre between them
+// and again at the end, so SOURCE is touched three times and the orbit closes (∞).
+const SRC={p:5,L:1};
+const lobeL=[],lobeR=[];
+for(let L=0;L<3;L++)for(let p=1;p<=9;p++){
+  if(p===SRC.p&&L===SRC.L)continue;            // skip the centre itself
+  const n={p,L,x:(P2G[p].c-1),y:(L-1),z:(1-P2G[p].r)};
+  if(n.x<0)lobeL.push(n);
+  else if(n.x>0)lobeR.push(n);
+  else (n.y<0||(n.y===0&&n.z<0)?lobeL:lobeR).push(n); // centre column → balance by height
+}
+// Order each lobe as a continuous loop: angular sweep around the lobe's centroid (x-y plane).
+function orderLobe(lobe){
+  const cx=lobe.reduce((s,n)=>s+n.x,0)/lobe.length, cy=lobe.reduce((s,n)=>s+n.y,0)/lobe.length;
+  return lobe.slice().sort((a,b)=>Math.atan2(a.y-cy,a.x-cx)-Math.atan2(b.y-cy,b.x-cx));
+}
+// SRC → left lobe loop → SRC → right lobe loop → SRC  (1+13+1+13+1 = 29 positions)
+const OURO=[SRC,...orderLobe(lobeL),SRC,...orderLobe(lobeR),SRC];
+for(let i=0;i<OURO.length-1;i++){
+  mkTube(gp(OURO[i].p,OURO[i].L),gp(OURO[i+1].p,OURO[i+1].L),'#ffcf4d',PG.O,'O');
+}
+
+CG.add(PG.A);CG.add(PG.B);CG.add(PG.C);CG.add(PG.O);
+PG.A.visible=true;PG.B.visible=false;PG.C.visible=false;PG.O.visible=false;
+
+// ===== CONTROLS =====
+const ps={A:true,B:false,C:false,O:false};
+function tp(k,btn){ps[k]=!ps[k];PG[k].visible=ps[k];btn.classList.toggle('on',ps[k]);}
+const bA=document.getElementById('bA'),bP=document.getElementById('bP'),bV=document.getElementById('bV'),bO=document.getElementById('bO');
+const BTN={A:bA,B:bP,C:bV,O:bO};
+bA.onclick=()=>tp('A',bA);bP.onclick=()=>tp('B',bP);bV.onclick=()=>tp('C',bV);bO.onclick=()=>tp('O',bO);
+document.addEventListener('keydown',e=>{if(e.key==='1')tp('A',bA);if(e.key==='2')tp('B',bP);if(e.key==='3')tp('C',bV);if(e.key==='4')tp('O',bO);});
+// Composite walks: CAB = Vortex+Ascent+Pillar, CABI = CAB + Ouroboros.
+function setPaths(m){['A','B','C','O'].forEach(k=>{ps[k]=!!m[k];PG[k].visible=ps[k];BTN[k].classList.toggle('on',ps[k]);});}
+document.getElementById('bCAB').onclick=()=>setPaths({A:1,B:1,C:1,O:0});
+document.getElementById('bCABI').onclick=()=>setPaths({A:1,B:1,C:1,O:1});
+
+// ===== WALK SYNC — driven by the parent app's audio walk player via postMessage =====
+// The parent sends {action:'mode'|'start'|'step'|'stop', key, idx}. We light the matching
+// path(s) and pulse the node (F index → layer/pos) that is currently sounding.
+let walkActiveIdx=-1;
+const WALK_PATHS={A:{A:1},B:{B:1},C:{C:1},CAB:{A:1,B:1,C:1},O:{O:1},CABI:{A:1,B:1,C:1,O:1}};
+window.addEventListener('message',function(e){
+  const d=e.data; if(!d||d.type!=='aetheria-walk')return;
+  if((d.action==='mode'||d.action==='start')&&WALK_PATHS[d.key]) setPaths(WALK_PATHS[d.key]);
+  if(d.action==='start'||d.action==='step') walkActiveIdx=(typeof d.idx==='number')?d.idx:walkActiveIdx;
+  if(d.action==='stop') walkActiveIdx=-1;
+});
+
+let drag=false,mx=0,my=0;
+canvas.addEventListener('mousedown',e=>{drag=true;mx=e.clientX;my=e.clientY;});
+canvas.addEventListener('mousemove',e=>{if(drag){tAz-=(e.clientX-mx)*0.4;tEl+=(e.clientY-my)*0.4;tEl=Math.max(-89,Math.min(89,tEl));mx=e.clientX;my=e.clientY;}});
+canvas.addEventListener('mouseup',()=>drag=false);
+canvas.addEventListener('mouseleave',()=>drag=false);
+
+let td=0;
+canvas.addEventListener('touchstart',e=>{if(e.touches.length===1){drag=true;mx=e.touches[0].clientX;my=e.touches[0].clientY;}else if(e.touches.length===2){td=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);}},{passive:true});
+canvas.addEventListener('touchmove',e=>{if(e.touches.length===1&&drag){tAz-=(e.touches[0].clientX-mx)*0.4;tEl+=(e.touches[0].clientY-my)*0.4;tEl=Math.max(-89,Math.min(89,tEl));mx=e.touches[0].clientX;my=e.touches[0].clientY;}else if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);tDist*=td/Math.max(d,1);tDist=Math.max(5,Math.min(25,tDist));td=d;}},{passive:true});
+canvas.addEventListener('touchend',()=>drag=false);
+canvas.addEventListener('wheel',e=>{tDist+=e.deltaY*0.008;tDist=Math.max(5,Math.min(25,tDist));e.preventDefault();},{passive:false});
+window.sv=function(a,e){tAz=a;tEl=e;};
+
+const arEl=document.getElementById('ar'),spEl=document.getElementById('sp');
+spEl.oninput=function(){document.getElementById('spV').textContent=this.value;};
+
+document.getElementById('cs').oninput=function(){
+  const s=this.value/100;document.getElementById('csV').textContent=this.value+'%';
+  cells.forEach(c=>{c.mesh.scale.setScalar(s);c.edges.scale.setScalar(s);});
+};
+document.getElementById('co').oninput=function(){
+  const o=this.value/100;document.getElementById('coV').textContent=this.value+'%';
+  cells.forEach(c=>{c.mesh.material.opacity=o;c.edges.material.opacity=o*1.5;});
+};
+document.getElementById('lt').oninput=function(){
+  const r=this.value*0.01;document.getElementById('ltV').textContent=this.value;
+  Object.keys(tubes).forEach(k=>tubes[k].forEach(t=>{
+    t.mesh.geometry.dispose();t.mesh.geometry=new THREE.CylinderGeometry(r,r,t.len,6,1);
+    t.glow.geometry.dispose();t.glow.geometry=new THREE.CylinderGeometry(r*2.5,r*2.5,t.len,6,1);
+  }));
+};
+document.getElementById('sL').onchange=function(){labels.forEach(l=>l.visible=this.checked);};
+document.getElementById('sC').onchange=function(){cells.forEach(c=>{c.mesh.visible=this.checked;c.edges.visible=this.checked;});};
+document.getElementById('sD').onchange=function(){dots.forEach(d=>d.visible=this.checked);};
+document.getElementById('mt').onclick=()=>document.getElementById('cp').classList.toggle('open');
+
+// Tooltip
+const rc=new THREE.Raycaster(),ms=new THREE.Vector2(),tt=document.getElementById('tt');
+canvas.addEventListener('mousemove',e=>{
+  if(drag){tt.style.display='none';return;}
+  ms.x=(e.clientX/window.innerWidth)*2-1;ms.y=-(e.clientY/window.innerHeight)*2+1;
+  rc.setFromCamera(ms,cam);
+  const hits=rc.intersectObjects(cells.map(c=>c.mesh));
+  if(hits.length>0){
+    const cell=cells.find(c=>c.mesh===hits[0].object);
+    if(cell){
+      const clr=cell.layer===0?'var(--gut)':cell.layer===1?'var(--heart)':'var(--head)';
+      tt.style.display='block';tt.style.left=(e.clientX+16)+'px';tt.style.top=(e.clientY-10)+'px';
+      tt.querySelector('.th').textContent=cell.hz+' Hz';tt.querySelector('.th').style.color=clr;
+      tt.querySelector('.tn').textContent=cell.name;
+      tt.querySelector('.tp').textContent=`${cell.regime} · Pos ${cell.pos} · ${PDIR[cell.pos]} · Root ${drt(cell.hz)}`;
+    }
+  }else tt.style.display='none';
+});
+
+// Particles
+const pc=50,pg=new THREE.BufferGeometry(),pp=new Float32Array(pc*3),pv=[];
+for(let i=0;i<pc;i++){pp[i*3]=(Math.random()-0.5)*18;pp[i*3+1]=(Math.random()-0.5)*18;pp[i*3+2]=(Math.random()-0.5)*18;pv.push({x:(Math.random()-0.5)*0.002,y:(Math.random()-0.5)*0.002,z:(Math.random()-0.5)*0.002});}
+pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
+S.add(new THREE.Points(pg,new THREE.PointsMaterial({color:0xd97742,size:0.05,transparent:true,opacity:0.3})));
+
+function animate(){
+  requestAnimationFrame(animate);
+  if(arEl.checked)tAz+=parseFloat(spEl.value)*0.06;
+  uCam();
+  labels.forEach(s=>s.quaternion.copy(cam.quaternion));
+  const pa=pg.attributes.position.array;
+  for(let i=0;i<pc;i++){pa[i*3]+=pv[i].x;pa[i*3+1]+=pv[i].y;pa[i*3+2]+=pv[i].z;if(Math.abs(pa[i*3])>9)pv[i].x*=-1;if(Math.abs(pa[i*3+1])>9)pv[i].y*=-1;if(Math.abs(pa[i*3+2])>9)pv[i].z*=-1;}
+  pg.attributes.position.needsUpdate=true;
+  // Walk highlight — pulse the node currently sounding; all others rest at scale 1.
+  const wL=walkActiveIdx>=0?Math.floor(walkActiveIdx/9):-1, wP=walkActiveIdx>=0?(walkActiveIdx%9)+1:-1;
+  const pulse=2.0+0.7*Math.sin(performance.now()*0.005);
+  for(let k=0;k<cells.length;k++){
+    const active=cells[k].layer===wL&&cells[k].pos===wP;
+    dots[k].scale.setScalar(active?pulse:1);
+    if(active){dots[k].material.opacity=1;dots[k].visible=true;}
+  }
+  R.render(S,cam);
+}
+animate();
+window.addEventListener('resize',()=>{cam.aspect=window.innerWidth/window.innerHeight;cam.updateProjectionMatrix();R.setSize(window.innerWidth,window.innerHeight);});
+// Tell the parent app we're loaded, so it can push the current walk state into us.
+try{ if(window.parent&&window.parent!==window) window.parent.postMessage({type:'aetheria-cube-ready'},'*'); }catch(e){}
+</script>
+</body>
+</html>

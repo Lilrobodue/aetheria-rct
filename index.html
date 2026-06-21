@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Aetheria: Resonant Coherence Training</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap');
 :root{--bg:#06060c;--bg2:#0a0810;--bg3:#0f0a14;--bdr:#1a1520;--dim:#5a4a42;--mut:#8a7a6a;--sub:#8a7a68;--txt:#ede6da;--gld:#d4a574;--gld2:#f0d4a8;--pur:#5048C4;--vio:#7B50D4;--mag:#A840B8}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh;min-height:100dvh;overflow:hidden;display:flex;flex-direction:column;position:fixed;top:0;left:0;right:0;bottom:0}
@@ -22,6 +22,31 @@ button{font-family:inherit;cursor:pointer}
 .hd-title{font-size:19px;font-weight:300;background:linear-gradient(135deg,var(--gld),var(--gld2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.08em}
 .hd-sub{font-size:11px;color:var(--sub);margin-top:1px}
 .content{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 14px 80px;-webkit-overflow-scrolling:touch;min-height:0}
+/* Embedded instruments (Regime Collider, Lo Shu Cube) fill the space between header and nav.
+   An iframe is a replaced element: top+bottom alone won't stretch it (height:auto falls back
+   to the ~150px intrinsic height), so set an explicit height spanning header→nav. */
+.embed-frame{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 56px);width:100%;height:calc(100dvh - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - 92px);border:none;background:#06050c;z-index:5}
+/* Lo Shu walk player — collapsible bottom sheet overlaid on the 3D cube */
+.walk-sheet{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 54px);z-index:10;max-width:460px;margin:0 auto;padding:0 10px}
+.walk-sheet-body{max-height:62vh;overflow-y:auto;transition:max-height .35s ease,opacity .3s ease;opacity:1;background:#0a0810f2;border:1px solid var(--bdr);border-radius:12px 12px 0 0;backdrop-filter:blur(10px)}
+.walk-sheet.collapsed .walk-sheet-body{max-height:0;opacity:0;overflow:hidden;border-color:transparent}
+.walk-sheet-body .card{border:none;margin:0;background:transparent}
+.walk-sheet-body .card-h{display:none}
+.walk-handle{background:#0c0b14f2;border:1px solid var(--bdr);border-radius:0 0 10px 10px;padding:7px 14px;cursor:pointer;backdrop-filter:blur(10px)}
+.walk-sheet.collapsed .walk-handle{border-radius:10px}
+.walk-handle-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.06em;color:var(--gld)}
+/* Sleep mode — full-screen overnight tracker */
+.sleep-screen{position:fixed;inset:0;background:#04030a;z-index:60;display:none;align-items:center;justify-content:center;color:#cfc8e0;font-family:'Cormorant Garamond',Georgia,serif}
+.sleep-inner{width:100%;max-width:460px;padding:28px 24px;text-align:center;transition:opacity 1.8s ease}
+.sleep-inner.dim{opacity:0.14}
+.slp-clock{font-size:62px;font-weight:300;letter-spacing:.04em;color:#e8e2f4;line-height:1}
+.slp-stage{font-size:22px;margin-top:10px;letter-spacing:.12em;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.slp-sub{font-size:13px;color:#6a6488;margin-top:4px;letter-spacing:.06em}
+.slp-hypno{width:100%;height:88px;margin:24px 0 14px;display:block}
+.slp-stats{font-size:11px;color:#8a84a8;line-height:1.6;font-family:'JetBrains Mono',monospace}
+.slp-vitals{font-size:11px;color:#5a5478;margin-top:10px;font-family:'JetBrains Mono',monospace}
+.slp-end{margin-top:26px;background:transparent;border:1px solid #3a3560;color:#9a94b8;padding:11px 26px;border-radius:8px;font-family:inherit;font-size:15px;letter-spacing:.1em}
+.slp-hint{font-size:10px;color:#33304e;margin-top:16px;letter-spacing:.05em}
 .nav{position:fixed;bottom:0;left:0;right:0;background:#0a0814ee;border-top:1px solid var(--bdr);display:flex;padding:4px 4px env(safe-area-inset-bottom,4px);z-index:20;backdrop-filter:blur(10px)}
 .nav-btn{flex:1;background:transparent;border:none;color:var(--dim);display:flex;flex-direction:column;align-items:center;gap:1px;padding:3px 0;font-size:10px;letter-spacing:.05em;transition:color .2s}
 .nav-btn.on{color:var(--gld)}
@@ -188,8 +213,27 @@ button{font-family:inherit;cursor:pointer}
     <button class="nav-btn" data-tab="cymatics" onclick="go('cymatics')"><span class="nav-ico">❋</span>Cymatics</button>
     <button class="nav-btn" data-tab="biofield" onclick="go('biofield')"><span class="nav-ico">◎</span>Biofield</button>
     <button class="nav-btn" data-tab="flower" onclick="go('flower')"><span class="nav-ico">✿</span>Flower</button>
+    <button class="nav-btn" data-tab="collider" onclick="go('collider')"><span class="nav-ico">⬡</span>Collider</button>
+    <button class="nav-btn" data-tab="cube" onclick="go('cube')"><span class="nav-ico">田</span>Lo Shu</button>
     <button class="nav-btn" data-tab="history" onclick="go('history')"><span class="nav-ico">☰</span>History</button>
     <button class="nav-btn" data-tab="links" onclick="go('links')"><span class="nav-ico">◈</span>Links</button>
+  </div>
+</div>
+<!-- Persistent embedded instruments — created once, shown/hidden by syncEmbeds() so a
+     parent re-render never reloads them (which would reset wave selections). -->
+<iframe id="frame-collider" class="embed-frame" data-src="regime_collider.html" title="Aetheria Regime Collider" allow="fullscreen" style="display:none"></iframe>
+<iframe id="frame-cube" class="embed-frame" data-src="loshu_cube_explorer_v3.html" title="Lo Shu Cube Path Explorer" allow="fullscreen" style="display:none"></iframe>
+<!-- Sleep Mode (full-screen overnight tracker) -->
+<div class="sleep-screen" id="sleepScreen" onpointerdown="armSleepDim()">
+  <div class="sleep-inner" id="sleepInner">
+    <div class="slp-clock" id="slpClock">--:--</div>
+    <div class="slp-stage" id="slpStage" style="color:#6a6488">Settling…</div>
+    <div class="slp-sub" id="slpElapsed">0h 00m asleep</div>
+    <canvas class="slp-hypno" id="slpHypno"></canvas>
+    <div class="slp-stats" id="slpStats"></div>
+    <div class="slp-vitals" id="slpVitals"></div>
+    <button class="slp-end" onclick="endSleep()">End Sleep</button>
+    <div class="slp-hint">Screen stays awake · tap to brighten · dims while you sleep</div>
   </div>
 </div>
 <!-- Disclaimer Modal -->
@@ -318,6 +362,8 @@ button{font-family:inherit;cursor:pointer}
 <script src="athena-core.js"></script>
 <script src="interval-analysis.js"></script>
 <script src="prescription-engine.js"></script>
+<script src="neurodynamics.js"></script>
+<script src="spiral-wave.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════
 // ARCHITECTURE (following Perplexity's analysis):
@@ -366,6 +412,72 @@ const triL={qian:[1,1,1],dui:[1,1,0],li:[1,0,1],zhen:[1,0,0],xun:[0,1,1],kan:[0,
 const BN=['delta','theta','alpha','beta','gamma'],BL=['Delta','Theta','Alpha','Beta','Gamma'],BH=['1-4','4-8','8-13','13-30','30-50'],BC=['#5048C4','#7B50D4','#A840B8','#C43A6A','#E02878'];
 
 // ═══════════════════════════════════════
+// LO SHU WALK DATA — three guided paths through the 27 frequencies
+// ═══════════════════════════════════════
+// F is laid out regime-major: GUT=F[0..8], HEART=F[9..17], HEAD=F[18..26].
+// So position p (1-9) within regime r (0=GUT,1=HEART,2=HEAD) → index = r*9+(p-1).
+const REGIME_NAMES=['GUT','HEART','HEAD'];
+const REGIME_COLS=['#C47A14','#C43A6A','#5048C4']; // GUT / HEART / HEAD
+// Position → compass direction (Lo Shu nine-palace correspondence)
+const POS_DIR={1:'N',2:'SW',3:'E',4:'SE',5:'Center',6:'NW',7:'W',8:'NE',9:'S'};
+// Lo Shu magic square (rows top→bottom): which position number sits in each cell.
+const LOSHU_GRID=[[4,9,2],[3,5,7],[8,1,6]];
+const _fi=(r,p)=>r*9+(p-1);           // regime,position → F index
+const loshuPos=(idx)=>(idx%9)+1;      // F index → position 1-9
+const loshuRegime=(idx)=>Math.floor(idx/9); // F index → 0/1/2
+// Walk A — Layer Ascent: 1→9 through GUT, then HEART, then HEAD (linear). Ground before you rise.
+const WALK_A=[];for(let r=0;r<3;r++)for(let p=1;p<=9;p++)WALK_A.push(_fi(r,p));
+// Walk B — Pillar: for each position 1→9, GUT→HEART→HEAD. Integrate each quality fully.
+const WALK_B=[];for(let p=1;p<=9;p++)for(let r=0;r<3;r++)WALK_B.push(_fi(r,p));
+// Walk C — Flying Star Vortex: nine-palace circuit 5,6,7,8,9,1,2,3,4 per layer. Emanate from the heart.
+const FLYING_STAR_ORDER=[5,6,7,8,9,1,2,3,4];
+const WALK_C=[];for(let r=0;r<3;r++)for(const p of FLYING_STAR_ORDER)WALK_C.push(_fi(r,p));
+// Ouroboros — closed figure-8 through all 27, crossing SOURCE (2178 = HEART pos5) ×3.
+// Same construction as the 3D cube's path, so the audio walk traces the figure you see.
+const P2G={};for(let r=0;r<3;r++)for(let c=0;c<3;c++)P2G[LOSHU_GRID[r][c]]={r,c};
+const WALK_O=(function(){
+  const SRC={p:5,L:1},lobeL=[],lobeR=[];
+  for(let L=0;L<3;L++)for(let p=1;p<=9;p++){
+    if(p===5&&L===1)continue;
+    const n={p,L,x:(P2G[p].c-1),y:(L-1),z:(1-P2G[p].r)};
+    if(n.x<0)lobeL.push(n);
+    else if(n.x>0)lobeR.push(n);
+    else (n.y<0||(n.y===0&&n.z<0)?lobeL:lobeR).push(n);
+  }
+  const ord=l=>{const cx=l.reduce((s,n)=>s+n.x,0)/l.length,cy=l.reduce((s,n)=>s+n.y,0)/l.length;
+    return l.slice().sort((a,b)=>Math.atan2(a.y-cy,a.x-cx)-Math.atan2(b.y-cy,b.x-cx));};
+  return [SRC,...ord(lobeL),SRC,...ord(lobeR),SRC].map(n=>_fi(n.L,n.p));
+})();
+// Composite walks. CAB = Vortex→Ascent→Pillar (81). CABI = CAB + Ouroboros (110).
+const WALK_CAB=[...WALK_C,...WALK_A,...WALK_B];
+const WALK_CABI=[...WALK_CAB,...WALK_O];
+const WALKS=[
+  {key:'A',name:'Ascent',seq:WALK_A,sub:'Ground before you rise'},
+  {key:'B',name:'Pillar',seq:WALK_B,sub:'Integrate each quality fully'},
+  {key:'C',name:'Vortex',seq:WALK_C,sub:'Emanate from the heart'},
+  {key:'CAB',name:'CAB',seq:WALK_CAB,sub:'Vortex→Ascent→Pillar · the cube from every angle'},
+  {key:'O',name:'Ouroboros',seq:WALK_O,sub:'Closed figure-8 · crosses SOURCE ×3'},
+  {key:'CABI',name:'CABI',seq:WALK_CABI,sub:'The full circuit · CAB then the loop home'},
+];
+
+// ── Lo Shu walk tuning ───────────────────────────────────────────────
+// The GUT layer IS the Solfeggio "Seed". Two retunings are offered:
+//  · Solfeggio      — the corrected 9-tone scale (pos 3 = 369, not the offset 396)
+//  · Perfect Lo Shu — positions 1-3 dropped by 99, positions 4-6 dropped by 9, so
+//    every tone's digit root locks to the 3·6·9 cycle that builds the magic square.
+// Positions 7-9 (741/852/963) and the HEART/HEAD layers are identical in both sets.
+const WALK_TUNINGS=[
+  {key:'solf', name:'Solfeggio',      gut:[174,285,369,417,528,639,741,852,963]},
+  {key:'loshu',name:'Perfect Lo Shu', gut:[ 75,186,270,408,519,630,741,852,963]},
+];
+// Hz to actually play/display for an F index under the active walk tuning.
+// Only the GUT/Seed layer is retuned; HEART/HEAD fall back to the canonical F value.
+function walkFreqHz(idx){
+  if(loshuRegime(idx)===0) return WALK_TUNINGS[app.walkTuning].gut[loshuPos(idx)-1];
+  return F[idx].f;
+}
+
+// ═══════════════════════════════════════
 // 1. AUDIO ENGINE — Singleton, never destroyed
 // ═══════════════════════════════════════
 class AudioEngine {
@@ -375,10 +487,19 @@ class AudioEngine {
     try{this.volume=parseFloat(localStorage.getItem('rct-volume'))||0.01;}catch(e){this.volume=0.01;}
   }
 
+  // 741 Hz and up fold down into the sub-bass register — the literal high pitch
+  // (741/852/963 Hz) is piercing; the octave-folded tone carries the same pitch
+  // class far more gently. Below 741 Hz plays at its true frequency.
+  _isFolded(f){ return f>=741; }
+  // Sub-bass needs more gain to sit at equal loudness; soften the curve a touch.
   _vol(freqIdx){
-    const base=F[freqIdx].f>963?0.35:0.18;
+    const base=this._isFolded(F[freqIdx].f)?0.32:0.18;
     return base*this.volume;
   }
+  // "Same message, gentler envelope": folded tones get a slower onset and a longer
+  // glide between notes so the sub-bass swells in rather than thumping on.
+  _attack(freqIdx){ return this._isFolded(F[freqIdx].f)?1.2:0.5; }
+  _glide(freqIdx){ return this._isFolded(F[freqIdx].f)?0.7:0.3; }
 
   setVolume(v){
     this.volume=Math.max(0,Math.min(1,v));
@@ -388,17 +509,21 @@ class AudioEngine {
     }
   }
 
-  start(freqIdx){
+  // freqHz (optional) overrides the played pitch for this index — used by the Lo Shu
+  // walk to sound a retuned GUT tone without mutating the canonical F table. The
+  // GUT tones affected (75–639) are all below the 741 fold threshold, so the
+  // index-based fold/vol/attack curves stay correct.
+  start(freqIdx, freqHz){
     if(this.playing) this.stop();
     try{
       this.ctx=new(window.AudioContext||window.webkitAudioContext)();
       this.osc=this.ctx.createOscillator();
       this.gain=this.ctx.createGain();
       this.osc.type='sine';
-      const pf=this._playable(F[freqIdx].f);
+      const pf=this._playable(freqHz!=null?freqHz:F[freqIdx].f);
       this.osc.frequency.setValueAtTime(pf,this.ctx.currentTime);
       this.gain.gain.setValueAtTime(0,this.ctx.currentTime);
-      this.gain.gain.linearRampToValueAtTime(this._vol(freqIdx),this.ctx.currentTime+0.5);
+      this.gain.gain.linearRampToValueAtTime(this._vol(freqIdx),this.ctx.currentTime+this._attack(freqIdx));
       this.osc.connect(this.gain);this.gain.connect(this.ctx.destination);
       this.osc.start();
       this.playing=true;this.currentFreqIdx=freqIdx;
@@ -407,13 +532,23 @@ class AudioEngine {
   }
 
   // Smoothly transition to a new frequency — THIS is what Muse calls
-  setFrequency(freqIdx){
+  setFrequency(freqIdx, freqHz){
     if(!this.playing||!this.osc||!this.ctx||freqIdx===this.currentFreqIdx)return;
-    const pf=this._playable(F[freqIdx].f);
-    this.osc.frequency.linearRampToValueAtTime(pf,this.ctx.currentTime+0.3);
-    this.gain.gain.linearRampToValueAtTime(this._vol(freqIdx),this.ctx.currentTime+0.3);
+    const pf=this._playable(freqHz!=null?freqHz:F[freqIdx].f);
+    const gl=this._glide(freqIdx);
+    this.osc.frequency.linearRampToValueAtTime(pf,this.ctx.currentTime+gl);
+    this.gain.gain.linearRampToValueAtTime(this._vol(freqIdx),this.ctx.currentTime+gl);
     this.currentFreqIdx=freqIdx;
-    console.log('[AudioEngine] Changed to',F[freqIdx].f,'Hz → playable',pf.toFixed(1),'Hz');
+    console.log('[AudioEngine] Changed to',(freqHz!=null?freqHz:F[freqIdx].f),'Hz → playable',pf.toFixed(1),'Hz');
+  }
+
+  // Re-apply the current tone's pitch in place — used when the walk tuning toggles
+  // live (same F index, different Hz), which setFrequency() would otherwise skip.
+  retune(freqHz){
+    if(!this.playing||!this.osc||!this.ctx)return;
+    const pf=this._playable(freqHz);
+    this.osc.frequency.linearRampToValueAtTime(pf,this.ctx.currentTime+0.3);
+    console.log('[AudioEngine] Retuned to',freqHz,'Hz → playable',pf.toFixed(1),'Hz');
   }
 
   stop(){
@@ -427,7 +562,7 @@ class AudioEngine {
     console.log('[AudioEngine] Stopped');
   }
 
-  _playable(f){let x=f;if(x>963)while(x>60)x/=2;return x;}
+  _playable(f){let x=f;if(this._isFolded(f))while(x>60)x/=2;return x;}
 }
 
 // THE singleton
@@ -492,6 +627,14 @@ const app = {
   gfBreathTotal:0, // 1-27
   gfBreathPhase:0, // 0=inhale(3s), 1=hold(6s), 2=exhale(9s)
   gfInhale:false, gfFormation:0,
+  // Lo Shu guided auto-walk
+  walkOn:false,      // walk currently stepping the oscillator
+  walkMode:0,        // 0=Ascent 1=Pillar 2=Vortex 3=CAB 4=Ouroboros 5=CABI
+  walkStep:0,        // index into the active walk sequence
+  walkSecPer:12,     // seconds held per tone
+  walkElapsed:0,     // ms elapsed within current tone (for the progress arc)
+  walkPanelOpen:true,// walk overlay expanded on the Lo Shu tab
+  walkTuning:(function(){try{return parseInt(localStorage.getItem('rct-walk-tuning'))||0;}catch(e){return 0;}})(), // 0=Solfeggio 1=Perfect Lo Shu
 };
 
 // ═══════════════════════════════════════
@@ -717,8 +860,13 @@ function onMuseData(data){
       '| Bands: d='+~~(pr.delta*100)+'% t='+~~(pr.theta*100)+'% a='+~~(pr.alpha*100)+'% b='+~~(pr.beta*100)+'% g='+~~(pr.gamma*100)+'%',
       '| Coh:'+~~(neuro.coherence*100)+'%');
 
+    // A guided Lo Shu walk or an active sleep session owns the oscillator —
+    // don't let the prescription override it.
+    if(app.walkOn||sleep.active){
+      // walk / sleep drives audio; prescription is still displayed but not sonified
+    }
     // Auto-start oscillator only on FIRST Muse prescription (not after user turned it off)
-    if(neuro.connected && !app.oscOn && !app.oscUserOff){
+    else if(neuro.connected && !app.oscOn && !app.oscUserOff){
       app.oscOn=true;
       audio.start(neuro.rxIdx);
       console.log('[Audio] Auto-started with Muse prescription');
@@ -732,7 +880,10 @@ function onMuseData(data){
     }
   }
 
-  // Step 5: Update UI (targeted DOM updates, never render())
+  // Step 5: Feed the sleep stager (no-op unless a sleep session is active)
+  sleepSample();
+
+  // Step 6: Update UI (targeted DOM updates, never render())
   updateUI();
 }
 
@@ -1150,6 +1301,7 @@ function athenaCallbackOpts(){
     onEEG:onAthenaEEG,
     onFNIRS:onAthenaFNIRS,
     onPPG:onAthenaPPG,
+    onAccGyro:onAthenaAccGyro,
     onStatus:onAthenaStatus,
     onBattery:function(pct){console.log('[Athena] Battery: '+pct.toFixed(1)+'%');},
     onLog:function(type,msg){console.log('[Athena]['+type+'] '+msg);},
@@ -1810,6 +1962,12 @@ function drawCanvases(){
   const bc=document.getElementById('cv-bio');
   if(bc)drawBiofield(bc.getContext('2d'),bc.width,bc.height,neuro.bands,neuro.coherence,animT,rx.c);
 
+  // NeuroDynamics attractor + Spiral-wave compass (Biofield tab)
+  const att=document.getElementById('cv-attractor');
+  if(att)drawAttractor(att.getContext('2d'),att.width,att.height);
+  const spc=document.getElementById('cv-spiral');
+  if(spc)drawSpiral(spc.getContext('2d'),spc.width,spc.height);
+
   // Golden flower canvas (standard)
   const gf=document.getElementById('cv-gf');
   if(gf)drawChladni(gf.getContext('2d'),gf.width,gf.height,rx.f,rx.c,animT,app.gfFormation);
@@ -2118,11 +2276,25 @@ setInterval(()=>{
   }
 },1000);
 
+// Show the persistent iframe for the current tab; lazy-load its src on first view.
+function syncEmbeds(){
+  const want = app.tab==='collider' ? 'frame-collider' : app.tab==='cube' ? 'frame-cube' : null;
+  ['frame-collider','frame-cube'].forEach(id=>{
+    const f=document.getElementById(id);
+    if(!f)return;
+    if(id===want){ if(!f.getAttribute('src')) f.src=f.dataset.src; f.style.display='block'; }
+    else f.style.display='none';
+  });
+}
+
 function render(){
   const rx=F[neuro.rxIdx];let h='';
 
   if(app.tab==='home'){
     h+=museBarHTML();
+    if(neuro.connected){
+      h+=`<button onclick="startSleep()" style="width:100%;background:linear-gradient(135deg,#0c0b1a,#0a0814);border:1px solid #2a2444;color:#9a94c8;padding:11px;border-radius:8px;font-family:inherit;font-size:14px;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px">🌙 <span>Sleep Mode${app.deviceType==='athena'?'':' · EEG only'}</span></button>`;
+    }
     h+=`<div class="rx" id="rx-card" style="border-color:${rx.c}33"><div class="card-h">YOUR BIOFIELD NEEDS NOW</div>
     <div class="rx-freq" id="rx-freq" style="color:${rx.c}">${rx.f} Hz</div>
     <div class="rx-name" id="rx-name">${rx.sc} — ${rx.kw}</div>
@@ -2318,6 +2490,7 @@ function render(){
     h+=`</div>`;
     h+=`<div class="ctrl-row">${togHTML(app.oscOn?'Playing':'Oscillator',app.oscOn,'toggleOsc()',sf.c)}</div>`;
     h+=volSliderHTML();
+    // (Lo Shu guided walk moved to the Lo Shu tab — overlaid on the 3D cube.)
     // I Ching
     h+=`<div class="card" id="cym-hex-card"><div class="card-h" id="cym-hex-title">HEXAGRAM ${sf.hx} — ${sf.hn}</div>
     <div style="display:flex;gap:12px;align-items:center">
@@ -2333,6 +2506,10 @@ function render(){
     h+=`<div class="coh-wrap"><div class="coh-ring" id="coh-ring2"><div class="coh-val" id="coh-val2" style="color:${rx.c}">${~~(neuro.coherence*100)}</div><div class="coh-lbl">COHERENCE</div></div></div>`;
     h+=`<div class="bands">${BN.map((b,i)=>`<div class="band"><div class="band-w"><div class="band-b" id="bb2-${b}" style="height:${neuro.bands[b]*100}%;background:${BC[i]}"></div></div><div class="band-n">${BL[i]}</div></div>`).join('')}</div>`;
     h+=`<div class="ins" style="border-color:var(--pur)">Delta (core) → Gamma (boundary). Ring brightness = band power. Coherence lines when bands synchronize.</div>`;
+    // Live brain-dynamics readouts (need raw EEG channels from a connected device)
+    h+=dynMetricsHTML();
+    h+=spiralMetricsHTML();
+    runDynamics(); // populate immediately on (re)entry
   }
 
   if(app.tab==='flower'){
@@ -2412,7 +2589,30 @@ function render(){
         <div style="font-size:10px;color:#8a7a6a;text-align:center;margin-top:4px">Records every EEG sample (~4Hz) with timestamp, all 5 bands, coherence, and prescription state.</div>
       </div>`;
     }
-    if(!app.sessions.length&&!neuro.connected){h+=`<div style="text-align:center;padding:40px 0;color:var(--sub)"><div style="font-size:18px;margin-bottom:8px">No sessions yet</div><div style="font-size:12px">Connect your device to begin.</div></div>`;}
+    // Sleep sessions — overnight staging, exportable to the Session Tagger
+    if(app.sleepSessions&&app.sleepSessions.length){
+      h+=`<div class="card-h" style="margin:14px 0 8px">🌙 SLEEP SESSIONS</div>`;
+      app.sleepSessions.forEach((s,i)=>{
+        const d=new Date(s.date);
+        const dateStr=d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' · '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+        h+=`<div class="card" style="padding:10px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <span style="font-size:14px;color:var(--gld)">${fmtMin(s.durationMin)} asleep</span>
+            <span style="font-size:10px;color:var(--dim)">${dateStr}</span>
+          </div>
+          <div style="display:flex;height:10px;border-radius:3px;overflow:hidden;margin:8px 0">${sleepBarHTML(s)}</div>
+          <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:6px">
+            ${STAGE_ORDER.map(st=>`<span style="color:${STAGE_COL[st]}">${STAGE_NAME[st]} ${fmtMin(s.stages[st])}</span>`).join('')}
+          </div>
+          <div style="font-size:10px;color:#8a7a6a;text-align:center">♥ avg ${s.avgHr||'—'} bpm · ${s.awakenings} awakening${s.awakenings===1?'':'s'} · coherence ${s.coherenceScore}</div>
+          <div style="display:flex;gap:8px;margin-top:8px;justify-content:center">
+            <button onclick="exportSleep('json',${i})" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:5px 12px;border-radius:4px;font-size:10px;font-family:inherit">Export → Tagger (JSON)</button>
+            <button onclick="exportSleep('csv',${i})" style="background:transparent;border:1px solid var(--bdr);color:var(--sub);padding:5px 12px;border-radius:4px;font-size:10px;font-family:inherit">CSV</button>
+          </div>
+        </div>`;
+      });
+    }
+    if(!app.sessions.length&&!neuro.connected&&!(app.sleepSessions&&app.sleepSessions.length)){h+=`<div style="text-align:center;padding:40px 0;color:var(--sub)"><div style="font-size:18px;margin-bottom:8px">No sessions yet</div><div style="font-size:12px">Connect your device to begin.</div></div>`;}
     else if(app.sessions.length){h+=`<div class="card-h" style="margin-bottom:12px">${app.sessions.length} SESSION${app.sessions.length>1?'S':''}</div>`;
     app.sessions.forEach(s=>{const d=new Date(s.date);const mins=Math.floor(s.duration/60),secs=s.duration%60;
     let sigHTML='';
@@ -2442,6 +2642,22 @@ function render(){
       <button onclick="exportData('csv')" style="background:transparent;border:1px solid var(--gld);color:var(--gld);padding:8px 0;border-radius:4px;font-size:10px;flex:1;font-family:inherit">Export CSV</button>
       <button onclick="clearHist()" style="background:transparent;border:1px solid #C45C5C33;color:#C45C5C;padding:8px 0;border-radius:4px;font-size:10px;flex:1;font-family:inherit">Clear</button>
     </div>`;}
+  }
+
+  // Collider & Cube are PERSISTENT iframes (see #frame-collider / #frame-cube below the nav).
+  // They live outside #content so a re-render never reloads them — syncEmbeds() shows/hides.
+  // On the Lo Shu (cube) tab, overlay the guided-walk player as a collapsible bottom sheet.
+  if(app.tab==='cube'){
+    const wk=WALKS[app.walkMode], open=app.walkPanelOpen;
+    h+=`<div class="walk-sheet ${open?'':'collapsed'}" id="walk-sheet">
+      <div class="walk-sheet-body">${walkCardHTML()}</div>
+      <div class="walk-handle" onclick="toggleWalkPanel()">
+        <div class="walk-handle-row">
+          <span id="walk-handle-label">🎵 ${wk.name}${app.walkOn?` · step ${app.walkStep+1}/${wk.seq.length}`:''}</span>
+          <span id="walk-handle-toggle">${open?'▾ hide':'▴ walks'}</span>
+        </div>
+      </div>
+    </div>`;
   }
 
   if(app.tab==='links'){
@@ -2497,6 +2713,7 @@ function render(){
   }
 
   document.getElementById('content').innerHTML=h;
+  syncEmbeds(); // show/hide the persistent collider & cube iframes for the current tab
   startAnim(); // Ensures canvas loop is running (won't restart if already going)
 }
 
@@ -2781,6 +2998,536 @@ window.resetGF=function(){
 };
 
 // ═══════════════════════════════════════
+// 11b. LO SHU GUIDED WALK — steps the oscillator through all 27 frequencies
+// ═══════════════════════════════════════
+let walkTimer=null;
+
+// 3×3 Lo Shu square; the cell holding the walk's current position lights up.
+function loShuGridHTML(){
+  const seq=WALKS[app.walkMode].seq;
+  const curIdx=app.walkOn?seq[app.walkStep]:-1;
+  const curPos=curIdx>=0?loshuPos(curIdx):-1;
+  const col=curIdx>=0?REGIME_COLS[loshuRegime(curIdx)]:'var(--gld)';
+  let g='<div id="loshu-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:108px;margin:0 auto">';
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++){
+    const n=LOSHU_GRID[r][c];
+    const on=n===curPos;
+    g+=`<div class="loshu-cell" data-n="${n}" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:15px;border:1px solid ${on?col:'var(--bdr)'};background:${on?col+'33':'var(--bg3)'};color:${on?'#ede6da':'var(--dim)'};box-shadow:${on?'0 0 8px '+col+'66':'none'};transition:all .3s">${n}</div>`;
+  }
+  return g+'</div>';
+}
+
+// The Lo Shu walk player card (lives on the Cymatics tab, by the oscillator).
+function walkCardHTML(){
+  const w=WALKS[app.walkMode];
+  const seq=w.seq;
+  const curIdx=app.walkOn?seq[app.walkStep]:seq[0];
+  const fr=F[curIdx];
+  const pos=loshuPos(curIdx);
+  const reg=loshuRegime(curIdx);
+  const col=REGIME_COLS[reg];
+  let h=`<div class="card" id="walk-card" style="border-color:${app.walkOn?col+'66':'var(--bdr)'}">
+    <div class="card-h">LO SHU WALK · 洛書</div>
+    <div class="walk-modes" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">`;
+  WALKS.forEach((m,i)=>{
+    const sel=i===app.walkMode;
+    h+=`<button onclick="setWalkMode(${i})" ${app.walkOn?'disabled':''} style="flex:1 1 28%;background:${sel?'var(--gld)22':'var(--bg3)'};border:1px solid ${sel?'var(--gld)':'var(--bdr)'};color:${sel?'var(--gld2)':'var(--mut)'};border-radius:6px;padding:6px 2px;font-family:inherit;font-size:12px;letter-spacing:.04em;${app.walkOn?'opacity:.5':''}">${m.name}</button>`;
+  });
+  h+=`</div>
+    <div style="text-align:center;font-size:11px;color:var(--dim);margin-bottom:10px">Lo Shu · ${w.name} — ${w.sub}</div>`;
+  // Tuning toggle — re-maps the GUT/Seed tones between Solfeggio and Perfect Lo Shu.
+  // Live during a walk (A/B the same step), so it stays enabled while walking.
+  h+=`<div class="walk-tuning" style="display:flex;gap:6px;margin-bottom:10px">`;
+  WALK_TUNINGS.forEach((t,i)=>{
+    const sel=i===app.walkTuning;
+    h+=`<button onclick="setWalkTuning(${i})" style="flex:1;background:${sel?'var(--gld)22':'var(--bg3)'};border:1px solid ${sel?'var(--gld)':'var(--bdr)'};color:${sel?'var(--gld2)':'var(--mut)'};border-radius:6px;padding:5px 2px;font-family:inherit;font-size:11px;letter-spacing:.03em">${t.name}</button>`;
+  });
+  h+=`</div>`;
+  h+=loShuGridHTML();
+  h+=`<div style="text-align:center;margin-top:10px">
+      <div id="walk-freq" style="font-size:22px;font-weight:300;color:${col}">${walkFreqHz(curIdx)} Hz</div>
+      <div id="walk-meta" style="font-size:11px;color:var(--mut)">${REGIME_NAMES[reg]} · pos ${pos} · ${POS_DIR[pos]} — ${fr.kw}</div>
+      <div id="walk-prog" style="font-size:10px;color:var(--dim);margin-top:2px">${app.walkOn?`Step ${app.walkStep+1} of ${seq.length}`:`${seq.length} tones · ${app.walkSecPer}s each · ~${Math.round(seq.length*app.walkSecPer/60)} min`}</div>
+    </div>
+    <div class="ctrl-row" style="border-top:none;margin-bottom:0;padding-bottom:0">
+      ${togHTML(app.walkOn?'Walking':'Begin Walk',app.walkOn,'toggleWalk()',col)}
+    </div>`;
+  return h+'</div>';
+}
+
+// ── Bridge to the 3D cube iframe: keep its path + active node in sync with the walk ──
+function cubeMsg(p){
+  const f=document.getElementById('frame-cube');
+  if(f&&f.contentWindow){ try{ f.contentWindow.postMessage(Object.assign({type:'aetheria-walk'},p),'*'); }catch(e){} }
+}
+function walkSyncCube(action){
+  const wk=WALKS[app.walkMode];
+  cubeMsg({action, key:wk.key, idx:(app.walkOn?wk.seq[app.walkStep]:undefined)});
+}
+// When the cube (re)loads it announces itself — push the current walk state so it's in sync.
+window.addEventListener('message',function(e){
+  if(e&&e.data&&e.data.type==='aetheria-cube-ready') walkSyncCube(app.walkOn?'start':'mode');
+});
+
+window.setWalkMode=function(m){ if(app.walkOn)return; app.walkMode=m; walkSyncCube('mode'); render(); };
+
+// Switch the GUT/Seed tuning (Solfeggio ↔ Perfect Lo Shu). Works live during a walk
+// so you can A/B the same tone; persists the choice across sessions.
+window.setWalkTuning=function(t){
+  if(t===app.walkTuning)return;
+  app.walkTuning=t;
+  try{localStorage.setItem('rct-walk-tuning',t);}catch(e){}
+  if(app.walkOn) audio.retune(walkFreqHz(WALKS[app.walkMode].seq[app.walkStep]));
+  render();
+};
+
+// Collapse/expand the walk sheet by toggling the class (keeps the CSS slide animation).
+window.toggleWalkPanel=function(){
+  app.walkPanelOpen=!app.walkPanelOpen;
+  const s=document.getElementById('walk-sheet');
+  if(s)s.classList.toggle('collapsed',!app.walkPanelOpen);
+  const t=document.getElementById('walk-handle-toggle');
+  if(t)t.textContent=app.walkPanelOpen?'▾ hide':'▴ walks';
+};
+
+window.toggleWalk=function(){
+  app.walkOn=!app.walkOn;
+  clearInterval(walkTimer); walkTimer=null;
+  if(app.walkOn){
+    app.walkStep=0; app.walkElapsed=0;
+    const idx=WALKS[app.walkMode].seq[0];
+    app.selIdx=idx; app.oscOn=true; app.oscUserOff=false;
+    if(audio.playing) audio.setFrequency(idx,walkFreqHz(idx)); else audio.start(idx,walkFreqHz(idx));
+    walkTimer=setInterval(walkTick,100);
+    walkSyncCube('start');
+    console.log('[Walk] Started — Lo Shu',WALKS[app.walkMode].name);
+  }else{
+    cubeMsg({action:'stop'});
+    console.log('[Walk] Stopped at step',app.walkStep+1);
+  }
+  render();
+};
+
+function walkTick(){
+  app.walkElapsed+=100;
+  if(app.walkElapsed>=app.walkSecPer*1000){
+    app.walkElapsed=0;
+    const seq=WALKS[app.walkMode].seq;
+    app.walkStep=(app.walkStep+1)%seq.length; // loop continuously
+    const idx=seq[app.walkStep];
+    app.selIdx=idx;
+    if(audio.playing) audio.setFrequency(idx,walkFreqHz(idx)); else audio.start(idx,walkFreqHz(idx));
+    cubeMsg({action:'step', idx});
+  }
+  updateWalkUI();
+}
+
+// Update the walk card in place (no full re-render) while it steps.
+function updateWalkUI(){
+  const card=document.getElementById('walk-card');
+  if(!card)return; // not on the Cymatics tab right now
+  const seq=WALKS[app.walkMode].seq;
+  const idx=seq[app.walkStep];
+  const fr=F[idx], pos=loshuPos(idx), reg=loshuRegime(idx), col=REGIME_COLS[reg];
+  const fEl=document.getElementById('walk-freq');
+  if(fEl){fEl.textContent=walkFreqHz(idx)+' Hz';fEl.style.color=col;}
+  const mEl=document.getElementById('walk-meta');
+  if(mEl)mEl.textContent=`${REGIME_NAMES[reg]} · pos ${pos} · ${POS_DIR[pos]} — ${fr.kw}`;
+  const pEl=document.getElementById('walk-prog');
+  if(pEl)pEl.textContent=`Step ${app.walkStep+1} of ${seq.length}`;
+  // The collapsed bottom-sheet handle has its own counter — keep it live too,
+  // otherwise it freezes at the last full render() (most visible on long walks like CABI).
+  const hEl=document.getElementById('walk-handle-label');
+  if(hEl)hEl.textContent=`🎵 ${WALKS[app.walkMode].name} · step ${app.walkStep+1}/${seq.length}`;
+  card.style.borderColor=col+'66';
+  document.querySelectorAll('#loshu-grid .loshu-cell').forEach(cell=>{
+    const on=+cell.dataset.n===pos;
+    cell.style.borderColor=on?col:'var(--bdr)';
+    cell.style.background=on?col+'33':'var(--bg3)';
+    cell.style.color=on?'#ede6da':'var(--dim)';
+    cell.style.boxShadow=on?'0 0 8px '+col+'66':'none';
+  });
+}
+
+// ═══════════════════════════════════════
+// 11c. NEURODYNAMICS + SPIRAL WAVE — live brain-dynamics readouts (Biofield tab)
+// ═══════════════════════════════════════
+const spiralAnalyzer=(typeof SpiralWaveAnalyzer!=='undefined')?new SpiralWaveAnalyzer({sampleRate:256}):null;
+let lastDyn=null, lastSpiral=null, dynTimer=null;
+
+// Recompute the (relatively expensive) dynamics metrics on a slow cadence.
+function runDynamics(){
+  if(app.tab!=='biofield'||!neuro.connected||!neuro.channels){lastDyn=null;lastSpiral=null;return;}
+  const ch=neuro.channels;
+  try{
+    if(typeof NeuroDynamics!=='undefined'&&ch.af7&&ch.af7.length>=64){
+      lastDyn=NeuroDynamics.analyze(Array.from(ch.af7),{sampleRate:256});
+    }
+    if(spiralAnalyzer&&ch.af7&&ch.af8&&ch.tp9&&ch.tp10){
+      lastSpiral=spiralAnalyzer.analyze({AF7:ch.af7,AF8:ch.af8,TP9:ch.tp9,TP10:ch.tp10});
+    }
+  }catch(e){console.warn('[Dynamics]',e);}
+  updateDynamicsUI();
+}
+
+function dynMetricsHTML(){
+  return `<div class="card" id="dyn-card">
+    <div class="card-h">ATTRACTOR & COMPLEXITY</div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <canvas id="cv-attractor" width="120" height="120" style="width:120px;height:120px;border-radius:6px;background:#070510;border:1px solid var(--bdr);flex-shrink:0"></canvas>
+      <div style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Fractal dim</span><span id="dyn-fd" style="color:var(--gld)">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Sample entropy</span><span id="dyn-se" style="color:var(--vio)">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">LZ complexity</span><span id="dyn-lz" style="color:var(--mag)">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Recurrence</span><span id="dyn-rr" style="color:var(--gld)">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Delay τ</span><span id="dyn-tau" style="color:var(--mut)">—</span></div>
+      </div>
+    </div>
+    <div class="ins" style="border-color:var(--vio);margin:8px 0 0">Takens phase portrait of AF7: x(t) vs x(t+τ). FD 1=smooth→2=rough. Higher entropy/LZ = richer, less predictable dynamics.</div>
+  </div>`;
+}
+
+function spiralMetricsHTML(){
+  return `<div class="card" id="spiral-card">
+    <div class="card-h">SPIRAL / TRAVELING WAVE</div>
+    <div style="display:flex;gap:12px;align-items:center">
+      <canvas id="cv-spiral" width="120" height="120" style="width:120px;height:120px;border-radius:50%;background:#070510;border:1px solid var(--bdr);flex-shrink:0"></canvas>
+      <div style="flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.9">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Direction</span><span id="sw-dir" style="color:var(--gld)">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Spin</span><span id="sw-spin" style="color:var(--vio)">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Speed</span><span id="sw-speed" style="color:var(--mag)">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Planarity</span><span id="sw-plan" style="color:var(--gld)">—</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--dim)">Dominant band</span><span id="sw-band" style="color:var(--mut)">—</span></div>
+      </div>
+    </div>
+    <div class="ins" style="border-color:var(--mag);margin:8px 0 0">Planar phase-gradient fit across the 4 electrodes (Ye et al., Science 2026). Arrow = propagation; spin = how fast that direction rotates between windows.</div>
+  </div>`;
+}
+
+function updateDynamicsUI(){
+  const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  if(lastDyn){
+    set('dyn-fd',lastDyn.higuchiFD!=null?lastDyn.higuchiFD.toFixed(3):'—');
+    set('dyn-se',lastDyn.sampleEntropy!=null?lastDyn.sampleEntropy.toFixed(3):'—');
+    set('dyn-lz',lastDyn.lempelZiv!=null?lastDyn.lempelZiv.toFixed(3):'—');
+    set('dyn-rr',lastDyn.recurrenceRate!=null?lastDyn.recurrenceRate.toFixed(3):'—');
+    set('dyn-tau',lastDyn.tau!=null?String(lastDyn.tau):'—');
+  }
+  if(lastSpiral&&lastSpiral.travelingWave){
+    const t=lastSpiral.travelingWave;
+    set('sw-dir',`${t.direction} ${t.angleDeg}°`);
+    set('sw-spin',t.rotationDegPerSec!=null?`${t.rotationDegPerSec>0?'+':''}${t.rotationDegPerSec}°/s`:'—');
+    set('sw-speed',t.speedMps!=null?t.speedMps+' m/s':'standing');
+    set('sw-plan',t.planarity!=null?t.planarity.toFixed(2):'—');
+    set('sw-band',lastSpiral.dominantBand||'—');
+  }
+}
+
+// Phase portrait (attractor) — small scatter of the delay embedding.
+function drawAttractor(ctx,w,h){
+  ctx.clearRect(0,0,w,h);
+  if(!lastDyn||!lastDyn.portrait||!lastDyn.portrait.length){
+    ctx.fillStyle='#3a3030';ctx.font="10px 'JetBrains Mono',monospace";ctx.textAlign='center';
+    ctx.fillText(neuro.connected?'…':'connect device',w/2,h/2);return;
+  }
+  const pad=8, sx=(w-2*pad)/2, sy=(h-2*pad)/2;
+  const P=lastDyn.portrait;
+  for(let i=0;i<P.length;i++){
+    const x=pad+sx*(1+P[i].x), y=pad+sy*(1-P[i].y);
+    const a=0.25+0.55*(i/P.length); // fade trail toward the present
+    ctx.fillStyle=`rgba(123,80,212,${a})`;
+    ctx.beginPath();ctx.arc(x,y,1.4,0,Math.PI*2);ctx.fill();
+  }
+}
+
+// Spiral compass — propagation arrow + rotation hint on a small dial.
+function drawSpiral(ctx,w,h){
+  ctx.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2, R=Math.min(w,h)/2-8;
+  ctx.strokeStyle='#1a1520';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(cx-R,cy);ctx.lineTo(cx+R,cy);ctx.moveTo(cx,cy-R);ctx.lineTo(cx,cy+R);ctx.stroke();
+  const tw=lastSpiral&&lastSpiral.travelingWave;
+  if(!tw||tw.strength<0.05){
+    ctx.fillStyle='#3a3030';ctx.font="10px 'JetBrains Mono',monospace";ctx.textAlign='center';
+    ctx.fillText(neuro.connected?'…':'connect',cx,cy+3);return;
+  }
+  // angleDeg: 0=right(+x), 90=front(+y). Canvas y is down, so negate.
+  const ang=-tw.angleDeg*Math.PI/180;
+  const len=R*(0.4+0.6*Math.min(1,tw.strength));
+  const ex=cx+Math.cos(ang)*len, ey=cy+Math.sin(ang)*len;
+  const col=tw.rotationDegPerSec>0?'#50d480':(tw.rotationDegPerSec<0?'#d4a050':'#A840B8');
+  ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ex,ey);ctx.stroke();
+  // arrowhead
+  const ah=6;
+  ctx.beginPath();
+  ctx.moveTo(ex,ey);
+  ctx.lineTo(ex-ah*Math.cos(ang-0.4),ey-ah*Math.sin(ang-0.4));
+  ctx.lineTo(ex-ah*Math.cos(ang+0.4),ey-ah*Math.sin(ang+0.4));
+  ctx.closePath();ctx.fill();
+  // rotation arc (spin) near the rim
+  if(tw.rotationDegPerSec){
+    const span=Math.min(Math.PI*1.6,Math.abs(tw.rotationDegPerSec)*Math.PI/180);
+    const ccw=tw.rotationDegPerSec>0;
+    ctx.strokeStyle=col+'aa';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(cx,cy,R-3,ang,ang+(ccw?-span:span),ccw);ctx.stroke();
+  }
+}
+
+// ═══════════════════════════════════════
+// 11d. SLEEP MODE — overnight staging (Muse S Athena: EEG bands + PPG heart-rate + accelerometer)
+// ═══════════════════════════════════════
+const SLEEP_EPOCH_MS=30000;                 // 30-second epochs (standard sleep epoch length)
+const STAGE_ORDER=['DEEP','LIGHT','REM','WAKE'];
+const STAGE_COL={WAKE:'#d97742',REM:'#5090d4',LIGHT:'#7B50D4',DEEP:'#2e6ea5'};
+const STAGE_NAME={WAKE:'Awake',REM:'REM',LIGHT:'Light',DEEP:'Deep'};
+const STAGE_ROW={WAKE:0,REM:1,LIGHT:2,DEEP:3}; // hypnogram row (0=top/awake … 3=bottom/deep)
+
+const sleep={active:false,startTs:0,epochStart:0,epochs:[],acc:null,stage:'WAKE',hrBaseline:null,wakeLock:null,prevVol:null};
+let moveLevel=0,_lastAccMag=null,lastSleepSession=null,_sleepClock=null,_sleepDimTimer=null,_sleepAudioStage=null;
+
+// Accelerometer → rolling "restlessness" (jerk EMA). Still body ≈ 0; turning over spikes it.
+function onAthenaAccGyro(d){
+  if(!d||!d.samples)return;
+  for(const row of d.samples){
+    const mag=Math.hypot(row[0],row[1],row[2]); // ~1g at rest
+    if(_lastAccMag!=null) moveLevel=moveLevel*0.9+Math.abs(mag-_lastAccMag)*0.1;
+    _lastAccMag=mag;
+  }
+}
+
+function freshAcc(){return {n:0,delta:0,theta:0,alpha:0,beta:0,gamma:0,coh:0,hr:0,hrN:0,move:0};}
+
+// Fed from onMuseData (~2-4 Hz) while a session is active.
+function sleepSample(){
+  if(!sleep.active)return;
+  const a=sleep.acc,b=neuro.bands;
+  a.n++;a.delta+=b.delta;a.theta+=b.theta;a.alpha+=b.alpha;a.beta+=b.beta;a.gamma+=b.gamma;
+  a.coh+=neuro.coherence;a.move+=moveLevel;
+  if(neuro.heartRate){a.hr+=neuro.heartRate;a.hrN++;}
+  if(Date.now()-sleep.epochStart>=SLEEP_EPOCH_MS) finalizeEpoch(Date.now());
+}
+
+function finalizeEpoch(now){
+  const a=sleep.acc;
+  if(a.n<1){sleep.acc=freshAcc();sleep.epochStart=now;return;}
+  const bands={delta:a.delta/a.n,theta:a.theta/a.n,alpha:a.alpha/a.n,beta:a.beta/a.n,gamma:a.gamma/a.n};
+  const coh=a.coh/a.n,move=a.move/a.n,hr=a.hrN?a.hr/a.hrN:null;
+  const stage=classifySleep(bands,hr,move);
+  sleep.epochs.push({t:now,stage,bands,hr:hr?Math.round(hr):null,move:+move.toFixed(4),coh:+coh.toFixed(3)});
+  sleep.stage=stage;
+  // Track a slow resting-HR floor so REM (HR rising while body is still) can be flagged.
+  if(hr) sleep.hrBaseline=(sleep.hrBaseline==null)?hr:Math.min(sleep.hrBaseline,sleep.hrBaseline*0.97+hr*0.03);
+  sleep.acc=freshAcc();sleep.epochStart=now;
+  applySleepAudio(stage);
+  updateSleepUI();
+}
+
+// Heuristic stager — INDICATIVE, not clinical. Relative band powers + movement + heart-rate.
+function classifySleep(b,hr,move){
+  const fast=b.beta+b.gamma;
+  if(move>0.06) return 'WAKE';                 // gross body movement
+  if(b.delta>=0.42) return 'DEEP';             // delta-dominant slow-wave sleep
+  if(fast>0.34||b.alpha>0.34) return 'WAKE';   // alert / eyes-open EEG, lying still
+  const hrUp=hr&&sleep.hrBaseline&&hr>sleep.hrBaseline+4;
+  if(b.delta<0.28&&b.theta>=0.24&&hrUp) return 'REM'; // active brain, still body, HR up
+  return 'LIGHT';
+}
+
+// Adaptive audio: soft grounding tone in DEEP, silence in REM / LIGHT / WAKE.
+function applySleepAudio(stage){
+  if(!sleep.active||stage===_sleepAudioStage)return;
+  _sleepAudioStage=stage;
+  if(stage==='DEEP'){
+    app.oscOn=true;
+    if(audio.playing)audio.setFrequency(0); else audio.start(0); // 174 Hz Foundation, very low volume
+  }else{
+    if(audio.playing)audio.stop();
+    app.oscOn=false;
+  }
+}
+
+// ---- Wake Lock (keep the screen on overnight) ----
+async function requestWakeLock(){
+  try{ if('wakeLock' in navigator){ sleep.wakeLock=await navigator.wakeLock.request('screen');
+    document.addEventListener('visibilitychange',_reacquireWakeLock); } }catch(e){console.warn('[Sleep] wakeLock:',e);}
+}
+function _reacquireWakeLock(){ if(sleep.active&&document.visibilityState==='visible'&&!sleep.wakeLock) requestWakeLock(); }
+function releaseWakeLock(){ try{sleep.wakeLock&&sleep.wakeLock.release();}catch(e){} sleep.wakeLock=null; document.removeEventListener('visibilitychange',_reacquireWakeLock); }
+
+// ---- Start / end ----
+window.startSleep=function(){
+  if(!neuro.connected){alert('Connect your Muse S Athena (or Muse 2) first.');return;}
+  sleep.active=true;sleep.startTs=Date.now();sleep.epochStart=Date.now();
+  sleep.epochs=[];sleep.acc=freshAcc();sleep.stage='WAKE';sleep.hrBaseline=neuro.heartRate||null;
+  _sleepAudioStage=null;sleep.prevVol=audio.volume;audio.volume=0.06; // very soft for overnight
+  if(audio.playing)audio.stop();app.oscOn=false;
+  const scr=document.getElementById('sleepScreen');scr.style.display='flex';
+  if(document.documentElement.requestFullscreen)document.documentElement.requestFullscreen().catch(()=>{});
+  requestWakeLock();
+  _sleepClock=setInterval(updateSleepClock,1000);updateSleepClock();
+  armSleepDim();updateSleepUI();
+  console.log('[Sleep] Session started');
+};
+window.endSleep=function(){
+  if(!sleep.active)return;
+  sleep.active=false;
+  clearInterval(_sleepClock);clearTimeout(_sleepDimTimer);
+  releaseWakeLock();
+  if(audio.playing)audio.stop();app.oscOn=false;
+  if(sleep.prevVol!=null)audio.volume=sleep.prevVol;
+  document.getElementById('sleepScreen').style.display='none';
+  if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});
+  if(sleep.epochs.length) saveSleepSession();
+  console.log('[Sleep] Session ended ·',sleep.epochs.length,'epochs');
+  render();
+};
+
+// ---- Auto-dim the overnight screen after inactivity; tap to brighten ----
+window.armSleepDim=function(){
+  clearTimeout(_sleepDimTimer);
+  const el=document.getElementById('sleepInner');if(el)el.classList.remove('dim');
+  _sleepDimTimer=setTimeout(()=>{const e=document.getElementById('sleepInner');if(e&&sleep.active)e.classList.add('dim');},20000);
+};
+
+function updateSleepClock(){
+  const c=document.getElementById('slpClock');
+  if(c){const d=new Date();c.textContent=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+  const e=document.getElementById('slpElapsed');
+  if(e){const m=Math.floor((Date.now()-sleep.startTs)/60000);e.textContent=Math.floor(m/60)+'h '+String(m%60).padStart(2,'0')+'m asleep';}
+}
+function fmtMin(m){m=Math.round(m);return Math.floor(m/60)+'h'+String(m%60).padStart(2,'0');}
+function sleepStageMinutes(eps){const t={WAKE:0,REM:0,LIGHT:0,DEEP:0};eps.forEach(ep=>t[ep.stage]+=SLEEP_EPOCH_MS/60000);return t;}
+function countAwakenings(eps){let n=0,slept=false;for(const ep of eps){if(ep.stage!=='WAKE')slept=true;else if(slept){n++;slept=false;}}return n;}
+
+function updateSleepUI(){
+  const st=document.getElementById('slpStage');
+  if(st){st.textContent=sleep.epochs.length?STAGE_NAME[sleep.stage]:'Settling…';st.style.color=STAGE_COL[sleep.stage]||'#cfc8e0';}
+  const t=sleepStageMinutes(sleep.epochs),ss=document.getElementById('slpStats');
+  if(ss)ss.innerHTML=STAGE_ORDER.map(s=>`<span style="color:${STAGE_COL[s]}">${STAGE_NAME[s]}</span> ${fmtMin(t[s])}`).join(' &nbsp;·&nbsp; ');
+  const v=document.getElementById('slpVitals');
+  if(v)v.innerHTML=`♥ ${neuro.heartRate?neuro.heartRate+' bpm':'—'} &nbsp;·&nbsp; motion ${Math.round(moveLevel*1000)} &nbsp;·&nbsp; ${sleep.epochs.length} epochs`;
+  drawHypnogram();
+}
+
+function drawHypnogram(){
+  const cv=document.getElementById('slpHypno');if(!cv)return;
+  const dpr=window.devicePixelRatio||1,w=cv.clientWidth||320,h=cv.clientHeight||90;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+  const eps=sleep.epochs;if(!eps.length)return;
+  const rh=h/4,dx=w/Math.max(eps.length,1);
+  for(let i=0;i<eps.length;i++){
+    const s=eps[i].stage;
+    ctx.fillStyle=STAGE_COL[s];ctx.globalAlpha=0.9;
+    ctx.fillRect(i*dx,STAGE_ROW[s]*rh,Math.ceil(dx)+0.5,rh-1);
+  }
+  ctx.globalAlpha=1;
+}
+
+// ---- Persist + export ----
+function saveSleepSession(){
+  const eps=sleep.epochs,t=sleepStageMinutes(eps);
+  const durMin=Math.round((Date.now()-sleep.startTs)/60000);
+  const hrs=eps.map(e=>e.hr).filter(Boolean);
+  const avgHr=hrs.length?Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length):null;
+  const avgCoh=eps.length?eps.reduce((a,e)=>a+e.coh,0)/eps.length:0;
+  const sess={type:'sleep',date:sleep.startTs,endTs:Date.now(),durationMin:durMin,
+    stages:t,avgHr,awakenings:countAwakenings(eps),coherenceScore:Math.round(avgCoh*100),
+    epochs:eps.map(e=>({t:e.t,stage:e.stage,hr:e.hr}))};
+  app.sleepSessions=app.sleepSessions||[];
+  app.sleepSessions.unshift(sess);
+  try{localStorage.setItem('rct-sleep',JSON.stringify(app.sleepSessions.slice(0,30)));}catch(e){}
+  lastSleepSession=sess;
+}
+
+function sleepNotes(s){
+  return `Sleep ${fmtMin(s.durationMin)} · Deep ${fmtMin(s.stages.DEEP)}, REM ${fmtMin(s.stages.REM)}, Light ${fmtMin(s.stages.LIGHT)}, Wake ${fmtMin(s.stages.WAKE)} · ${s.awakenings} awakening${s.awakenings===1?'':'s'} · avg HR ${s.avgHr||'—'}`;
+}
+
+// Proportional stage bar for the History summary.
+function sleepBarHTML(s){
+  const total=STAGE_ORDER.reduce((a,st)=>a+s.stages[st],0)||1;
+  return STAGE_ORDER.map(st=>`<div style="width:${s.stages[st]/total*100}%;background:${STAGE_COL[st]}"></div>`).join('');
+}
+
+// Derived sleep metrics (efficiency, score, totals) — shared by export + display.
+function sleepSummary(s){
+  const deep=s.stages.DEEP,light=s.stages.LIGHT,rem=s.stages.REM,wake=s.stages.WAKE;
+  const asleep=deep+light+rem,inBed=s.durationMin;
+  const eff=inBed>0?asleep/inBed:0;
+  const dPct=asleep>0?deep/asleep:0,rPct=asleep>0?rem/asleep:0;
+  const hrs=(s.epochs||[]).map(e=>e.hr).filter(Boolean);
+  const minHr=hrs.length?Math.min(...hrs):null;
+  // Sleep score 0-100: efficiency + adequate deep(~20%)/REM(~22%) − awakenings.
+  const score=Math.max(0,Math.min(100,Math.round(100*(0.5*eff+0.25*Math.min(dPct/0.20,1)+0.15*Math.min(rPct/0.22,1)+0.10*Math.max(0,1-s.awakenings/8)))));
+  const TARGET=420; // 7 h
+  return {deep,light,rem,wake,asleep,inBed,eff,minHr,score,
+    protMet:asleep>=TARGET,protStatus:asleep<TARGET?'short':asleep<=540?'optimal':'long'};
+}
+
+window.exportSleep=function(fmt,idx){
+  const s=(idx!=null&&app.sleepSessions)?app.sleepSessions[idx]:lastSleepSession;
+  if(!s){alert('No sleep session to export.');return;}
+  const d=new Date(s.date),ts=d.toISOString().replace(/[:.]/g,'-').slice(0,19);
+  const notes=sleepNotes(s),m=sleepSummary(s),eps=s.epochs||[];
+  const startISO=new Date(s.date).toISOString(),endISO=new Date(s.endTs).toISOString();
+  const sessionId=startISO.slice(0,10)+'_'+s.date;
+  const taggerRow={date:d.toISOString().slice(0,10),time:d.toTimeString().slice(0,8),walk_type:'Sleep',duration_minutes:s.durationMin,coherence_score:s.coherenceScore,classification:'Sleep',regime:'Mixed',notes:notes};
+  let blob,filename;
+  if(fmt==='json'){
+    // Mirrors the Tagger's session_summary_for_tagger envelope, with sleep mapped in.
+    blob=new Blob([JSON.stringify({
+      aetheria_export_version:'1.0',
+      export_type:'session_summary_for_tagger',
+      session_type:'sleep',
+      exported_at:new Date().toISOString(),
+      metadata:{sessionId,userId:'default',startTime:startISO,endTime:endISO,softwareVersion:'1.0.0',device:'muse-s-athena'},
+      session:{sessionId,startTime:startISO,endTime:endISO,duration_seconds:Math.round((s.endTs-s.date)/1000),softwareVersion:'1.0.0'},
+      summary:{
+        duration_minutes:s.durationMin,
+        interval_classification:'Sleep',
+        interval_dominant_regime:'Mixed',
+        interval_coherence_score:s.coherenceScore,
+        mean_bcs:s.coherenceScore,
+        duration_protocol_met:m.protMet,
+        duration_protocol_status:m.protStatus,
+        // sleep-specific
+        sleep_score:m.score,
+        total_sleep_minutes:Math.round(m.asleep),
+        time_in_bed_minutes:Math.round(m.inBed),
+        sleep_efficiency_pct:Math.round(m.eff*100),
+        deep_minutes:Math.round(m.deep),light_minutes:Math.round(m.light),rem_minutes:Math.round(m.rem),wake_minutes:Math.round(m.wake),
+        awakenings:s.awakenings,avg_heart_rate:s.avgHr,min_heart_rate:m.minHr
+      },
+      sleep:{
+        epoch_seconds:SLEEP_EPOCH_MS/1000,
+        stages:{deep:Math.round(m.deep),light:Math.round(m.light),rem:Math.round(m.rem),wake:Math.round(m.wake)},
+        staging_note:'Heuristic estimate from EEG band powers + PPG heart-rate + accelerometer. Indicative, not clinical.'
+      },
+      time_series:{
+        hypnogram_t:eps.map(e=>+((e.t-s.date)/1000).toFixed(1)),
+        hypnogram_stage:eps.map(e=>e.stage),
+        hypnogram_level:eps.map(e=>STAGE_ROW[e.stage]), // 0=Awake · 1=REM · 2=Light · 3=Deep
+        hr_t:eps.filter(e=>e.hr).map(e=>+((e.t-s.date)/1000).toFixed(1)),
+        hr_value:eps.filter(e=>e.hr).map(e=>e.hr)
+      },
+      tagger_row:taggerRow
+    },null,2)],{type:'application/json'});filename=`aetheria-tagger-export_sleep_${ts}.json`;
+  }else{
+    // Flat CSV convenience (spreadsheets) — JSON is the canonical Tagger import.
+    const headers='date,time,session_type,duration_minutes,total_sleep_minutes,sleep_efficiency_pct,sleep_score,coherence_score,classification,regime,deep_min,light_min,rem_min,wake_min,awakenings,avg_hr,min_hr,notes';
+    const row=[d.toISOString().slice(0,10),d.toTimeString().slice(0,8),'Sleep',s.durationMin,Math.round(m.asleep),Math.round(m.eff*100),m.score,s.coherenceScore,'Sleep','Mixed',
+      Math.round(m.deep),Math.round(m.light),Math.round(m.rem),Math.round(m.wake),s.awakenings,s.avgHr||'',m.minHr||'','"'+notes+'"'].join(',');
+    blob=new Blob([headers+'\n'+row],{type:'text/csv'});filename=`aetheria-tagger-export_sleep_${ts}.csv`;
+  }
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  console.log('[Sleep] Exported',filename);
+};
+
+// ═══════════════════════════════════════
 // 12. BOOT
 // ═══════════════════════════════════════
 // Guide
@@ -2799,8 +3546,12 @@ window.acceptDisclaimer=function(){
 document.getElementById('disclaimer').style.display='flex';
 
 try{const s=localStorage.getItem('rct-sessions');if(s)app.sessions=JSON.parse(s);}catch(e){}
+try{const sl=localStorage.getItem('rct-sleep');if(sl)app.sleepSessions=JSON.parse(sl);}catch(e){}
 try{const dt=localStorage.getItem('rct-device-type');if(dt&&(dt==='muse2'||dt==='athena'))app.deviceType=dt;}catch(e){}
-if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('SW:',e));
+// Service workers require an http(s) origin — skip under file:// to avoid a console error.
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(e=>console.warn('SW:',e));
+// Recompute live brain-dynamics (attractor/complexity + spiral wave) every 1.5s while on Biofield.
+dynTimer=setInterval(runDynamics,1500);
 render();
 console.log('[Aetheria RCT v2.0] Booted. Devices: Muse 2 (EEG) + Athena (EEG+fNIRS). Pipeline: Device → onMuseData → prescribe → audio.setFrequency → updateUI');
 </script>

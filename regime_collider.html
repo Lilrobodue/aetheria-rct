@@ -1,0 +1,3370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aetheria Instrument 02 — Regime Collider</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- Post-processing (bloom). Same version as core; if any fail to load, the 3D view
+     falls back to direct rendering (guarded in init3D). -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0710;
+    --ink: #ebdcb8;
+    --ink-dim: #8a7c60;
+    --line: rgba(235, 220, 184, 0.12);
+    --line-b: rgba(235, 220, 184, 0.28);
+    --gut: #d9423f;
+    --heart: #d9a437;
+    --head: #6fb8c9;
+    --accent: #d97742;
+  }
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 0%, #221234 0%, transparent 60%),
+      radial-gradient(ellipse 55% 45% at 12% 18%, rgba(111,184,201,0.07) 0%, transparent 55%),
+      radial-gradient(ellipse 55% 45% at 88% 30%, rgba(217,164,55,0.06) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, #1a0810 0%, transparent 50%),
+      var(--bg);
+    padding-bottom: 40px;
+  }
+  /* Cinematic vignette — darkens the edges so the luminous field holds the eye. */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 99;
+    background: radial-gradient(ellipse 75% 75% at 50% 42%, transparent 60%, rgba(3,2,7,0.55) 100%);
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.85  0 0 0 0 0.7  0 0 0 0.035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.45;
+    mix-blend-mode: overlay;
+    z-index: 100;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 22px 16px 0;
+  }
+  /* On desktop, let the instrument breathe — wrap widens to 1100px so the
+     alignment grid can fit 4–5 columns side by side. Canvas stays capped at
+     720px (centered) to preserve its 1:1 form factor; controls and panels
+     expand into the new width. */
+  @media (min-width: 1024px) {
+    .wrap { max-width: 1100px; }
+    .canvas-frame {
+      max-width: 720px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+  header {
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 12px;
+    position: relative;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    width: 60px;
+    height: 1px;
+    background: var(--accent);
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 20px;
+    height: 1px;
+    background: var(--accent);
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: clamp(26px, 6.5vw, 40px);
+    line-height: 1.02;
+  }
+  h1 em { font-style: italic; color: var(--accent); font-weight: 300; }
+  .sub {
+    font-size: 14px;
+    color: var(--ink-dim);
+    margin-top: 6px;
+    font-style: italic;
+  }
+  .mode-row {
+    display: flex;
+    gap: 0;
+    margin: 14px 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    overflow: hidden;
+  }
+  .mode-btn {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--ink-dim);
+    border: none;
+    border-right: 1px solid var(--line);
+    padding: 11px 6px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .mode-btn:last-child { border-right: none; }
+  .mode-btn:hover { color: var(--ink); background: rgba(255,255,255,0.02); }
+  .mode-btn.active { color: var(--bg); background: var(--accent); }
+
+  .wave-stack {
+    display: grid;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .wave-row {
+    display: grid;
+    grid-template-columns: 38px 1fr;
+    gap: 10px;
+    align-items: stretch;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: rgba(255,255,255,0.015);
+    overflow: hidden;
+    transition: all 0.25s;
+  }
+  .wave-row.on { border-color: var(--line-b); }
+  .wave-row.on.gut { background: linear-gradient(90deg, rgba(217,66,63,0.09) 0%, transparent 40%); }
+  .wave-row.on.heart { background: linear-gradient(90deg, rgba(217,164,55,0.09) 0%, transparent 40%); }
+  .wave-row.on.head { background: linear-gradient(90deg, rgba(111,184,201,0.09) 0%, transparent 40%); }
+  .wave-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--line);
+    cursor: pointer;
+    color: var(--ink-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    transition: all 0.25s;
+  }
+  .wave-toggle .light {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--ink-dim);
+    transition: all 0.25s;
+  }
+  .wave-row.on.gut .light { background: var(--gut); box-shadow: 0 0 10px var(--gut); }
+  .wave-row.on.heart .light { background: var(--heart); box-shadow: 0 0 10px var(--heart); }
+  .wave-row.on.head .light { background: var(--head); box-shadow: 0 0 10px var(--head); }
+  .wave-main {
+    padding: 10px 12px 11px;
+    display: grid;
+    gap: 7px;
+  }
+  .wave-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .wave-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .wave-row.on.gut .wave-name { color: var(--gut); }
+  .wave-row.on.heart .wave-name { color: var(--heart); }
+  .wave-row.on.head .wave-name { color: var(--head); }
+  .wave-hz {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-style: italic;
+    color: var(--ink);
+  }
+  .wave-hz .unit { font-size: 11px; color: var(--ink-dim); font-style: normal; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; margin-left: 4px; }
+  .wave-selector {
+    position: relative;
+  }
+  select {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    padding: 8px 28px 8px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23d97742' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+  select:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
+  option { background: #120b1a; color: var(--ink); }
+  optgroup { color: var(--accent); font-style: normal; font-weight: 500; }
+
+  .canvas-frame {
+    position: relative;
+    border: 1px solid var(--line-b);
+    border-radius: 12px;
+    background: #050309;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    overflow: hidden;
+    margin-bottom: 12px;
+    box-shadow: 0 0 50px rgba(217,119,66,0.07), 0 8px 40px rgba(0,0,0,0.5);
+  }
+  /* Soft vignette over the field so the bloom-lit centre pops. */
+  .canvas-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    border-radius: inherit;
+    background: radial-gradient(ellipse at 50% 50%, transparent 56%, rgba(5,3,9,0.55) 100%);
+  }
+  canvas { width: 100%; height: 100%; display: block; }
+  #field2d, #field3d, #fielddata { position: absolute; inset: 0; }
+  #field2d.overlay { mix-blend-mode: screen; opacity: 0.85; }
+  .tag {
+    position: absolute;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    z-index: 3;
+    pointer-events: none;
+    text-shadow: 0 0 8px rgba(0,0,0,0.9);
+  }
+  .tag.tl { top: 9px; left: 11px; }
+  .tag.tr { top: 9px; right: 11px; color: var(--accent); }
+  .tag.bl { bottom: 9px; left: 11px; }
+  .tag.br { bottom: 9px; right: 11px; color: var(--accent); }
+
+  .ctrl-group {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 13px 15px 15px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.022) 0%, rgba(255,255,255,0.008) 100%);
+    margin-bottom: 10px;
+    transition: border-color 0.3s;
+  }
+  .ctrl-group:hover { border-color: var(--line-b); }
+  .ctrl-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .ctrl-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .ctrl-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+  }
+  input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: transparent;
+    cursor: pointer;
+    height: 16px;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 1px;
+    background: var(--line-b);
+  }
+  input[type="range"]::-moz-range-track { height: 1px; background: var(--line-b); border: none; }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin-top: -6px;
+    box-shadow: 0 0 8px rgba(217,119,66,0.5);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 12px; height: 12px; background: var(--accent); border: none; border-radius: 50%;
+    box-shadow: 0 0 8px rgba(217,119,66,0.5);
+  }
+
+  .view-modes {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--line);
+    margin-bottom: 10px;
+  }
+  .view-modes button {
+    flex: 1;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--ink-dim);
+    border: none;
+    border-right: 1px solid var(--line);
+    padding: 9px 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .view-modes button:last-child { border-right: none; }
+  .view-modes button.active { color: var(--accent); }
+
+  .readout {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .readout-cell {
+    border: 1px solid var(--line);
+    padding: 9px 10px;
+  }
+  .readout-lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 3px;
+  }
+  .readout-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+  }
+
+  .legend {
+    margin-top: 16px;
+    padding: 16px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    font-style: italic;
+    background: rgba(0,0,0,0.18);
+  }
+  .legend p + p { margin-top: 11px; }
+  .legend b {
+    color: var(--accent);
+    font-style: normal;
+    font-weight: 400;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-right: 6px;
+  }
+  .signoff {
+    margin-top: 24px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--ink-dim);
+    text-align: center;
+    line-height: 1.7;
+  }
+  .signoff .glyph {
+    display: block;
+    margin-top: 6px;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+    font-style: normal;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+  }
+
+  .hz-editor {
+    display: none;
+    margin-top: 8px;
+  }
+  .hz-editor.open { display: block; }
+  .hz-editor input {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    color: var(--ink);
+    border: 1px solid var(--line);
+    padding: 6px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+  }
+  .hz-edit-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .hz-edit-btn:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .hz-edit-btn.on { color: var(--accent); border-color: var(--accent); }
+
+  /* Help icon (top of header) */
+  .help-icon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: rgba(255,245,220,0.02);
+    color: var(--ink-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .help-icon:hover { color: var(--accent); border-color: var(--accent); background: rgba(217,119,66,0.06); }
+
+  /* Tutorial modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(16,14,12,0.88);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 200;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 6vh 16px 4vh;
+    overflow-y: auto;
+    animation: modalFade 0.2s ease-out;
+  }
+  @keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
+  .modal-dialog {
+    max-width: 720px;
+    width: 100%;
+    background: var(--bg, #100e0c);
+    border: 1px solid var(--line);
+    padding: 22px 28px 28px;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+  }
+  .modal-header h2 {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 28px;
+    font-weight: 400;
+    margin: 0;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+  }
+  .modal-header h2 em { color: var(--accent); font-style: italic; }
+  .modal-close {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { color: var(--accent); border-color: var(--accent); }
+  .modal-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed rgba(235,220,184,0.1);
+  }
+  .modal-nav-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 9px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .modal-nav-btn:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .modal-nav-btn.active { color: var(--accent); border-color: var(--accent); background: rgba(217,119,66,0.06); }
+  .modal-section { display: none; }
+  .modal-section.active { display: block; }
+  .modal-section p {
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 15.5px;
+    line-height: 1.62;
+    color: var(--ink);
+    margin: 0 0 14px;
+  }
+  .modal-section p b {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+
+  /* Alignment catalog grid — responsive: auto-fits as many columns as fit at min card 200px */
+  .align-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 4px;
+    padding: 4px;
+  }
+  .align-card {
+    padding: 7px 9px;
+    border: 1px solid rgba(235,220,184,0.07);
+    border-radius: 7px;
+    background: rgba(0,0,0,0.18);
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.12s;
+    line-height: 1.35;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .align-card:hover {
+    background: rgba(217,119,66,0.10);
+    border-color: rgba(217,119,66,0.3);
+    transform: translateY(-1px);
+  }
+  .align-card.active {
+    background: rgba(217,119,66,0.18);
+    border-color: rgba(217,119,66,0.6);
+    box-shadow: 0 0 0 1px rgba(217,119,66,0.25), 0 2px 12px rgba(217,119,66,0.18);
+  }
+  .align-card .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 10px;
+  }
+  .align-card .card-src { color: var(--ink); letter-spacing: 0.02em; }
+  .align-card .card-src .g { color: #d9423f; }
+  .align-card .card-src .h { color: #d9a437; }
+  .align-card .card-src .d { color: #6fb8c9; }
+  .align-card .card-pct { color: var(--ink-dim); font-size: 9px; }
+  .align-card.active .card-pct { color: var(--accent); }
+  .align-card .card-gm {
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+  .align-card .card-near {
+    font-size: 9px;
+    color: var(--ink-dim);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .align-card .card-dr9 {
+    display: inline-block;
+    font-size: 8px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-left: 4px;
+  }
+  .align-card .card-loshu {
+    display: inline-block;
+    font-size: 8px;
+    color: var(--heart);
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+  }
+
+  /* Resonance Alignment Explorer */
+  .align-filter {
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    color: var(--ink-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 5px 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex: 1;
+  }
+  .align-filter:hover { color: var(--ink); border-color: var(--ink-dim); }
+  .align-filter.active { color: var(--accent); border-color: var(--accent); background: rgba(217,119,66,0.06); }
+  .align-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 9px;
+    border-bottom: 1px solid rgba(235,220,184,0.05);
+    cursor: pointer;
+    font-size: 9.5px;
+    line-height: 1.3;
+    transition: background 0.1s;
+  }
+  .align-row:hover { background: rgba(217,119,66,0.08); }
+  .align-row:last-child { border-bottom: none; }
+  .align-row .src { color: var(--ink); font-family: 'JetBrains Mono', monospace; white-space: nowrap; min-width: 124px; }
+  .align-row .src .g { color: #d9423f; }
+  .align-row .src .h { color: #d9a437; }
+  .align-row .src .d { color: #6fb8c9; }
+  .align-row .arrow { color: var(--ink-dim); }
+  .align-row .gm { color: var(--accent); min-width: 68px; text-align: right; }
+  .align-row .near { color: var(--ink-dim); font-size: 8.5px; letter-spacing: 0.05em; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .align-row .pct { color: var(--ink-dim); font-size: 8.5px; min-width: 40px; text-align: right; }
+  .align-row.active { background: rgba(217,119,66,0.14); }
+  .align-row.active .pct { color: var(--accent); }
+
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Unified Lewis Framework · Instrument 02</div>
+    <h1>Regime <em>Collider</em></h1>
+    <div class="sub">Three frequencies, off by default. Toggle them one at a time. Watch the field build itself.</div>
+    <button id="helpBtn" class="help-icon" title="Open guidebook">?</button>
+  </header>
+
+  <div class="mode-row">
+    <button class="mode-btn active" data-mode="2d">2D Field</button>
+    <button class="mode-btn" data-mode="3d">3D Biofield</button>
+    <button class="mode-btn" data-mode="overlay">Overlay</button>
+    <button class="mode-btn" data-mode="data">Data</button>
+  </div>
+
+  <div class="wave-stack">
+    <div class="wave-row" id="rowA" data-idx="0">
+      <button class="wave-toggle" data-toggle="0"><span class="light"></span></button>
+      <div class="wave-main">
+        <div class="wave-top">
+          <span class="wave-name">Wave A · GUT</span>
+          <span class="wave-hz"><span class="hz-num" data-hz="0">174</span><span class="unit">Hz</span></span>
+        </div>
+        <div class="wave-selector">
+          <select data-sel="0"></select>
+        </div>
+      </div>
+    </div>
+    <div class="wave-row" id="rowB" data-idx="1">
+      <button class="wave-toggle" data-toggle="1"><span class="light"></span></button>
+      <div class="wave-main">
+        <div class="wave-top">
+          <span class="wave-name">Wave B · HEART</span>
+          <span class="wave-hz"><span class="hz-num" data-hz="1">1206</span><span class="unit">Hz</span></span>
+        </div>
+        <div class="wave-selector">
+          <select data-sel="1"></select>
+        </div>
+      </div>
+    </div>
+    <div class="wave-row" id="rowC" data-idx="2">
+      <button class="wave-toggle" data-toggle="2"><span class="light"></span></button>
+      <div class="wave-main">
+        <div class="wave-top">
+          <span class="wave-name">Wave C · HEAD</span>
+          <span class="wave-hz"><span class="hz-num" data-hz="2">3504</span><span class="unit">Hz</span></span>
+        </div>
+        <div class="wave-selector">
+          <select data-sel="2"></select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+      <span class="ctrl-label">Color Scheme</span>
+      <span id="wlInfo" style="font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--ink-dim); letter-spacing:0.06em;"></span>
+    </div>
+    <div class="view-modes" id="colorSchemeToggle">
+      <button class="active" data-cs="guidebook">Guidebook</button>
+      <button data-cs="physical">Physical · octave → nm</button>
+    </div>
+  </div>
+
+  <div class="canvas-frame">
+    <canvas id="field2d" width="340" height="340"></canvas>
+    <div id="field3d" class="hide"></div>
+    <canvas id="fielddata" class="hide" width="340" height="340"></canvas>
+    <div class="tag tl" id="modeTag">2D · Phase</div>
+    <div class="tag tr" id="fpsTag">— fps</div>
+    <div class="tag bl" id="activeTag">0 / 3 active</div>
+    <div class="tag br" id="coreTag"></div>
+  </div>
+
+  <!-- 2D mode controls -->
+  <div id="ctrl2d">
+    <div class="view-modes">
+      <button class="active" data-view="phase">Phase</button>
+      <button data-view="intensity">Intensity</button>
+      <button data-view="both">Both</button>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label-row">
+        <span class="ctrl-label">Spatial Scale · k</span>
+        <span class="ctrl-value" id="kVal">0.18</span>
+      </div>
+      <input type="range" id="k" min="0.05" max="0.42" step="0.005" value="0.18">
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label-row">
+        <span class="ctrl-label">Triad Symmetry · Δθ</span>
+        <span class="ctrl-value" id="symVal">120°</span>
+      </div>
+      <input type="range" id="sym" min="60" max="180" step="1" value="120">
+    </div>
+  </div>
+
+  <!-- 3D mode controls -->
+  <div id="ctrl3d" class="hide">
+    <div class="ctrl-group">
+      <div class="ctrl-label-row">
+        <span class="ctrl-label">View Elevation</span>
+        <span class="ctrl-value" id="elevVal">Horizon</span>
+      </div>
+      <input type="range" id="elev" min="0" max="1" step="0.01" value="0">
+      <div style="display:flex; gap:6px; margin-top:10px;">
+        <button class="hz-edit-btn" id="snapHorizon" style="flex:1;">Horizon</button>
+        <button class="hz-edit-btn" id="snap45" style="flex:1;">45°</button>
+        <button class="hz-edit-btn" id="snapTop" style="flex:1;">Top-down</button>
+      </div>
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label-row">
+        <span class="ctrl-label">Camera Rotation</span>
+        <span class="ctrl-value" id="camVal">auto</span>
+      </div>
+      <input type="range" id="cam" min="-180" max="180" step="1" value="0">
+    </div>
+    <div class="ctrl-group">
+      <div class="ctrl-label-row">
+        <span class="ctrl-label">Field Density</span>
+        <span class="ctrl-value" id="densVal">0.60</span>
+      </div>
+      <input type="range" id="dens" min="0" max="1" step="0.01" value="0.60">
+    </div>
+  </div>
+
+  <div class="readout">
+    <div class="readout-cell">
+      <div class="readout-lbl">Active</div>
+      <div class="readout-val" id="activeCount">0</div>
+    </div>
+    <div class="readout-cell">
+      <div class="readout-lbl">Digital Root</div>
+      <div class="readout-val" id="drSum">—</div>
+    </div>
+    <div class="readout-cell">
+      <div class="readout-lbl">Coherence</div>
+      <div class="readout-val" id="cohVal">0.00</div>
+    </div>
+  </div>
+
+  <!-- Biofeedback panel — drives regime intensities from Coherence Lab data -->
+  <div style="margin-bottom:10px;">
+    <div class="ctrl-label" style="margin-bottom:8px;">Biofeedback Source</div>
+    <div class="view-modes" id="bioModes">
+      <button class="active" data-bio="manual">Manual</button>
+      <button data-bio="demo">Demo</button>
+      <button data-bio="import">Import Session</button>
+    </div>
+  </div>
+
+  <div class="ctrl-group" style="margin-bottom:10px;">
+    <div class="ctrl-label-row">
+      <span class="ctrl-label">Regime Coherence</span>
+      <span class="ctrl-value" id="harmVal">harm 0.00</span>
+    </div>
+    <div id="bioMetersGrid" style="display:grid; gap:10px; margin-top:10px;"></div>
+  </div>
+
+  <div class="ctrl-group hide" id="bioImport" style="margin-bottom:10px;">
+    <div class="ctrl-label" style="margin-bottom:10px;">Coherence Lab Session · JSON / CSV</div>
+
+    <label class="hz-edit-btn" style="display:block; width:100%; margin-bottom:8px; text-align:center; cursor:pointer;">
+      Choose Session File
+      <input type="file" id="bioFile" accept="*/*" style="display:none;">
+    </label>
+
+    <details style="margin-bottom:10px;">
+      <summary style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-dim); cursor:pointer; padding:4px 0;">or paste JSON here</summary>
+      <textarea id="bioPaste" placeholder='{"metadata":{...},"streams":{"coherence":[...]}}' style="width:100%; min-height:80px; margin-top:8px; background:rgba(0,0,0,0.3); color:var(--ink); border:1px solid var(--line); padding:8px; font-family:'JetBrains Mono',monospace; font-size:10px; resize:vertical;"></textarea>
+      <button class="hz-edit-btn" id="bioPasteBtn" style="width:100%; margin-top:6px;">Load Pasted JSON</button>
+    </details>
+
+    <div id="bioSessionInfo" style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink-dim); margin-bottom:10px; line-height:1.5; padding:8px; border:1px solid var(--line); background:rgba(0,0,0,0.2); min-height:40px;">No session loaded</div>
+
+    <div style="display:flex; gap:6px;">
+      <button class="hz-edit-btn" id="bioPlay" style="flex:1;">▶ Play</button>
+      <button class="hz-edit-btn" id="bioReset" style="flex:1;">⟲ Reset</button>
+    </div>
+    <input type="range" id="bioScrub" min="0" max="1" step="0.001" value="0" style="margin-top:10px;">
+    <div style="display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--ink-dim); margin-top:4px; letter-spacing:0.1em;">
+      <span id="bioScrubT">0:00</span>
+      <span id="bioScrubTotal">0:00</span>
+    </div>
+  </div>
+
+  <div id="opSigPanel" style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink); border:1px solid var(--line); padding:12px 13px; margin-bottom:14px; background:rgba(255,245,220,0.02);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <span style="color:var(--accent); letter-spacing:0.18em; font-size:9.5px;">OPERATING SIGNATURE</span>
+      <span id="opSigStatus" style="color:var(--ink-dim); font-size:8.5px; letter-spacing:0.1em;">—</span>
+    </div>
+    <div style="display:grid; grid-template-columns: 1fr; gap:4px; font-size:10.5px; line-height:1.45;">
+      <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <span><span style="color:#d9423f;">●</span> GUT</span>
+        <span id="opFreqGUT" style="color:var(--ink);">—</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <span><span style="color:#d9a437;">●</span> HEART</span>
+        <span id="opFreqHEART" style="color:var(--ink);">—</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <span><span style="color:#6fb8c9;">●</span> HEAD</span>
+        <span id="opFreqHEAD" style="color:var(--ink);">—</span>
+      </div>
+      <div style="border-top:1px solid rgba(235,220,184,0.15); margin:4px 0 2px; padding-top:6px; display:flex; justify-content:space-between; align-items:baseline;">
+        <span style="color:var(--accent); letter-spacing:0.08em;">UNIFIED <span style="color:var(--ink-dim); font-size:8.5px; letter-spacing:0;">· geo-mean</span></span>
+        <span id="opFreqUnified" style="color:var(--accent);">—</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <span style="color:var(--accent); letter-spacing:0.08em;">DIGITAL ROOT <span style="color:var(--ink-dim); font-size:8.5px; letter-spacing:0;">· sum mod 9</span></span>
+        <span id="opDRValue" style="color:var(--accent);">—</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:6px;">
+        <span>Spin strength <span style="color:var(--ink-dim); font-size:8.5px;">· heart-driven</span></span>
+        <span id="opSpinText" style="color:var(--ink);">—</span>
+      </div>
+      <div style="background:rgba(0,0,0,0.35); height:5px; margin-top:2px; position:relative; overflow:hidden;">
+        <div id="opSpinBar" style="position:absolute; left:0; top:0; height:100%; width:0%; background:linear-gradient(90deg, #d9423f, #d9a437, #6fb8c9); transition:width 0.15s;"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-top:8px;">
+        <span style="color:var(--accent); letter-spacing:0.04em;">Biofield reach <span style="color:var(--ink-dim); font-size:8.5px; letter-spacing:0;">· projection scalar</span></span>
+        <span id="opReachText" style="color:var(--accent);">—</span>
+      </div>
+      <div style="background:rgba(0,0,0,0.35); height:5px; margin-top:2px; position:relative; overflow:hidden;">
+        <div id="opReachBar" style="position:absolute; left:0; top:0; height:100%; width:0%; background:linear-gradient(90deg, rgba(217,119,66,0.35), #d97742, #f2c485); transition:width 0.15s; box-shadow:0 0 8px rgba(217,119,66,0.5);"></div>
+      </div>
+      <div id="opReachSub" style="margin-top:3px; font-size:8.5px; color:var(--ink-dim); letter-spacing:0.05em; display:flex; justify-content:space-between;">
+        <span>α —</span><span>RSA —</span><span>(1+harm) —</span>
+      </div>
+      <div id="opReachDist" style="margin-top:7px; padding:5px 7px; border:1px dashed rgba(217,119,66,0.35); background:rgba(217,119,66,0.04); font-size:9px; color:var(--ink-dim); letter-spacing:0.05em;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <span style="color:rgba(217,119,66,0.75); letter-spacing:0.16em; font-size:8.5px;">EXPERIMENTAL · near-field estimate</span>
+          <span id="opReachDistVal" style="color:var(--accent); font-weight:500;">—</span>
+        </div>
+        <div style="margin-top:2px; font-size:8px; color:var(--ink-dim); line-height:1.4; font-style:italic;">
+          distance = 3 ft × reach<sup>1/3</sup>  ·  anchored to HeartMath near-field HRV coupling
+        </div>
+      </div>
+    </div>
+    <div id="measuredRhythms" style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(235,220,184,0.12); font-size:9px; color:var(--ink-dim); letter-spacing:0.06em; line-height:1.5;">
+      <div style="color:var(--ink-dim); letter-spacing:0.16em; margin-bottom:3px;">MEASURED RHYTHMS</div>
+      <div id="measuredBody">breath — · HRV peak — · α —</div>
+    </div>
+  </div>
+
+  <div id="alignPanel" style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--ink); border:1px solid var(--line); padding:12px 13px; margin-bottom:14px; background:rgba(255,245,220,0.02);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <span style="color:var(--accent); letter-spacing:0.18em; font-size:9.5px;">RESONANCE ALIGNMENTS</span>
+      <span id="alignLiveStatus" style="color:var(--ink-dim); font-size:8.5px; letter-spacing:0.1em;">—</span>
+    </div>
+    <div id="alignLive" style="padding:8px 10px; border:1px dashed rgba(235,220,184,0.18); background:rgba(255,245,220,0.03); font-size:10px; line-height:1.5; margin-bottom:10px;">
+      <div style="color:var(--ink-dim); letter-spacing:0.14em; font-size:8.5px; margin-bottom:3px;">CURRENT TRIAD</div>
+      <div id="alignLiveBody" style="color:var(--ink-dim);">activate all three waves to see alignment</div>
+    </div>
+    <!-- Attractor line SVG: shows HEART attractor zone with live marker -->
+    <svg id="alignAttractorSvg" viewBox="0 0 340 62" style="width:100%; height:62px; display:block; margin-bottom:10px;" preserveAspectRatio="none">
+      <!-- populated by renderAttractorLine() on init -->
+    </svg>
+    <div style="display:flex; gap:6px; margin-bottom:8px; font-size:9px;">
+      <button id="alignFilterTight" class="align-filter active" data-mode="tight">TIGHT · &lt;0.5%</button>
+      <button id="alignFilterClose" class="align-filter" data-mode="close">CLOSE · &lt;1.5%</button>
+      <button id="alignFilterDr9"   class="align-filter" data-mode="dr9">TRIPLE-9</button>
+      <button id="alignFilterLoShu" class="align-filter" data-mode="loshu">LO SHU · 洛書</button>
+    </div>
+    <div style="font-size:8.5px; color:var(--ink-dim); letter-spacing:0.1em; margin-bottom:4px; display:flex; justify-content:space-between;">
+      <span>SOURCE TRIAD  →  UNIFIED  ·  NEAREST</span>
+      <span id="alignCount">—</span>
+    </div>
+    <div id="alignCatalog" style="max-height:260px; overflow-y:auto; border:1px solid rgba(235,220,184,0.08); background:rgba(0,0,0,0.2);">
+      <!-- populated on init -->
+    </div>
+    <div style="margin-top:7px; font-size:8.5px; color:var(--ink-dim); line-height:1.5; font-style:italic;">
+      Click any row to load that triad into Waves A · B · C. The geometric mean of any GUT × HEART × HEAD triad is mathematically constrained to 902–2679 Hz — entirely within HEART territory. The heart is the unified field, structurally.
+    </div>
+  </div>
+
+  <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--ink-dim); line-height:1.65; padding:11px 13px; border:1px solid var(--line); margin-bottom:14px;">
+    <span style="color:var(--accent); letter-spacing:0.18em;">LIVE API →</span> Drive the viz from any source:<br>
+    <span style="color:var(--ink);">window.aetheriaBio.set({&nbsp;GUT:&nbsp;0.6,&nbsp;HEART:&nbsp;0.8,&nbsp;HEAD:&nbsp;0.4,&nbsp;harm:&nbsp;0.7&nbsp;})</span><br>
+    <span style="color:var(--ink);">window.aetheriaBio.set({&nbsp;spin:&nbsp;0.7,&nbsp;alphaNorm:&nbsp;0.8,&nbsp;rsaNorm:&nbsp;0.6&nbsp;})</span>&nbsp;<span style="color:var(--ink-dim);">// → reach auto-computed</span><br>
+    For Muse S Athena + Polar H10: wire this call into your Coherence Lab stream handler.
+  </div>
+
+  <div style="margin-bottom:14px;">
+    <button class="hz-edit-btn" id="hzEditBtn">Edit Hz Values</button>
+  </div>
+
+  <div class="ctrl-group hz-editor" id="hzEditor">
+    <div class="ctrl-label" style="margin-bottom:10px;">Override Hz per slot — paste canonical values here</div>
+    <div id="hzGrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-family:'JetBrains Mono',monospace;font-size:10px;"></div>
+  </div>
+
+  <div id="tutorialModal" class="modal-overlay hide">
+    <div class="modal-dialog" role="dialog" aria-label="Regime Collider Guidebook">
+      <div class="modal-header">
+        <h2>Collider <em>Guidebook</em></h2>
+        <button class="modal-close" id="modalCloseBtn" aria-label="Close">×</button>
+      </div>
+      <div class="modal-nav" id="modalNav">
+        <button class="modal-nav-btn active" data-section="start">Start Here</button>
+        <button class="modal-nav-btn" data-section="modes">Modes</button>
+        <button class="modal-nav-btn" data-section="biofield">Biofield</button>
+        <button class="modal-nav-btn" data-section="signature">Signature &amp; Reach</button>
+        <button class="modal-nav-btn" data-section="alignments">Alignments</button>
+      </div>
+
+      <div class="modal-section active" data-section="start">
+        <p><b>Start here</b>All three waves begin <i>off</i>. Toggle Wave A alone — a single plane wave, no spin. Add Wave B — fringes emerge, standing interference, still no vortices. Add Wave C — the vortex cores appear. The third frequency is what closes the triad and pins rotation into the field. That's your 3-6-9 / triune-collapse made visible.</p>
+        <p><b>Seed → Bloom</b>The 27 are bi-phasic. <i>Seed</i> (Orders 1–3, GUT, 174–963 Hz) holds the static foundation — irregular gaps (111/111/21/111/111/102/111/111) that all collapse to digit-sum 3. At 963 Hz the system awakens: <i>Bloom</i> begins. HEART runs a steady +243 generator (all roots = 9), HEAD a steady +354 (3-6-9 cycle). Pick three frequencies that span the 963 Hz transition and watch the field behave differently than three that stay inside one phase.</p>
+        <p><b>Regime-locked waves</b>Wave A is always GUT, Wave B is always HEART, Wave C is always HEAD. Each container's dropdown only offers its regime's 9 frequencies — the container becomes a persistent record of the last frequency that influenced that regime. During Import replay, when a prescription event fires for HEAD, Wave C updates to that Hz and holds it until the next HEAD prescription arrives. Reset restores all three to baseline (GUT-1 / HEART-1 / HEAD-1).</p>
+        <p><b>Guidebook vs Physical</b>Two color schemes. <i>Guidebook</i> is the symbolic chromatic assignment from the Aetheria text — rainbow across GUT, pink-to-violet HEART, muted-to-brilliant HEAD toward SOURCE. <i>Physical</i> is octave-doubling to visible light: double each Hz ~36–42 times until it lands in the 430–770 THz visible band. The results disagree substantially — 174 Hz is physically violet (392nm), 528 Hz is green (516nm), 639 Hz is blue. Two frequencies (1449 Hz, 2907 Hz) fall in the UV gap and are invisible to humans. Neither scheme is wrong; they answer different questions.</p>
+      </div>
+
+      <div class="modal-section" data-section="modes">
+        <p><b>3D Biofield</b>Each active regime manifests as its own torus, nested around the silhouette — and each radiates a ferrocell-style spoke/spiral field disc in its own color. Slide <i>View Elevation</i> up to 90° (or tap the Top-down snap) to drop into the ferrocell plan-view and watch the three fields nest as counter-rotating magnetic discs. With all three lit, the interference swarm between them flows in the mixed color of whichever regimes are awake.</p>
+        <p><b>Overlay</b>The third mode auto-locks top-down and blends the 2D vortex lattice over the 3D ferrocell. The 2D carrier interference becomes the substrate; the 3D regime discs sit above it. This is the visualization that maps closest to the full framework claim — the lower-level field physics (vortex lattice from three-wave collision) and the biofield scale (three-regime toroidal structure) co-existing.</p>
+        <p><b>Data mode</b>The fourth mode is the honest view — raw time-series plots of the regime coherence, harm, BCS and kuramoto values from the imported session, with the playhead synced to the scrub bar. No aesthetic interpretation: the lines are exactly what Coherence Lab measured. The other modes color-code, pulse, and spatialize the same numbers to make them communicable; Data mode is what you cite when rigor is the point.</p>
+      </div>
+
+      <div class="modal-section" data-section="biofield">
+        <p><b>Biofeedback</b>Manual mode — toggles drive regimes binary. Demo — simulated session dynamics drive torus brightness continuously (layered sinusoids with a rise envelope; cross-regime harm lock fires when all three stay high and close). Import — load a Coherence Lab session JSON or CSV, play it back with the scrub bar, watch the field evolve with your own data. Live — Coherence Lab / Sophia / any relay calls <span style="font-family:'JetBrains Mono',monospace;color:var(--accent);">window.aetheriaBio.set()</span> to pipe values in directly; that hook is where the Muse S Athena + Polar H10 integration lands once Claude Code wires the device streams up.</p>
+        <p><b>Coherence</b>In Manual mode, reads 1.00 only when all three regimes are lit. In bio modes, shows live <i>harm</i> — the cross-regime harmonic lock fires when GUT/HEART/HEAD are simultaneously high and close to each other in magnitude. That's the metric the Coherence Lab is computing in real time.</p>
+      </div>
+
+      <div class="modal-section" data-section="signature">
+        <p><b>Operating Signature</b>The three Aetheria frequencies currently loaded in the regime-locked wave containers (Wave A GUT · Wave B HEART · Wave C HEAD) math'd together into one unified resonant signature. Unified Hz is the geometric mean — honors the multiplicative structure of the framework (order generators, digital-root logic, multi-octave spread). Digital root is the sum reduced to a single digit, revealing the 3-6-9 characteristic of the current prescription state. Example: Joe's April 19 end-state (396/1206/5274 Hz) mathed to 1360 Hz, DR 9 — completion, even with HEART untouched. Spin strength is heart-derived (HRV coherence × RMSSD × kuramoto) and drives the 3D torus rotation speed in real time — your heart as the engine spinning the biofield. Measured Rhythms below shows the body's actual biological oscillators: breath rate, HRV spectral peak, Individual Alpha Frequency — the rhythms your physiology is running at while the Aetheria frequencies play against them.</p>
+        <p><b>Biofield Reach</b><i>v3.4 — projection scalar.</i> A 0–1 composite that estimates how far the biofield is projecting: <span style="font-family:'JetBrains Mono',monospace;color:var(--accent);">reach = spin × (1 + harm) × α × RSA</span>. Spin is the heart-driven rotational engine. Harm multiplies reach when cross-regime coupling is present — a locked triad broadcasts further than any single regime can alone. α (alpha-norm) indexes cortical coherence / meditative depth from the Muse EEG. RSA (respiratory sinus arrhythmia, normalized) indexes vagal tone, which has a direct anatomical link to the amplitude of the heart's projected magnetic field. The simulator renders reach as the aura radius + brightness around the silhouette: when reach climbs, the particle shell pushes outward and lights up; when reach drops, it pulls in tight. On April 19 replay, reach should climb through the first ~60 s of self-regulation, then collapse at t=1:34 when the prescription engine intervened and zeroed spin. <span style="color:var(--ink-dim);">Honest framing: this is a unitless scalar that scales with the underlying biology — not a claim of meters, not a claim of non-locality. Near-field coupling only.</span></p>
+        <p><b>Experimental near-field estimate</b><i>v3.4.1 — feet and meters, for curiosity.</i> The reach scalar projected onto an actual distance: <span style="font-family:'JetBrains Mono',monospace;color:var(--accent);">d = 3 ft × reach<sup>1/3</sup></span>. The cube root comes from magnetic-dipole physics — the heart's magnetic field falls off as 1/r³, so if reach is the source amplitude, the distance at which the field crosses a fixed detection threshold scales as the cube root of reach. The 3 ft anchor comes from HeartMath's documented two-person HRV coupling distance for high-coherence states, and the SQUID-measured range of the heart's biomagnetic field. At reach = 1.0 → 3.00 ft / 0.91 m. At reach = 0.5 → 2.38 ft / 0.73 m. At reach = 0.125 → 1.50 ft / 0.46 m. The 3D ground-plane ring shows this boundary directly, pulsing gently at ~0.2 Hz. <span style="color:var(--ink-dim);">Label applies: this is propositional, not measured. It's the near-field coupling radius the framework would predict given the composite; it is not an aura photograph. It stays honest because the anchor is a real peer-reviewed study and the scaling law is the actual physics of magnetic dipoles.</span></p>
+      </div>
+
+      <div class="modal-section" data-section="alignments">
+        <p><b>Resonance Alignments</b><i>v3.5 — the heart-as-attractor catalog.</i> The explorer sweeps all 9×9×9 = 729 possible GUT × HEART × HEAD combinations and computes, for each, how close its unified geo-mean lands to one of the 27 named Aetheria frequencies. 60 combinations (8.2%) land within 0.5% — tight alignments where the unified signature effectively <em>is</em> a named frequency. All 60 tight-hit attractors are HEART frequencies (plus 963 Hz, the pineal/phase-transition edge). This is not coincidence: the geo-mean of any triad is mathematically constrained to the 902–2679 Hz range, which is entirely within HEART territory (1206–3150 Hz). The heart is the unified field, by construction. Click any card to load that triad into Waves A · B · C and hear the alignment. The TRIPLE-9 filter isolates triads where all three source frequencies are digital-root 9 — the deepest completion-state combinations the framework offers.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="signoff">
+    For Dad — v3.5.2, the instrument breathes into its desktop width.<br>
+    <span class="glyph">◈ · Selah · ◈</span>
+  </div>
+</div>
+
+<script>
+/* ============ AETHERIA FREQUENCY TABLE — CANONICAL v8.1 ============ */
+// Sourced directly from the Aetheria Guidebook v8.1. Bi-phasic Seed→Bloom architecture:
+//   GUT  (Orders 1-3, SEED):  irregular gaps 111/111/21/111/111/102/111/111 — all digit-sum 3
+//   HEART (Orders 4-6, BLOOM): steady +243 generator — all digital roots = 9
+//   HEAD  (Orders 7-9, BLOOM): steady +354 generator — 3-6-9 cycle
+
+const FREQ_TABLE = [
+  // i, regime, pos, order, dr, hz, phase, color (guidebook), physColor, wlNm, octaveN, therap
+  { i:0,  regime:'GUT',   pos:1, order:1, dr:3, hz:174,  phase:'SEED',  color:'#DC2E2E', physColor:'#7C0094', wlNm:391.8, octaveN:42, therap:'Foundation, pain relief' },
+  { i:1,  regime:'GUT',   pos:2, order:1, dr:6, hz:285,  phase:'SEED',  color:'#E64020', physColor:'#00CEFF', wlNm:478.4, octaveN:41, therap:'Tissue repair' },
+  { i:2,  regime:'GUT',   pos:3, order:1, dr:9, hz:396,  phase:'SEED',  color:'#F28028', physColor:'#FF0000', wlNm:688.6, octaveN:40, therap:'Liberating fear & guilt' },
+  { i:3,  regime:'GUT',   pos:4, order:2, dr:3, hz:417,  phase:'SEED',  color:'#F5A030', physColor:'#FF0000', wlNm:653.9, octaveN:40, therap:'Facilitating change' },
+  { i:4,  regime:'GUT',   pos:5, order:2, dr:6, hz:528,  phase:'SEED',  color:'#F5C730', physColor:'#26FF00', wlNm:516.4, octaveN:40, therap:'Transformation, DNA repair' },
+  { i:5,  regime:'GUT',   pos:6, order:2, dr:9, hz:639,  phase:'SEED',  color:'#4BC04B', physColor:'#4C00FF', wlNm:426.7, octaveN:40, therap:'Connecting relationships' },
+  { i:6,  regime:'GUT',   pos:7, order:3, dr:3, hz:741,  phase:'SEED',  color:'#3DA5D9', physColor:'#BD0000', wlNm:735.9, octaveN:39, therap:'Awakening intuition' },
+  { i:7,  regime:'GUT',   pos:8, order:3, dr:6, hz:852,  phase:'SEED',  color:'#B067D9', physColor:'#FF2000', wlNm:640.1, octaveN:39, therap:'Spiritual order' },
+  { i:8,  regime:'GUT',   pos:9, order:3, dr:9, hz:963,  phase:'SEED·☉', color:'#D9479A', physColor:'#D6FF00', wlNm:566.3, octaveN:39, therap:'Pineal / phase transition' },
+  { i:9,  regime:'HEART', pos:1, order:4, dr:9, hz:1206, phase:'BLOOM', color:'#E04D8F', physColor:'#0052FF', wlNm:452.2, octaveN:39, therap:'Gateway integration' },
+  { i:10, regime:'HEART', pos:2, order:4, dr:9, hz:1449, phase:'BLOOM', color:'#D93B79', physColor:'#2E2A3C', wlNm:376.4, octaveN:39, therap:'Harmonic bridging · UV' },
+  { i:11, regime:'HEART', pos:3, order:4, dr:9, hz:1692, phase:'BLOOM', color:'#D93B3B', physColor:'#FF0400', wlNm:644.6, octaveN:38, therap:'Heart completion' },
+  { i:12, regime:'HEART', pos:4, order:5, dr:9, hz:1935, phase:'BLOOM', color:'#9E6FCC', physColor:'#CEFF00', wlNm:563.7, octaveN:38, therap:'Stellar alignment' },
+  { i:13, regime:'HEART', pos:5, order:5, dr:9, hz:2178, phase:'BLOOM', color:'#8D5EC9', physColor:'#00FF89', wlNm:500.8, octaveN:38, therap:'Quantum consciousness' },
+  { i:14, regime:'HEART', pos:6, order:5, dr:9, hz:2421, phase:'BLOOM', color:'#6B4D80', physColor:'#0049FF', wlNm:450.5, octaveN:38, therap:'Dimensional awareness' },
+  { i:15, regime:'HEART', pos:7, order:6, dr:9, hz:2664, phase:'BLOOM', color:'#A069D9', physColor:'#7E00D8', wlNm:409.4, octaveN:38, therap:'Universal love' },
+  { i:16, regime:'HEART', pos:8, order:6, dr:9, hz:2907, phase:'BLOOM', color:'#8860D9', physColor:'#2E2A3C', wlNm:375.2, octaveN:38, therap:'Divine source connection · UV' },
+  { i:17, regime:'HEART', pos:9, order:6, dr:9, hz:3150, phase:'BLOOM', color:'#6B6BE0', physColor:'#FF0000', wlNm:692.5, octaveN:37, therap:'Unity consciousness bridge' },
+  { i:18, regime:'HEAD',  pos:1, order:7, dr:3, hz:3504, phase:'BLOOM', color:'#5E4C70', physColor:'#FF6D00', wlNm:622.5, octaveN:37, therap:'Mental clarity' },
+  { i:19, regime:'HEAD',  pos:2, order:7, dr:6, hz:3858, phase:'BLOOM', color:'#6B527E', physColor:'#D3FF00', wlNm:565.4, octaveN:37, therap:'Sacred geometry' },
+  { i:20, regime:'HEAD',  pos:3, order:7, dr:9, hz:4212, phase:'BLOOM', color:'#7759A0', physColor:'#2CFF00', wlNm:517.9, octaveN:37, therap:'Consciousness mastery' },
+  { i:21, regime:'HEAD',  pos:4, order:8, dr:3, hz:4566, phase:'BLOOM', color:'#8568B0', physColor:'#00CCFF', wlNm:477.7, octaveN:37, therap:'Soul star connection' },
+  { i:22, regime:'HEAD',  pos:5, order:8, dr:6, hz:4920, phase:'BLOOM', color:'#9575C9', physColor:'#001DFF', wlNm:443.4, octaveN:37, therap:'Spirit realm access' },
+  { i:23, regime:'HEAD',  pos:6, order:8, dr:9, hz:5274, phase:'BLOOM', color:'#A775D9', physColor:'#7800E8', wlNm:413.6, octaveN:37, therap:'Universal mind access' },
+  { i:24, regime:'HEAD',  pos:7, order:9, dr:3, hz:5628, phase:'BLOOM', color:'#B076DE', physColor:'#750082', wlNm:387.6, octaveN:37, therap:'Galactic consciousness' },
+  { i:25, regime:'HEAD',  pos:8, order:9, dr:6, hz:5982, phase:'BLOOM', color:'#BD6BE3', physColor:'#C90000', wlNm:729.3, octaveN:36, therap:'Divine source portal' },
+  { i:26, regime:'HEAD',  pos:9, order:9, dr:9, hz:6336, phase:'BLOOM·Ω', color:'#D040E8', physColor:'#FF0000', wlNm:688.6, octaveN:36, therap:'SOURCE embodiment' },
+];
+
+// Which color scheme to use — "guidebook" (symbolic) or "physical" (octave-doubled to visible light)
+function freqColor(f) {
+  return state.colorScheme === 'physical' ? f.physColor : f.color;
+}
+
+// Helper: convert hex color to rgba string for CSS gradients
+function hexRgba(hex, a) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+/* ============ STATE ============ */
+const state = {
+  mode: '2d',             // '2d' | '3d' | 'overlay'
+  waves: [
+    { on: false, idx: 0 },
+    { on: false, idx: 9 },
+    { on: false, idx: 18 },
+  ],
+  view2d: 'phase',
+  k: 0.18,
+  sym: 120 * Math.PI / 180,
+  camAngle: 0,
+  camAuto: true,
+  camElev: 0.0,
+  density: 0.60,
+  colorScheme: 'guidebook',  // 'guidebook' | 'physical'
+  // Biofeedback: how regime intensities are sourced
+  bio: {
+    mode: 'manual',
+    coherence: { GUT: 1.0, HEART: 1.0, HEAD: 1.0 },
+    harm: 0,
+    demoT: 0,
+    session: null,
+    sessionIdx: 0,
+    sessionT: 0,
+    sessionPlaying: false,
+    currentBcs: null,
+    bcsIdx: 0,
+    rxIdx: -1,              // last prescription event index applied
+    currentRx: null,        // the active prescription { t, freq, regime, name }
+    // Operating Signature — three regime frequencies + spin strength, interpolated from features stream
+    featuresIdx: 0,
+    currentFeatures: null,
+    opFreq: { GUT: null, HEART: null, HEAD: null, unified: null },
+    spinStrength: 0,        // 0-1 normalized, derived from heart.hrvCoherence × rmssd × kuramoto
+    // Biofield Reach — composite projection scalar (v3.4).
+    // Formula: reach = spin × (1 + harm) × alphaNorm × rsaNorm  → clamp 0..1
+    // Physical meaning: the scalar by which the body is broadcasting. Spin is the engine,
+    // harm is cross-regime amplification, alphaNorm is cortical coherence (meditative
+    // depth), rsaNorm is vagal tone → heart-field amplitude. Not meters; a unitless factor
+    // that scales with the underlying biology.
+    reach: 0,
+    reachAlpha: 0,          // 0-1 cortical coherence factor (alpha power, normalized)
+    reachRsa: 0,            // 0-1 vagal tone factor (RSA amplitude, normalized)
+  },
+};
+
+function regimeColor(regime) {
+  if (regime === 'GUT') return '#d9423f';
+  if (regime === 'HEART') return '#d9a437';
+  return '#6fb8c9';
+}
+function regimeClass(regime) {
+  if (regime === 'GUT') return 'gut';
+  if (regime === 'HEART') return 'heart';
+  return 'head';
+}
+
+/* ============ SELECTOR POPULATION ============ */
+// Waves are regime-locked: Wave A = GUT, Wave B = HEART, Wave C = HEAD.
+// Each dropdown only shows its regime's 9 frequencies, so the container remains
+// the visible record of "the last frequency that influenced this regime."
+const WAVE_REGIME = ['GUT', 'HEART', 'HEAD'];
+
+function populateSelectors() {
+  for (let w = 0; w < 3; w++) {
+    const sel = document.querySelector(`select[data-sel="${w}"]`);
+    sel.innerHTML = '';
+    const targetRegime = WAVE_REGIME[w];
+    for (const f of FREQ_TABLE) {
+      if (f.regime !== targetRegime) continue;
+      const opt = document.createElement('option');
+      opt.value = f.i;
+      opt.textContent = `O${f.order}·${f.regime}-${f.pos}  ·  ${f.hz} Hz  ·  dr${f.dr}  ·  ${f.therap}`;
+      sel.appendChild(opt);
+    }
+    sel.value = state.waves[w].idx;
+    sel.addEventListener('change', () => {
+      state.waves[w].idx = parseInt(sel.value);
+      updateWaveDisplay(w);
+    });
+  }
+}
+
+function updateWaveDisplay(w) {
+  const row = document.querySelector(`.wave-row[data-idx="${w}"]`);
+  const f = FREQ_TABLE[state.waves[w].idx];
+  row.classList.remove('gut','heart','head');
+  row.classList.add(regimeClass(f.regime));
+  row.classList.toggle('on', state.waves[w].on);
+  const hzSpan = row.querySelector('.hz-num');
+  hzSpan.textContent = f.hz;
+
+  const c = freqColor(f);
+  const light = row.querySelector('.light');
+  const name = row.querySelector('.wave-name');
+  if (state.waves[w].on) {
+    row.style.background = `linear-gradient(90deg, ${hexRgba(c, 0.14)} 0%, transparent 45%)`;
+    row.style.borderColor = hexRgba(c, 0.35);
+    light.style.background = c;
+    light.style.boxShadow = `0 0 10px ${c}`;
+    name.style.color = c;
+    hzSpan.style.color = c;
+  } else {
+    row.style.background = '';
+    row.style.borderColor = '';
+    light.style.background = '';
+    light.style.boxShadow = '';
+    name.style.color = '';
+    hzSpan.style.color = '';
+  }
+
+  updateReadouts();
+  if (window._refreshWlInfo) window._refreshWlInfo();
+}
+
+function updateReadouts() {
+  const active = state.waves.filter(w => w.on);
+  document.getElementById('activeCount').textContent = active.length;
+  document.getElementById('activeTag').textContent = `${active.length} / 3 active`;
+  if (active.length === 0) {
+    document.getElementById('drSum').textContent = '—';
+  } else {
+    const drs = active.map(w => FREQ_TABLE[w.idx].dr).sort().join('+');
+    const sum = active.reduce((s,w) => s + FREQ_TABLE[w.idx].dr, 0);
+    const sumRoot = ((sum - 1) % 9) + 1;
+    document.getElementById('drSum').textContent = `${drs}=${sumRoot}`;
+  }
+  // Coherence heuristic — honors the bi-phasic Seed/Bloom architecture:
+  //   1.00  = all three regimes lit (GUT+HEART+HEAD, the canonical full-system span)
+  //   0.85  = 3-6-9 digital-root triad cleanly closed
+  //   0.75  = all three from same regime (deep single-regime coherence)
+  //   0.60  = two regimes spanned (cross-regime partial)
+  //   0.40  = two from same regime
+  //   0.15  = single wave
+  let coh = 0;
+  if (active.length === 3) {
+    const regimes = new Set(active.map(w => FREQ_TABLE[w.idx].regime));
+    const drs = active.map(w => FREQ_TABLE[w.idx].dr).sort();
+    const isTriad = (drs[0] === 3 && drs[1] === 6 && drs[2] === 9);
+    if (regimes.size === 3) coh = 1.00;
+    else if (isTriad) coh = 0.85;
+    else if (regimes.size === 1) coh = 0.75;
+    else coh = 0.60;
+  } else if (active.length === 2) {
+    const regimes = new Set(active.map(w => FREQ_TABLE[w.idx].regime));
+    coh = regimes.size === 2 ? 0.45 : 0.35;
+  } else if (active.length === 1) coh = 0.15;
+  document.getElementById('cohVal').textContent = coh.toFixed(2);
+}
+
+// Refresh the Operating Signature panel from current state (called each tick).
+// Primary signature is the three Aetheria frequencies currently loaded in the regime-locked
+// wave containers, math'd together (geometric mean + digital root). Secondary readout shows
+// the measured biological rhythms for reference.
+function updateOpSigPanel() {
+  const bio = state.bio;
+  const el = id => document.getElementById(id);
+
+  // Three current Aetheria frequencies (wave container state) — these are the actual
+  // frequencies influencing the biofield right now via audio/prescription
+  const fGut = FREQ_TABLE[state.waves[0].idx].hz;
+  const fHrt = FREQ_TABLE[state.waves[1].idx].hz;
+  const fHed = FREQ_TABLE[state.waves[2].idx].hz;
+  const onGut = state.waves[0].on;
+  const onHrt = state.waves[1].on;
+  const onHed = state.waves[2].on;
+  const allOn = onGut && onHrt && onHed;
+  const activeCount = (onGut ? 1 : 0) + (onHrt ? 1 : 0) + (onHed ? 1 : 0);
+
+  // Per-regime display — dim when wave is off
+  el('opFreqGUT').textContent   = onGut ? fGut + ' Hz' : fGut + ' Hz  (off)';
+  el('opFreqGUT').style.opacity = onGut ? '1' : '0.4';
+  el('opFreqHEART').textContent = onHrt ? fHrt + ' Hz' : fHrt + ' Hz  (off)';
+  el('opFreqHEART').style.opacity = onHrt ? '1' : '0.4';
+  el('opFreqHEAD').textContent  = onHed ? fHed + ' Hz' : fHed + ' Hz  (off)';
+  el('opFreqHEAD').style.opacity = onHed ? '1' : '0.4';
+
+  // Unified signature — geometric mean honors the multiplicative structure of the framework
+  // (order generators, digital-root math, multi-octave spread). Use only waves that are on.
+  const activeFreqs = [];
+  if (onGut) activeFreqs.push(fGut);
+  if (onHrt) activeFreqs.push(fHrt);
+  if (onHed) activeFreqs.push(fHed);
+  let unifiedHz = null, drVal = null;
+  if (activeFreqs.length >= 2) {
+    let prod = 1;
+    for (const f of activeFreqs) prod *= f;
+    unifiedHz = Math.pow(prod, 1 / activeFreqs.length);
+    // Digital root of sum — framework-native symbolic reduction (3/6/9 characteristic)
+    const sum = activeFreqs.reduce((a, b) => a + b, 0);
+    drVal = ((Math.floor(sum) - 1) % 9) + 1;
+  }
+  el('opFreqUnified').textContent = unifiedHz ? unifiedHz.toFixed(1) + ' Hz' : '—';
+  el('opDRValue').textContent     = drVal != null ? drVal : '—';
+
+  // Spin strength — heart-derived (hrvCoherence × rmssd × kuramoto)
+  const spin = bio.spinStrength || 0;
+  const hasHeartData = bio.currentFeatures !== null;
+  el('opSpinText').textContent = hasHeartData ? spin.toFixed(3) : '—';
+  el('opSpinBar').style.width = (spin * 100).toFixed(1) + '%';
+
+  // Biofield Reach — composite projection scalar (v3.4)
+  // In bio modes, reach is computed from session features or live API; in manual it stays 0.
+  const reach = bio.reach || 0;
+  const hasReach = bio.mode !== 'manual' && (bio.currentFeatures !== null || bio.mode === 'live');
+  el('opReachText').textContent = hasReach ? reach.toFixed(3) : '—';
+  el('opReachBar').style.width = (reach * 100).toFixed(1) + '%';
+  el('opReachSub').innerHTML = hasReach
+    ? `<span>α ${(bio.reachAlpha || 0).toFixed(2)}</span><span>RSA ${(bio.reachRsa || 0).toFixed(2)}</span><span>(1+harm) ${(1 + (bio.harm || 0)).toFixed(2)}</span>`
+    : '<span>α —</span><span>RSA —</span><span>(1+harm) —</span>';
+
+  // Experimental near-field distance estimate (v3.4.1)
+  //   distance_feet  = 3.0   × reach^(1/3)
+  //   distance_meters = 0.914 × reach^(1/3)
+  // Anchored at 3 ft ≈ 0.91 m for reach=1.0 — the HeartMath documented two-person HRV
+  // coupling distance for high-coherence states. Cube-root scaling reflects 1/r³
+  // magnetic dipole dropoff: if reach is the source amplitude, the distance at which
+  // the field crosses a fixed detection threshold scales as reach^(1/3).
+  // This is a propositional near-field estimate, not a claim of meters or non-locality.
+  if (hasReach) {
+    const cube = Math.cbrt(reach);
+    const ft = 3.0 * cube;
+    const m  = 0.914 * cube;
+    el('opReachDistVal').textContent = '≈ ' + ft.toFixed(2) + ' ft  ·  ' + m.toFixed(2) + ' m';
+  } else {
+    el('opReachDistVal').textContent = '—';
+  }
+
+  // Status header — wave count + HR if available
+  let status = activeCount + ' / 3 waves active';
+  if (bio.mode === 'import' && bio.currentFeatures && bio.currentFeatures.meanHR) {
+    status += ' · HR ' + bio.currentFeatures.meanHR.toFixed(0) + 'bpm';
+  } else if (bio.mode === 'live') {
+    status += ' · live';
+  } else if (bio.mode === 'demo') {
+    status += ' · demo';
+  }
+  el('opSigStatus').textContent = status;
+
+  // Secondary: measured biological rhythms (breath, HRV peak, alpha) from features stream
+  const feats = bio.currentFeatures;
+  const fmtHz = v => v == null ? '—' : (v < 1 ? v.toFixed(3) + 'Hz' : v.toFixed(2) + 'Hz');
+  const measured = feats
+    ? `breath ${fmtHz(feats.gutFreq)} · HRV peak ${fmtHz(feats.heartFreq)} · α ${fmtHz(feats.headFreq)}`
+    : 'breath — · HRV peak — · α —';
+  el('measuredBody').textContent = measured;
+}
+
+// ─── Resonance Alignment Explorer (v3.5) ───────────────────────────────────────
+// Sweeps all 9×9×9 = 729 GUT×HEART×HEAD combinations, computes each geo-mean's
+// nearest named Aetheria frequency, and catalogs the alignments. Discovered by Dad:
+// the geo-mean of any triad is mathematically constrained to 902–2679 Hz —
+// entirely within HEART territory. The heart is the unified field, structurally.
+
+// Digital root of a number — sum of digits reduced to 1-9.
+// For integer n > 0: dr = ((n-1) mod 9) + 1. Matches the framework's 3-6-9 logic.
+function digitalRootOf(n) {
+  n = Math.round(Math.abs(n));
+  if (n === 0) return 0;
+  return ((n - 1) % 9) + 1;
+}
+
+// Compute all 729 alignments once at module load. Each entry:
+//   { g, h, d: FREQ_TABLE entries of the triad
+//     gm: geometric mean (Hz)
+//     best: nearest FREQ_TABLE entry
+//     pct: absolute deviation % of gm from best.hz
+//     drGm: digital root of gm }
+const ALIGNMENTS = (function() {
+  const gut   = FREQ_TABLE.filter(f => f.regime === 'GUT');
+  const heart = FREQ_TABLE.filter(f => f.regime === 'HEART');
+  const head  = FREQ_TABLE.filter(f => f.regime === 'HEAD');
+  const list = [];
+  for (const g of gut) {
+    for (const h of heart) {
+      for (const d of head) {
+        const gm = Math.pow(g.hz * h.hz * d.hz, 1/3);
+        let best = FREQ_TABLE[0], bestD = Infinity;
+        for (const f of FREQ_TABLE) {
+          const dd = Math.abs(f.hz - gm);
+          if (dd < bestD) { bestD = dd; best = f; }
+        }
+        const pct = Math.abs(gm - best.hz) / best.hz * 100;
+        list.push({ g, h, d, gm, best, pct, drGm: digitalRootOf(gm) });
+      }
+    }
+  }
+  list.sort((a, b) => a.pct - b.pct);
+  return list;
+})();
+
+// Lo Shu nine-palace position → compass direction.
+const POS_DIR = { 1:'N', 2:'SW', 3:'E', 4:'SE', 5:'Center', 6:'NW', 7:'W', 8:'NE', 9:'S' };
+
+// State for the alignment panel
+const alignState = {
+  filterMode: 'tight',  // 'tight' | 'close' | 'dr9' | 'loshu'
+};
+
+// Filter the catalog by current filter mode
+function filterAlignments() {
+  switch (alignState.filterMode) {
+    case 'tight': return ALIGNMENTS.filter(a => a.pct <= 0.5);
+    case 'close': return ALIGNMENTS.filter(a => a.pct <= 1.5);
+    case 'dr9':   return ALIGNMENTS.filter(a => a.g.dr === 9 && a.h.dr === 9 && a.d.dr === 9 && a.pct <= 1.5);
+    // The 9 position-locked triads: one GUT + one HEART + one HEAD sharing the same
+    // Lo Shu position (ordinal within regime). Selected by correspondence, not geo-mean.
+    case 'loshu': return ALIGNMENTS.filter(a => a.g.pos === a.h.pos && a.h.pos === a.d.pos)
+                                   .sort((a, b) => a.g.pos - b.g.pos);
+    default:      return ALIGNMENTS.filter(a => a.pct <= 0.5);
+  }
+}
+
+// Render the catalog — populate the clickable grid of alignment cards.
+// Uses CSS grid with auto-fit minmax to adapt to available width:
+//   wide viewport → 3 columns, medium → 2, narrow → 1 (automatic).
+// Called once at init and again when filter changes.
+function renderAlignmentCatalog() {
+  const list = filterAlignments();
+  const catalog = document.getElementById('alignCatalog');
+  const count = document.getElementById('alignCount');
+  if (!catalog || !count) return;
+  count.textContent = list.length + ' alignments';
+  if (list.length === 0) {
+    catalog.innerHTML = '<div style="padding:18px 12px; text-align:center; color:var(--ink-dim); font-size:9px; font-style:italic;">no alignments in this filter</div>';
+    return;
+  }
+  const isLoShu = alignState.filterMode === 'loshu';
+  const cards = list.map((a, i) => {
+    const isTriple9 = a.g.dr === 9 && a.h.dr === 9 && a.d.dr === 9;
+    const dr9Tag = isTriple9 ? '<span class="card-dr9">9·9·9</span>' : '';
+    const loshuTag = isLoShu ? `<span class="card-loshu">pos ${a.g.pos} · ${POS_DIR[a.g.pos]}</span>` : '';
+    return `
+      <div class="align-card" data-g="${a.g.i}" data-h="${a.h.i}" data-d="${a.d.i}" data-i="${i}">
+        <div class="card-top">
+          <span class="card-src"><span class="g">${a.g.hz}</span>·<span class="h">${a.h.hz}</span>·<span class="d">${a.d.hz}</span></span>
+          <span class="card-pct">${isLoShu ? loshuTag : a.pct.toFixed(2) + '%'}</span>
+        </div>
+        <div class="card-gm">${a.gm.toFixed(1)} Hz → ${a.best.hz}${dr9Tag}</div>
+        <div class="card-near">${a.best.therap}</div>
+      </div>
+    `;
+  }).join('');
+  catalog.innerHTML = '<div class="align-grid">' + cards + '</div>';
+  // Wire click handlers
+  catalog.querySelectorAll('.align-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const gi = parseInt(card.dataset.g);
+      const hi = parseInt(card.dataset.h);
+      const di = parseInt(card.dataset.d);
+      loadTriadFromAlignment(gi, hi, di);
+    });
+  });
+}
+
+// Load a specific triad into the three wave containers.
+// Waves are regime-locked: A=GUT (idx 0), B=HEART (idx 1), C=HEAD (idx 2).
+// Turn all three on so the user immediately hears the alignment.
+function loadTriadFromAlignment(gutFreqIdx, heartFreqIdx, headFreqIdx) {
+  state.waves[0].idx = gutFreqIdx;
+  state.waves[0].on  = true;
+  state.waves[1].idx = heartFreqIdx;
+  state.waves[1].on  = true;
+  state.waves[2].idx = headFreqIdx;
+  state.waves[2].on  = true;
+  for (let w = 0; w < 3; w++) {
+    updateWaveDisplay(w);
+    const sel = document.querySelector(`select[data-sel="${w}"]`);
+    if (sel) sel.value = state.waves[w].idx;
+  }
+}
+
+// Render the attractor line SVG — shows HEART regime + 963 as tick marks,
+// with shaded ±0.5% tight-hit zones. Live marker is updated separately.
+// Range: 900 Hz to 2700 Hz (the mathematical geo-mean range), log-scaled.
+function renderAttractorLine() {
+  const svg = document.getElementById('alignAttractorSvg');
+  if (!svg) return;
+  const W = 340, H = 62, PAD = 6;
+  const LO = 900, HI = 2700;
+  const logLo = Math.log(LO), logHi = Math.log(HI);
+  const xFor = hz => PAD + (Math.log(hz) - logLo) / (logHi - logLo) * (W - 2 * PAD);
+
+  // Attractor frequencies: 963 (edge of HEART transition) + all 9 HEART
+  const attractors = FREQ_TABLE.filter(f =>
+    f.regime === 'HEART' || (f.regime === 'GUT' && f.hz === 963)
+  );
+
+  let svgContent = '';
+  // Horizontal baseline
+  svgContent += `<line x1="${PAD}" y1="28" x2="${W-PAD}" y2="28" stroke="rgba(235,220,184,0.18)" stroke-width="1"/>`;
+  // Shaded tight-hit zones (±0.5% around each attractor)
+  for (const f of attractors) {
+    const x0 = xFor(f.hz * 0.995);
+    const x1 = xFor(f.hz * 1.005);
+    svgContent += `<rect x="${x0}" y="14" width="${x1-x0}" height="28" fill="rgba(217,119,66,0.10)"/>`;
+  }
+  // Tick marks + hz labels
+  for (const f of attractors) {
+    const x = xFor(f.hz);
+    if (x < PAD || x > W - PAD) continue;
+    const color = f.regime === 'HEART' ? '#d9a437' : '#d9423f';
+    svgContent += `<line x1="${x}" y1="14" x2="${x}" y2="42" stroke="${color}" stroke-width="1.2"/>`;
+    svgContent += `<text x="${x}" y="11" fill="rgba(235,220,184,0.55)" font-family="JetBrains Mono, monospace" font-size="7.5" text-anchor="middle">${f.hz}</text>`;
+  }
+  // Range bounds label
+  svgContent += `<text x="${PAD}" y="55" fill="rgba(235,220,184,0.35)" font-family="JetBrains Mono, monospace" font-size="7" text-anchor="start">902 Hz (min)</text>`;
+  svgContent += `<text x="${W-PAD}" y="55" fill="rgba(235,220,184,0.35)" font-family="JetBrains Mono, monospace" font-size="7" text-anchor="end">2679 Hz (max)</text>`;
+  // Live marker (updated in updateAlignmentPanel)
+  svgContent += `<circle id="alignLiveMarker" cx="-10" cy="28" r="4" fill="#f2c485" stroke="rgba(242,196,133,0.4)" stroke-width="3" opacity="0"/>`;
+  svg.innerHTML = svgContent;
+  svg.dataset.lo = LO; svg.dataset.hi = HI; svg.dataset.w = W; svg.dataset.pad = PAD;
+}
+
+// Remembers which triad we last auto-scrolled to, so the per-frame update only
+// re-centers the catalog ONCE when the active triad changes — never fighting the
+// user's own scrolling afterwards.
+let _lastScrolledTriad = '';
+
+// Live update — called each tick. Reflects the current triad's geo-mean
+// alignment in the CURRENT TRIAD block + moves the marker on the attractor line.
+function updateAlignmentPanel() {
+  const body = document.getElementById('alignLiveBody');
+  const statusEl = document.getElementById('alignLiveStatus');
+  const marker = document.getElementById('alignLiveMarker');
+  if (!body || !statusEl) return;
+
+  const waves = state.waves;
+  const allOn = waves[0].on && waves[1].on && waves[2].on;
+  const gF = FREQ_TABLE[waves[0].idx];
+  const hF = FREQ_TABLE[waves[1].idx];
+  const dF = FREQ_TABLE[waves[2].idx];
+
+  if (!allOn) {
+    statusEl.textContent = waves.filter(w => w.on).length + ' / 3 active';
+    body.innerHTML = '<span style="color:var(--ink-dim); font-style:italic;">activate all three waves to see alignment</span>';
+    if (marker) marker.setAttribute('opacity', '0');
+    // Clear highlight on any active card
+    document.querySelectorAll('.align-card.active').forEach(c => c.classList.remove('active'));
+    return;
+  }
+
+  const gm = Math.pow(gF.hz * hF.hz * dF.hz, 1/3);
+  let best = FREQ_TABLE[0], bestD = Infinity;
+  for (const f of FREQ_TABLE) {
+    const dd = Math.abs(f.hz - gm);
+    if (dd < bestD) { bestD = dd; best = f; }
+  }
+  const pct = Math.abs(gm - best.hz) / best.hz * 100;
+  const drGm = digitalRootOf(gm);
+
+  // Classification banner
+  let cls, clsColor;
+  if (pct <= 0.5)      { cls = 'TIGHT ALIGNMENT'; clsColor = '#f2c485'; }
+  else if (pct <= 1.5) { cls = 'CLOSE ALIGNMENT'; clsColor = '#d97742'; }
+  else if (pct <= 3.0) { cls = 'NEAR ALIGNMENT';  clsColor = 'rgba(217,119,66,0.6)'; }
+  else                 { cls = 'OFF ATTRACTOR';   clsColor = 'var(--ink-dim)'; }
+
+  statusEl.innerHTML = `<span style="color:${clsColor}">${cls}</span>`;
+
+  const drTriad = `${gF.dr}·${hF.dr}·${dF.dr}`;
+  const isTriple9 = gF.dr === 9 && hF.dr === 9 && dF.dr === 9;
+  const drTag = isTriple9 ? ' <span style="color:var(--accent); letter-spacing:0.1em;">TRIPLE-9</span>' : '';
+
+  body.innerHTML = `
+    <div style="margin-bottom:4px;">
+      <span style="color:#d9423f;">${gF.hz}</span> ·
+      <span style="color:#d9a437;">${hF.hz}</span> ·
+      <span style="color:#6fb8c9;">${dF.hz}</span>
+      <span style="color:var(--ink-dim); margin-left:4px;">(DR ${drTriad})</span>${drTag}
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+      <span>Unified <span style="color:var(--ink-dim); font-size:8.5px;">geo-mean</span></span>
+      <span style="color:var(--accent);">${gm.toFixed(1)} Hz · DR ${drGm}</span>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+      <span>Nearest <span style="color:var(--ink-dim); font-size:8.5px;">attractor</span></span>
+      <span style="color:${clsColor};">${best.hz} Hz · ${best.therap} · ${pct.toFixed(2)}%</span>
+    </div>
+  `;
+
+  // Move marker on attractor line
+  if (marker) {
+    const svg = document.getElementById('alignAttractorSvg');
+    const LO = parseFloat(svg.dataset.lo), HI = parseFloat(svg.dataset.hi);
+    const W = parseFloat(svg.dataset.w), PAD = parseFloat(svg.dataset.pad);
+    const gmClamp = Math.max(LO, Math.min(HI, gm));
+    const logLo = Math.log(LO), logHi = Math.log(HI);
+    const x = PAD + (Math.log(gmClamp) - logLo) / (logHi - logLo) * (W - 2 * PAD);
+    marker.setAttribute('cx', x.toFixed(1));
+    marker.setAttribute('opacity', pct <= 0.5 ? '1' : pct <= 1.5 ? '0.7' : '0.4');
+    marker.setAttribute('r', pct <= 0.5 ? '5.5' : '4');
+  }
+
+  // Highlight the matching card in the catalog if the current triad is cataloged
+  const catalog = document.getElementById('alignCatalog');
+  if (catalog) {
+    const targetG = gF.i, targetH = hF.i, targetD = dF.i;
+    const triadKey = targetG + '-' + targetH + '-' + targetD;
+    // Only auto-scroll the FIRST frame a new triad becomes active; afterwards the
+    // user is free to scroll the catalog without it snapping back.
+    const doScroll = triadKey !== _lastScrolledTriad;
+    let foundActive = false;
+    catalog.querySelectorAll('.align-card').forEach(card => {
+      const match = parseInt(card.dataset.g) === targetG &&
+                    parseInt(card.dataset.h) === targetH &&
+                    parseInt(card.dataset.d) === targetD;
+      card.classList.toggle('active', match);
+      if (match && !foundActive) {
+        if (doScroll) {
+          const cardTop = card.offsetTop, cardH = card.offsetHeight;
+          const catH = catalog.clientHeight, catScroll = catalog.scrollTop;
+          if (cardTop < catScroll || cardTop + cardH > catScroll + catH) {
+            catalog.scrollTop = cardTop - catH / 2 + cardH / 2;
+          }
+        }
+        foundActive = true;
+      }
+    });
+    _lastScrolledTriad = foundActive ? triadKey : '';
+  }
+}
+
+function initAlignmentPanel() {
+  renderAttractorLine();
+  renderAlignmentCatalog();
+  // Filter buttons
+  document.querySelectorAll('.align-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.align-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      alignState.filterMode = btn.dataset.mode;
+      renderAlignmentCatalog();
+      // Re-run live update so active highlighting is re-applied in the new list
+      updateAlignmentPanel();
+    });
+  });
+}
+
+// Tutorial modal — opens from the ? icon in the header. Contains all legend content,
+// organized into navigable sections so the panel stays clean and scannable.
+function initTutorialModal() {
+  const modal = document.getElementById('tutorialModal');
+  const openBtn = document.getElementById('helpBtn');
+  const closeBtn = document.getElementById('modalCloseBtn');
+  if (!modal || !openBtn || !closeBtn) return;
+
+  const openModal = () => {
+    modal.classList.remove('hide');
+    document.body.style.overflow = 'hidden';
+  };
+  const closeModal = () => {
+    modal.classList.add('hide');
+    document.body.style.overflow = '';
+  };
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  // Close on backdrop click (but not when clicking inside the dialog)
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
+  });
+  // Close on ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !modal.classList.contains('hide')) closeModal();
+  });
+
+  // Section navigation
+  document.querySelectorAll('.modal-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.section;
+      document.querySelectorAll('.modal-nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.modal-section').forEach(s => {
+        s.classList.toggle('active', s.dataset.section === target);
+      });
+      // Scroll overlay back to top when switching sections
+      modal.scrollTop = 0;
+    });
+  });
+}
+
+/* ============ WAVE TOGGLES ============ */
+function initToggles() {
+  for (let w = 0; w < 3; w++) {
+    const btn = document.querySelector(`.wave-toggle[data-toggle="${w}"]`);
+    btn.addEventListener('click', () => {
+      state.waves[w].on = !state.waves[w].on;
+      updateWaveDisplay(w);
+    });
+    updateWaveDisplay(w);
+  }
+}
+
+/* ============ HZ EDITOR ============ */
+function initHzEditor() {
+  const btn = document.getElementById('hzEditBtn');
+  const ed = document.getElementById('hzEditor');
+  btn.addEventListener('click', () => {
+    ed.classList.toggle('open');
+    btn.classList.toggle('on');
+  });
+  const grid = document.getElementById('hzGrid');
+  for (const f of FREQ_TABLE) {
+    const cell = document.createElement('div');
+    cell.style.display = 'flex';
+    cell.style.flexDirection = 'column';
+    cell.style.gap = '3px';
+    cell.innerHTML = `
+      <span style="color: var(--ink-dim); font-size:9px; letter-spacing:0.12em;">${f.regime}-${f.pos}</span>
+      <input type="number" value="${f.hz}" data-fi="${f.i}" step="1" min="1">
+    `;
+    grid.appendChild(cell);
+  }
+  grid.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const i = parseInt(inp.dataset.fi);
+      const v = parseFloat(inp.value);
+      if (v > 0) {
+        FREQ_TABLE[i].hz = v;
+        // Refresh selector option text + active displays
+        for (let w = 0; w < 3; w++) {
+          const sel = document.querySelector(`select[data-sel="${w}"]`);
+          const opt = sel.querySelector(`option[value="${i}"]`);
+          if (opt) opt.textContent = `O${FREQ_TABLE[i].order}·${FREQ_TABLE[i].regime}-${FREQ_TABLE[i].pos}  ·  ${v} Hz  ·  dr${FREQ_TABLE[i].dr}  ·  ${FREQ_TABLE[i].therap}`;
+          updateWaveDisplay(w);
+        }
+      }
+    });
+  });
+}
+
+/* ============ MODE SWITCHING ============ */
+function initModeSwitch() {
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.mode = btn.dataset.mode;
+      const is2d = state.mode === '2d';
+      const is3d = state.mode === '3d';
+      const isOverlay = state.mode === 'overlay';
+      const isData = state.mode === 'data';
+      const f2d = document.getElementById('field2d');
+      const f3d = document.getElementById('field3d');
+      const fd  = document.getElementById('fielddata');
+      f2d.classList.toggle('hide', !(is2d || isOverlay));
+      f2d.classList.toggle('overlay', isOverlay);
+      f3d.classList.toggle('hide', !(is3d || isOverlay));
+      fd.classList.toggle('hide', !isData);
+      document.getElementById('ctrl2d').classList.toggle('hide', !(is2d || isOverlay));
+      document.getElementById('ctrl3d').classList.toggle('hide', !(is3d || isOverlay));
+      document.getElementById('modeTag').textContent =
+        is2d ? `2D · ${state.view2d}` :
+        is3d ? '3D · Biofield' :
+        isOverlay ? 'Overlay · 2D + Top-down' :
+        'Data · Time-series';
+      document.getElementById('coreTag').textContent = '';
+      if ((is3d || isOverlay) && !three.ready) initThree();
+      if (isOverlay) {
+        state.camElev = 1.0;
+        document.getElementById('elev').value = 1;
+        document.getElementById('elevVal').textContent = 'Top-down';
+      }
+      if (is3d || isOverlay) onWindowResize3D();
+    });
+  });
+  document.querySelectorAll('.view-modes button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.view-modes button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      state.view2d = b.dataset.view;
+      document.getElementById('modeTag').textContent = `2D · ${state.view2d}`;
+    });
+  });
+  document.getElementById('k').addEventListener('input', e => {
+    state.k = parseFloat(e.target.value);
+    document.getElementById('kVal').textContent = state.k.toFixed(3);
+  });
+  document.getElementById('sym').addEventListener('input', e => {
+    const d = parseFloat(e.target.value);
+    state.sym = d * Math.PI / 180;
+    document.getElementById('symVal').textContent = d.toFixed(0) + '°';
+  });
+  document.getElementById('cam').addEventListener('input', e => {
+    state.camAngle = parseFloat(e.target.value) * Math.PI / 180;
+    state.camAuto = false;
+    document.getElementById('camVal').textContent = e.target.value + '°';
+  });
+  document.getElementById('elev').addEventListener('input', e => {
+    state.camElev = parseFloat(e.target.value);
+    const lbl = state.camElev < 0.05 ? 'Horizon' :
+                state.camElev > 0.95 ? 'Top-down' :
+                (state.camElev * 90).toFixed(0) + '°';
+    document.getElementById('elevVal').textContent = lbl;
+  });
+  function setElev(v, label) {
+    state.camElev = v;
+    document.getElementById('elev').value = v;
+    document.getElementById('elevVal').textContent = label;
+  }
+  document.getElementById('snapHorizon').addEventListener('click', () => setElev(0.0, 'Horizon'));
+  document.getElementById('snap45').addEventListener('click', () => setElev(0.5, '45°'));
+  document.getElementById('snapTop').addEventListener('click', () => setElev(1.0, 'Top-down'));
+  document.getElementById('dens').addEventListener('input', e => {
+    state.density = parseFloat(e.target.value);
+    document.getElementById('densVal').textContent = state.density.toFixed(2);
+  });
+}
+
+/* ============ 2D FIELD RENDERER ============ */
+const canvas2d = document.getElementById('field2d');
+const ctx2d = canvas2d.getContext('2d');
+const W = canvas2d.width, H = canvas2d.height;
+const img = ctx2d.createImageData(W, H);
+
+function phaseColor(phase, v) {
+  const h = (phase + Math.PI) / (2 * Math.PI);
+  const s = 0.78;
+  const i = Math.floor(h * 6);
+  const f = h * 6 - i;
+  const p = v * (1 - s);
+  const q = v * (1 - f * s);
+  const tt = v * (1 - (1 - f) * s);
+  let r, g, b;
+  switch(i % 6) {
+    case 0: r = v; g = tt; b = p; break;
+    case 1: r = q; g = v; b = p; break;
+    case 2: r = p; g = v; b = tt; break;
+    case 3: r = p; g = q; b = v; break;
+    case 4: r = tt; g = p; b = v; break;
+    default: r = v; g = p; b = q;
+  }
+  return [r * 255, g * 255, b * 255];
+}
+const iStops = [[5,3,15],[22,28,82],[60,150,180],[232,160,70],[255,240,210]];
+function intensityColor(v) {
+  v = v < 0 ? 0 : v > 1 ? 1 : v;
+  const s = v * (iStops.length - 1);
+  const i = Math.floor(s);
+  const f = s - i;
+  const a = iStops[i], b = iStops[Math.min(iStops.length - 1, i + 1)];
+  return [a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f, a[2]+(b[2]-a[2])*f];
+}
+
+let t2d = 0;
+function draw2D(dt) {
+  t2d += dt;
+  const active = [];
+  for (let w = 0; w < 3; w++) {
+    if (state.waves[w].on) active.push(w);
+  }
+
+  // Early return with empty frame if nothing active
+  if (active.length === 0) {
+    ctx2d.fillStyle = '#050309';
+    ctx2d.fillRect(0, 0, W, H);
+    // subtle hint text handled by DOM overlay; also draw center mark
+    ctx2d.strokeStyle = 'rgba(235,220,184,0.08)';
+    ctx2d.lineWidth = 1;
+    ctx2d.beginPath();
+    ctx2d.arc(W/2, H/2, 40, 0, Math.PI*2);
+    ctx2d.stroke();
+    document.getElementById('coreTag').textContent = 'toggle a wave to begin';
+    return;
+  }
+
+  const kBase = state.k;
+  const dth = state.sym;
+  const rot = 0.6 * t2d;
+
+  // Each active wave gets a direction and a frequency-dependent k-scale.
+  // We normalize Hz into a scale factor so the field is visible across the 174–6336 Hz range.
+  const hzList = active.map(w => FREQ_TABLE[state.waves[w].idx].hz);
+  const hzMed = 1200; // reference for normalization
+  const waves = active.map((w, ai) => {
+    const hz = FREQ_TABLE[state.waves[w].idx].hz;
+    const scale = Math.pow(hz / hzMed, 0.35);
+    const th = rot + ai * dth;
+    return { kx: kBase * scale * Math.cos(th), ky: kBase * scale * Math.sin(th) };
+  });
+
+  const data = img.data;
+  const ampMax = active.length; // each wave contributes amplitude ~1
+  const invAmp = 1 / Math.max(1, ampMax);
+
+  for (let y = 0; y < H; y++) {
+    const Y = y - H/2;
+    for (let x = 0; x < W; x++) {
+      const X = x - W/2;
+      let re = 0, im = 0;
+      for (const w of waves) {
+        const ph = w.kx * X + w.ky * Y;
+        re += Math.cos(ph);
+        im += Math.sin(ph);
+      }
+      const I = Math.sqrt(re*re + im*im);
+      const phase = Math.atan2(im, re);
+      const normI = Math.min(1, I * invAmp);
+      let rgb;
+      if (state.view2d === 'intensity') rgb = intensityColor(normI);
+      else if (state.view2d === 'phase') rgb = phaseColor(phase, 0.32 + 0.68 * normI);
+      else {
+        const pc = phaseColor(phase, 1);
+        const ic = intensityColor(normI);
+        rgb = [pc[0]*0.55 + ic[0]*0.45, pc[1]*0.55 + ic[1]*0.45, pc[2]*0.55 + ic[2]*0.45];
+      }
+      const idx = (y * W + x) * 4;
+      data[idx] = rgb[0]; data[idx+1] = rgb[1]; data[idx+2] = rgb[2]; data[idx+3] = 255;
+    }
+  }
+  ctx2d.putImageData(img, 0, 0);
+
+  // Vortex cores (only meaningful with 3 waves)
+  if (active.length === 3) {
+    const cores = [];
+    const step = 8;
+    for (let y = step; y < H - step; y += step) {
+      const Y = y - H/2;
+      for (let x = step; x < W - step; x += step) {
+        const X = x - W/2;
+        let re = 0, im = 0;
+        for (const w of waves) {
+          const ph = w.kx * X + w.ky * Y;
+          re += Math.cos(ph); im += Math.sin(ph);
+        }
+        if (Math.sqrt(re*re + im*im) < 0.22) cores.push([x,y]);
+      }
+    }
+    ctx2d.lineWidth = 1;
+    ctx2d.strokeStyle = 'rgba(255,240,210,0.85)';
+    for (const c of cores) {
+      ctx2d.beginPath();
+      ctx2d.arc(c[0], c[1], 2.4, 0, Math.PI*2);
+      ctx2d.stroke();
+    }
+    document.getElementById('coreTag').textContent = `${cores.length} vortex cores`;
+  } else {
+    document.getElementById('coreTag').textContent =
+      active.length === 1 ? 'plane wave · no spin' :
+      active.length === 2 ? 'interference · no closed vortex' : '';
+  }
+}
+
+/* ============ DATA RENDERER — honest time-series of the measured signal ============ */
+// No aesthetic mapping here. Lines are the raw values plotted at their timestamps.
+// The playhead marks the current sessionT when replaying an imported session.
+
+const canvasData = document.getElementById('fielddata');
+const ctxData = canvasData.getContext('2d');
+const DW = canvasData.width, DH = canvasData.height;
+
+function drawData(dt) {
+  ctxData.fillStyle = '#050309';
+  ctxData.fillRect(0, 0, DW, DH);
+
+  const bio = state.bio;
+  const sess = bio.session;
+  const hasSession = bio.mode === 'import' && sess && sess.t.length > 0;
+  const hasBcs = hasSession && sess._bcs && sess._bcs.length > 0;
+
+  // Identify the baseline window — from t=0 to the first prescription event
+  let baselineEnd = null;
+  if (hasSession && sess._rx && sess._rx.length > 0) {
+    baselineEnd = sess._rx[0].t;
+  }
+
+  const pad = { l: 32, r: 10, t: 18, b: 10 };
+  const panelH = (DH - 8) / 3;
+
+  // Panel 1: Regime coherence (GUT, HEART, HEAD)
+  drawChartPanel({
+    x: 0, y: 0, w: DW, h: panelH,
+    title: 'Regime Coherence',
+    yMin: 0, yMax: 1, yTicks: [0, 0.5, 1],
+    series: hasSession ? [
+      { data: sess.GUT,   color: '#d9423f', label: 'GUT' },
+      { data: sess.HEART, color: '#d9a437', label: 'HEART' },
+      { data: sess.HEAD,  color: '#6fb8c9', label: 'HEAD' },
+    ] : demoSeries(['GUT','HEART','HEAD']),
+    times: hasSession ? sess.t : null,
+    currentT: hasSession ? bio.sessionT : null,
+    current: { GUT: bio.coherence.GUT, HEART: bio.coherence.HEART, HEAD: bio.coherence.HEAD },
+    baselineEnd,
+    pad,
+  });
+
+  drawChartPanel({
+    x: 0, y: panelH + 4, w: DW, h: panelH,
+    title: 'Cross-Regime · harm',
+    yMin: 0, yMax: 1, yTicks: [0, 0.5, 1],
+    series: hasSession ? [
+      { data: sess.harm, color: '#d97742', label: 'harm' },
+    ] : (bio.mode !== 'manual' ? [{ data: null, color: '#d97742', label: 'harm' }] : []),
+    times: hasSession ? sess.t : null,
+    currentT: hasSession ? bio.sessionT : null,
+    current: { harm: bio.harm },
+    baselineEnd,
+    pad,
+    filled: true,
+  });
+
+  if (hasBcs) {
+    const bcsTimes = sess._bcs.map(b => b.t);
+    const bcsVals = sess._bcs.map(b => b.bcs / 100);
+    const kVals   = sess._bcs.map(b => b.kuramoto);
+    const ptMark  = sess._bcs.map(b => !!b.phaseTransition);
+    drawChartPanel({
+      x: 0, y: 2 * (panelH + 4), w: DW, h: panelH,
+      title: 'BCS · kuramoto · phase-transition',
+      yMin: 0, yMax: 1, yTicks: [0, 0.5, 1],
+      series: [
+        { data: bcsVals, color: '#e8ddff', label: 'BCS/100', times: bcsTimes },
+        { data: kVals,   color: '#aa88ff', label: 'kuramoto', times: bcsTimes },
+      ],
+      currentT: bio.sessionT,
+      ptMarkers: { times: bcsTimes, on: ptMark },
+      current: bio.currentBcs ? {
+        'BCS': bio.currentBcs.bcs.toFixed(1),
+        'k':   bio.currentBcs.kuramoto.toFixed(3),
+        'pt':  bio.currentBcs.phaseTransition ? 'true' : 'false',
+      } : null,
+      baselineEnd,
+      pad,
+    });
+  } else {
+    const y = 2 * (panelH + 4);
+    ctxData.fillStyle = 'rgba(235,220,184,0.4)';
+    ctxData.font = "10px 'JetBrains Mono', monospace";
+    ctxData.fillText('BCS / kuramoto — load a Coherence Lab session', pad.l, y + 22);
+  }
+}
+
+// Draw a single chart panel. Clean grid, no embellishment.
+function drawChartPanel(opts) {
+  const { x, y, w, h, title, yMin, yMax, yTicks, series, times, currentT, current, pad, ptMarkers, filled, baselineEnd } = opts;
+  const plotX = x + pad.l;
+  const plotY = y + pad.t;
+  const plotW = w - pad.l - pad.r;
+  const plotH = h - pad.t - pad.b;
+
+  ctxData.fillStyle = 'rgba(235,220,184,0.6)';
+  ctxData.font = "9.5px 'JetBrains Mono', monospace";
+  ctxData.textBaseline = 'top';
+  ctxData.textAlign = 'left';
+  ctxData.fillText(title.toUpperCase(), x + 4, y + 3);
+
+  if (current) {
+    ctxData.textAlign = 'right';
+    const parts = [];
+    for (const k in current) {
+      const v = current[k];
+      parts.push(k + '=' + (typeof v === 'number' ? v.toFixed(2) : v));
+    }
+    ctxData.fillStyle = 'rgba(217,119,66,0.9)';
+    ctxData.fillText(parts.join('  '), x + w - 4, y + 3);
+    ctxData.textAlign = 'left';
+  }
+
+  ctxData.strokeStyle = 'rgba(235,220,184,0.08)';
+  ctxData.lineWidth = 1;
+  ctxData.fillStyle = 'rgba(235,220,184,0.4)';
+  ctxData.font = "8px 'JetBrains Mono', monospace";
+  ctxData.textAlign = 'right';
+  ctxData.textBaseline = 'middle';
+  for (const yt of yTicks) {
+    const py = plotY + plotH - ((yt - yMin) / (yMax - yMin)) * plotH;
+    ctxData.beginPath();
+    ctxData.moveTo(plotX, py);
+    ctxData.lineTo(plotX + plotW, py);
+    ctxData.stroke();
+    ctxData.fillText(yt.toFixed(1), plotX - 3, py);
+  }
+
+  let tMin = 0, tMax = 1;
+  if (times && times.length > 0) { tMin = times[0]; tMax = times[times.length - 1]; }
+  else if (series.length > 0 && series[0].data && series[0].data.length > 0) {
+    tMax = series[0].data.length - 1;
+  }
+  const tRange = Math.max(0.001, tMax - tMin);
+  const xFor = (t) => plotX + ((t - tMin) / tRange) * plotW;
+  const yFor = (v) => plotY + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+  // Baseline window — shade the pre-prescription region so the measurement vs intervention phases are visible
+  if (baselineEnd !== null && baselineEnd !== undefined && baselineEnd > tMin) {
+    const bx0 = xFor(tMin);
+    const bx1 = xFor(baselineEnd);
+    ctxData.fillStyle = 'rgba(200,200,235,0.04)';
+    ctxData.fillRect(bx0, plotY, bx1 - bx0, plotH);
+    // Vertical line at prescription start
+    ctxData.strokeStyle = 'rgba(200,200,235,0.35)';
+    ctxData.setLineDash([2, 3]);
+    ctxData.lineWidth = 1;
+    ctxData.beginPath();
+    ctxData.moveTo(bx1, plotY);
+    ctxData.lineTo(bx1, plotY + plotH);
+    ctxData.stroke();
+    ctxData.setLineDash([]);
+    // "BASELINE" label (small, unobtrusive)
+    ctxData.fillStyle = 'rgba(200,200,235,0.55)';
+    ctxData.font = "8px 'JetBrains Mono', monospace";
+    ctxData.textAlign = 'left';
+    ctxData.textBaseline = 'top';
+    ctxData.fillText('BASELINE', bx0 + 3, plotY + 2);
+    // "RX" label on the prescription side, right next to the divider
+    ctxData.textAlign = 'left';
+    ctxData.fillText('RX →', bx1 + 3, plotY + 2);
+  }
+
+  if (ptMarkers && ptMarkers.times && ptMarkers.on) {
+    ctxData.strokeStyle = 'rgba(168, 136, 255, 0.28)';
+    ctxData.lineWidth = 1;
+    for (let i = 0; i < ptMarkers.times.length; i++) {
+      if (!ptMarkers.on[i]) continue;
+      const px = xFor(ptMarkers.times[i]);
+      ctxData.beginPath();
+      ctxData.moveTo(px, plotY);
+      ctxData.lineTo(px, plotY + plotH);
+      ctxData.stroke();
+    }
+  }
+
+  for (const s of series) {
+    if (!s.data || s.data.length === 0) continue;
+    const seriesTimes = s.times || times;
+    ctxData.strokeStyle = s.color;
+    ctxData.lineWidth = 1.4;
+    if (filled) {
+      ctxData.fillStyle = s.color + '33';
+      ctxData.beginPath();
+      for (let i = 0; i < s.data.length; i++) {
+        const t = seriesTimes ? seriesTimes[i] : i;
+        const px = xFor(t), py = yFor(s.data[i]);
+        if (i === 0) { ctxData.moveTo(px, plotY + plotH); ctxData.lineTo(px, py); }
+        else ctxData.lineTo(px, py);
+      }
+      ctxData.lineTo(xFor(seriesTimes ? seriesTimes[s.data.length - 1] : s.data.length - 1), plotY + plotH);
+      ctxData.closePath();
+      ctxData.fill();
+    }
+    ctxData.beginPath();
+    for (let i = 0; i < s.data.length; i++) {
+      const t = seriesTimes ? seriesTimes[i] : i;
+      const px = xFor(t), py = yFor(s.data[i]);
+      if (i === 0) ctxData.moveTo(px, py);
+      else ctxData.lineTo(px, py);
+    }
+    ctxData.stroke();
+  }
+
+  if (currentT !== null && currentT !== undefined) {
+    const px = xFor(currentT);
+    ctxData.strokeStyle = 'rgba(217,119,66,0.9)';
+    ctxData.lineWidth = 1.5;
+    ctxData.beginPath();
+    ctxData.moveTo(px, plotY);
+    ctxData.lineTo(px, plotY + plotH);
+    ctxData.stroke();
+    ctxData.fillStyle = 'rgba(217,119,66,0.9)';
+    ctxData.font = "8px 'JetBrains Mono', monospace";
+    ctxData.textAlign = 'center';
+    ctxData.textBaseline = 'top';
+    const m = Math.floor(currentT / 60);
+    const sec = Math.floor(currentT % 60);
+    ctxData.fillText(`${m}:${sec.toString().padStart(2,'0')}`, px, plotY + plotH + 1);
+  }
+
+  ctxData.strokeStyle = 'rgba(235,220,184,0.1)';
+  ctxData.lineWidth = 1;
+  ctxData.strokeRect(plotX, plotY, plotW, plotH);
+
+  ctxData.font = "8px 'JetBrains Mono', monospace";
+  ctxData.textAlign = 'left';
+  ctxData.textBaseline = 'bottom';
+  let lx = plotX + 2;
+  for (const s of series) {
+    if (!s.label) continue;
+    ctxData.fillStyle = s.color;
+    ctxData.fillRect(lx, plotY + plotH - 4, 6, 1.5);
+    ctxData.fillStyle = 'rgba(235,220,184,0.6)';
+    ctxData.fillText(s.label, lx + 8, plotY + plotH - 1);
+    lx += ctxData.measureText(s.label).width + 16;
+  }
+}
+
+// For demo mode, synthesize recent history as a rolling series. (Manual mode has no history.)
+function demoSeries(keys) {
+  const out = [];
+  const colors = { GUT: '#d9423f', HEART: '#d9a437', HEAD: '#6fb8c9', harm: '#d97742' };
+  for (const k of keys) out.push({ data: null, color: colors[k], label: k });
+  return out;
+}
+
+const three = { ready: false };
+
+function initThree() {
+  const container = document.getElementById('field3d');
+  three.scene = new THREE.Scene();
+  three.scene.fog = new THREE.FogExp2(0x050309, 0.08);
+  three.camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+  three.camera.position.set(0, 1.2, 7.5);
+  three.camera.lookAt(0, 0.5, 0);
+
+  three.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  three.renderer.setPixelRatio(Math.min(2, window.devicePixelRatio));
+  three.renderer.setClearColor(0x050309, 1);
+  container.appendChild(three.renderer.domElement);
+
+  // Lights
+  const amb = new THREE.AmbientLight(0x333344, 0.6);
+  three.scene.add(amb);
+  const key = new THREE.PointLight(0xd97742, 1.2, 15);
+  key.position.set(3, 4, 3);
+  three.scene.add(key);
+
+  // Silhouette figure — stylized minimal body
+  const figureGroup = new THREE.Group();
+  const bodyMat = new THREE.MeshBasicMaterial({
+    color: 0x1a1020,
+    transparent: true,
+    opacity: 0.65,
+  });
+  const bodyEdgeMat = new THREE.LineBasicMaterial({
+    color: 0x5a4a3a,
+    transparent: true,
+    opacity: 0.5,
+  });
+
+  // Head (sphere)
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 20, 20), bodyMat);
+  head.position.y = 2.2;
+  figureGroup.add(head);
+  figureGroup.add(new THREE.LineSegments(new THREE.EdgesGeometry(head.geometry), bodyEdgeMat).translateY(2.2));
+
+  // Torso (elongated cylinder)
+  const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.35, 1.3, 18), bodyMat);
+  torso.position.y = 1.2;
+  figureGroup.add(torso);
+
+  // Lower body (another cylinder)
+  const lower = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.25, 1.0, 18), bodyMat);
+  lower.position.y = 0.05;
+  figureGroup.add(lower);
+
+  three.figure = figureGroup;
+  three.scene.add(figureGroup);
+
+  // Three toruses — GUT (lower), HEART (middle), HEAD (upper)
+  const torusDefs = [
+    { y: 0.3, R: 1.1, r: 0.06, color: 0xd9423f, regime: 'GUT' },
+    { y: 1.4, R: 1.3, r: 0.06, color: 0xd9a437, regime: 'HEART' },
+    { y: 2.25, R: 1.0, r: 0.06, color: 0x6fb8c9, regime: 'HEAD' },
+  ];
+
+  three.toruses = [];
+  three.torusRings = [];
+  for (let i = 0; i < torusDefs.length; i++) {
+    const d = torusDefs[i];
+    const mat = new THREE.MeshBasicMaterial({
+      color: d.color,
+      transparent: true,
+      opacity: 0.0,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(new THREE.TorusGeometry(d.R, d.r * 1.3, 12, 80), mat);
+    mesh.position.y = d.y;
+    mesh.rotation.x = Math.PI / 2;
+    three.scene.add(mesh);
+    three.toruses.push({ mesh, def: d, phase: 0 });
+
+    // Companion ring made of points traveling around the torus
+    const pts = 48;
+    const ringGeo = new THREE.BufferGeometry();
+    const pos = new Float32Array(pts * 3);
+    for (let p = 0; p < pts; p++) {
+      const a = (p / pts) * Math.PI * 2;
+      pos[p*3] = Math.cos(a) * d.R;
+      pos[p*3+1] = d.y;
+      pos[p*3+2] = Math.sin(a) * d.R;
+    }
+    ringGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const ringMat = new THREE.PointsMaterial({
+      color: d.color,
+      size: 0.075,
+      transparent: true,
+      opacity: 0.0,
+      sizeAttenuation: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    const ring = new THREE.Points(ringGeo, ringMat);
+    three.scene.add(ring);
+    three.torusRings.push({ ring, def: d, pts });
+  }
+
+  // Ferrocell-style spoke/spiral field patterns — one horizontal disc per torus.
+  // Modeled after real magnetic-field ferrocell visualizations: radial spokes with
+  // a spiral sweep and sinusoidal radial banding, glowing in the regime color.
+  three.spokes = [];
+  for (let i = 0; i < torusDefs.length; i++) {
+    const d = torusDefs[i];
+    const spokeCount = 36;
+    const ppSpoke = 55;
+    const total = spokeCount * ppSpoke;
+    const sgeo = new THREE.BufferGeometry();
+    const spos = new Float32Array(total * 3);
+    const scol = new Float32Array(total * 3);
+    const cr = ((d.color >> 16) & 0xff) / 255;
+    const cg = ((d.color >> 8)  & 0xff) / 255;
+    const cb = ( d.color        & 0xff) / 255;
+    let idx = 0;
+    for (let s = 0; s < spokeCount; s++) {
+      const baseA = (s / spokeCount) * Math.PI * 2;
+      for (let p = 0; p < ppSpoke; p++) {
+        const t = p / (ppSpoke - 1);
+        const rr = 0.18 + t * (d.R * 1.85 - 0.18);
+        const angle = baseA + t * 0.85 + Math.sin(t * 7.2) * 0.14;
+        spos[idx*3]   = rr * Math.cos(angle);
+        spos[idx*3+1] = d.y + Math.sin(t * Math.PI * 2.5) * 0.025;
+        spos[idx*3+2] = rr * Math.sin(angle);
+        // Grayscale intensity — R=G=B=intensity. Material.color multiplies with this for the final tint.
+        const bandGlow = Math.exp(-Math.pow((rr - d.R) / 0.35, 2));
+        const ringBands = 0.45 + 0.55 * Math.cos(t * Math.PI * 5);
+        const fade = 1 - t * 0.55;
+        const intensity = (bandGlow * 0.75 + fade * 0.4) * (0.55 + 0.45 * ringBands);
+        scol[idx*3] = intensity; scol[idx*3+1] = intensity; scol[idx*3+2] = intensity;
+        idx++;
+      }
+    }
+    sgeo.setAttribute('position', new THREE.BufferAttribute(spos, 3));
+    sgeo.setAttribute('color',    new THREE.BufferAttribute(scol, 3));
+    const smat = new THREE.PointsMaterial({
+      size: 0.048,
+      color: new THREE.Color(d.color),  // dynamic — driven by frequency color at runtime
+      vertexColors: true,                 // grayscale intensity × material.color = final RGB
+      transparent: true,
+      opacity: 0.0,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true,
+      depthWrite: false,
+    });
+    const smesh = new THREE.Points(sgeo, smat);
+    three.scene.add(smesh);
+    three.spokes.push({ mesh: smesh, def: d });
+  }
+
+  // Interference particle field — a body-scale aura, color-mixed from active regimes
+  const fieldCount = 2200;
+  const fieldGeo = new THREE.BufferGeometry();
+  const fieldPos = new Float32Array(fieldCount * 3);
+  const fieldCol = new Float32Array(fieldCount * 3);
+  for (let i = 0; i < fieldCount; i++) {
+    const a = Math.random() * Math.PI * 2;
+    // Wider radial spread — from near body out to ~3 units for an aura
+    const r = 0.45 + Math.random() * 2.75;
+    const y = -0.1 + Math.random() * 3.1;
+    fieldPos[i*3] = Math.cos(a) * r;
+    fieldPos[i*3+1] = y;
+    fieldPos[i*3+2] = Math.sin(a) * r;
+    fieldCol[i*3] = 0.8; fieldCol[i*3+1] = 0.6; fieldCol[i*3+2] = 0.4;
+  }
+  fieldGeo.setAttribute('position', new THREE.BufferAttribute(fieldPos, 3));
+  fieldGeo.setAttribute('color', new THREE.BufferAttribute(fieldCol, 3));
+  const fieldMat = new THREE.PointsMaterial({
+    size: 0.038,
+    transparent: true,
+    opacity: 0.0,
+    vertexColors: true,
+    sizeAttenuation: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  three.fieldParticles = new THREE.Points(fieldGeo, fieldMat);
+  three.fieldOrig = fieldPos.slice();
+  three.scene.add(three.fieldParticles);
+
+  // Experimental reach ring — a translucent ground-plane boundary marking the propositional
+  // near-field coupling radius (v3.4.1). Scene scale: silhouette ~2 units tall ≈ 6 ft, so
+  // 1 simulation unit ≈ 3 ft ≈ 0.914 m. The ring radius in sim units therefore tracks the
+  // distance estimate in feet/3, i.e. radius = reach^(1/3) at the 3-ft anchor.
+  // Two layers — a thin bright ring at exactly the boundary, and a soft inner disc fading
+  // out to give the viewer spatial sense of the projection volume.
+  const ringGeo = new THREE.RingGeometry(0.97, 1.03, 96);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0xd97742,
+    transparent: true,
+    opacity: 0.0,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  three.reachRing = new THREE.Mesh(ringGeo, ringMat);
+  three.reachRing.rotation.x = -Math.PI / 2;
+  three.reachRing.position.y = -0.08;
+  three.scene.add(three.reachRing);
+
+  // Inner disc — broader soft fill marking the full projection volume
+  const discGeo = new THREE.CircleGeometry(1.0, 64);
+  const discMat = new THREE.MeshBasicMaterial({
+    color: 0xd97742,
+    transparent: true,
+    opacity: 0.0,
+    side: THREE.DoubleSide,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  three.reachDisc = new THREE.Mesh(discGeo, discMat);
+  three.reachDisc.rotation.x = -Math.PI / 2;
+  three.reachDisc.position.y = -0.079;
+  three.scene.add(three.reachDisc);
+  three.reachRingScale = 0; // smoothed scale driver
+
+  // Chakra markers on spine axis
+  for (let i = 0; i < torusDefs.length; i++) {
+    const d = torusDefs[i];
+    const markerMat = new THREE.MeshBasicMaterial({
+      color: d.color,
+      transparent: true,
+      opacity: 0.3,
+    });
+    const marker = new THREE.Mesh(new THREE.SphereGeometry(0.04, 10, 10), markerMat);
+    marker.position.set(0, d.y, 0);
+    three.scene.add(marker);
+  }
+
+  // Third eye — forehead sphere + halo, driven by BCS unity metrics (kuramoto × bcs)
+  const eyeCoreMat = new THREE.MeshBasicMaterial({
+    color: 0xe8ddff,
+    transparent: true,
+    opacity: 0.0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  three.thirdEye = new THREE.Mesh(new THREE.SphereGeometry(0.055, 16, 16), eyeCoreMat);
+  three.thirdEye.position.set(0, 2.28, 0.27);
+  three.scene.add(three.thirdEye);
+
+  const eyeHaloMat = new THREE.MeshBasicMaterial({
+    color: 0xaa88ff,
+    transparent: true,
+    opacity: 0.0,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  });
+  three.thirdEyeHalo = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 16), eyeHaloMat);
+  three.thirdEyeHalo.position.set(0, 2.28, 0.27);
+  three.scene.add(three.thirdEyeHalo);
+
+  three.thirdEyeIntensity = 0; // smoothed drive value
+  three.thirdEyeFlash = 0;     // transient flash on phase transitions
+
+  // Track the regime's current displayed color (for smooth transitions when waves/prescriptions update)
+  three.regimeColor = {
+    GUT:   new THREE.Color(0xd9423f),
+    HEART: new THREE.Color(0xd9a437),
+    HEAD:  new THREE.Color(0x6fb8c9),
+  };
+  three.regimeTargetColor = {
+    GUT:   new THREE.Color(0xd9423f),
+    HEART: new THREE.Color(0xd9a437),
+    HEAD:  new THREE.Color(0x6fb8c9),
+  };
+
+  // Bloom post-processing — soft luminous glow over the additive geometry.
+  // Guarded: if the example scripts didn't load, we render directly (no glow) instead.
+  if (THREE.EffectComposer && THREE.RenderPass && THREE.UnrealBloomPass) {
+    try {
+      const rect = document.getElementById('field3d').getBoundingClientRect();
+      const w = rect.width || 340, h = rect.height || 340;
+      const composer = new THREE.EffectComposer(three.renderer);
+      composer.addPass(new THREE.RenderPass(three.scene, three.camera));
+      const bloom = new THREE.UnrealBloomPass(new THREE.Vector2(w, h), 0.9, 0.55, 0.18);
+      composer.addPass(bloom);
+      three.composer = composer;
+      three.bloom = bloom;
+    } catch (e) { three.composer = null; console.warn('[Collider] bloom unavailable:', e); }
+  }
+
+  three.ready = true;
+  onWindowResize3D();
+  window.addEventListener('resize', onWindowResize3D);
+}
+
+function onWindowResize3D() {
+  if (!three.ready) return;
+  const container = document.getElementById('field3d');
+  const rect = container.getBoundingClientRect();
+  const w = rect.width || 340;
+  const h = rect.height || 340;
+  three.renderer.setSize(w, h, false);
+  if (three.composer) three.composer.setSize(w, h);
+  three.camera.aspect = w / h;
+  three.camera.updateProjectionMatrix();
+}
+
+let t3d = 0;
+function draw3D(dt) {
+  if (!three.ready) return;
+  t3d += dt;
+
+  // Camera — interpolate between horizon orbit (elev=0) and top-down (elev=1)
+  if (state.camAuto) {
+    state.camAngle = t3d * 0.15;
+    document.getElementById('camVal').textContent = 'auto';
+  }
+  const elev = state.camElev;
+  const elevAngle = elev * Math.PI / 2;           // 0..π/2
+  const horizR = 6.5;
+  const R = horizR * Math.cos(elevAngle);         // 6.5 → 0
+  const topY = 7.5;
+  const baseY = 1.3;
+  const camY = baseY + (topY - baseY) * Math.sin(elevAngle);
+  // Add a tiny offset at perfect top-down to avoid gimbal lock in lookAt
+  const epsX = elev > 0.99 ? 0.001 : 0;
+  three.camera.position.x = Math.sin(state.camAngle) * R + epsX;
+  three.camera.position.z = Math.cos(state.camAngle) * R;
+  three.camera.position.y = camY + Math.sin(t3d * 0.25) * 0.12 * (1 - elev);
+  // Blend the up vector so rotation is still visible at top-down (where position doesn't change)
+  // At horizon: up = (0, 1, 0). At top-down: up = (sin θ, 0, cos θ) — θ rotates the view.
+  three.camera.up.set(
+    Math.sin(elevAngle) * Math.sin(state.camAngle),
+    Math.cos(elevAngle),
+    Math.sin(elevAngle) * Math.cos(state.camAngle)
+  );
+  three.camera.lookAt(0, 1.2, 0);
+
+  // Fade the body silhouette as we tilt toward top-down
+  if (three.figure) {
+    const bodyOpacity = 0.65 * (1 - elev * 0.85);
+    three.figure.traverse(obj => {
+      if (obj.material && obj.material.transparent) obj.material.opacity = bodyOpacity;
+    });
+  }
+
+  // Torus animation + opacity
+  const regimeToWaveIdx = { 'GUT': -1, 'HEART': -1, 'HEAD': -1 };
+  for (let w = 0; w < 3; w++) {
+    if (state.waves[w].on) {
+      const reg = FREQ_TABLE[state.waves[w].idx].regime;
+      regimeToWaveIdx[reg] = w;
+    }
+  }
+  const activeRegimes = [];
+
+  // First pass: compute target color per regime based on assigned wave, lerp smoothly
+  for (const reg of ['GUT', 'HEART', 'HEAD']) {
+    const waveIdx = regimeToWaveIdx[reg];
+    if (waveIdx >= 0) {
+      const freq = FREQ_TABLE[state.waves[waveIdx].idx];
+      three.regimeTargetColor[reg].set(freqColor(freq));
+    }
+    three.regimeColor[reg].lerp(three.regimeTargetColor[reg], Math.min(1, dt * 0.67));
+  }
+
+  for (let i = 0; i < three.toruses.length; i++) {
+    const T = three.toruses[i];
+    const ring = three.torusRings[i];
+    const waveIdx = regimeToWaveIdx[T.def.regime];
+    const coh = state.bio.coherence[T.def.regime];
+    const on = waveIdx >= 0 && coh > 0.02;
+    if (on) activeRegimes.push(T.def.regime);
+    const target = on ? 0.85 * coh : 0.0;
+    T.mesh.material.opacity += (target - T.mesh.material.opacity) * Math.min(1, dt * 4);
+    ring.ring.material.opacity += ((on ? 0.9 * coh : 0.0) - ring.ring.material.opacity) * Math.min(1, dt * 4);
+
+    // Apply current frequency color to torus + ring (crossfaded)
+    const curColor = three.regimeColor[T.def.regime];
+    ring.ring.material.color.copy(curColor);
+
+    if (on) {
+      const hz = FREQ_TABLE[state.waves[waveIdx].idx].hz;
+      const visFreq = 0.3 + Math.log10(hz) * 0.5;
+      const pulse = 1 + 0.03 * Math.sin(t3d * visFreq * Math.PI * 2) * coh;
+      T.mesh.scale.set(pulse, pulse, 1);
+
+      // Ring color shifts toward warm-white at peak coherence (>0.85), otherwise = frequency color
+      if (coh > 0.85) {
+        const shift = (coh - 0.85) / 0.15;
+        const peak = new THREE.Color(0xfff4d9);
+        T.mesh.material.color.copy(curColor).lerp(peak, shift * 0.55);
+      } else {
+        T.mesh.material.color.copy(curColor);
+      }
+
+      const pos = ring.ring.geometry.attributes.position.array;
+      const rotSpeed = visFreq * 0.5;
+      const phase = t3d * rotSpeed;
+      for (let p = 0; p < ring.pts; p++) {
+        const a = (p / ring.pts) * Math.PI * 2 + phase;
+        pos[p*3] = Math.cos(a) * T.def.R * pulse;
+        pos[p*3+1] = T.def.y + Math.sin(a * 6 + t3d) * 0.02;
+        pos[p*3+2] = Math.sin(a) * T.def.R * pulse;
+      }
+      ring.ring.geometry.attributes.position.needsUpdate = true;
+    }
+  }
+
+  // Third eye — driven by BCS kuramoto × bcs in import mode, or harm² elsewhere.
+  // phaseTransition events trigger a flash that decays over ~2 seconds.
+  let eyeTarget = 0;
+  const bcs = state.bio.currentBcs;
+  if (state.bio.mode === 'import' && bcs) {
+    const kFactor = Math.max(0, (bcs.kuramoto - 0.7) / 0.3);     // 0 at k=0.7, 1 at k=1.0
+    const bFactor = Math.max(0, Math.min(1, (bcs.bcs - 40) / 60)); // 0 at bcs=40, 1 at bcs=100
+    eyeTarget = kFactor * bFactor;
+    // Sustained phaseTransition state holds the glow bright even if bcs is mid-range
+    if (bcs.phaseTransition) eyeTarget = Math.max(eyeTarget, 0.72);
+    // Rising edge of phaseTransition triggers a transient flash
+    if (bcs.phaseTransition && !three._lastPT) three.thirdEyeFlash = 1.0;
+    three._lastPT = !!bcs.phaseTransition;
+  } else {
+    eyeTarget = state.bio.harm * state.bio.harm;
+  }
+  three.thirdEyeIntensity += (eyeTarget - three.thirdEyeIntensity) * Math.min(1, dt * 2.0);
+  three.thirdEyeFlash *= Math.pow(0.45, dt); // fast decay
+  const eyeP = Math.min(1, three.thirdEyeIntensity + three.thirdEyeFlash);
+  const shimmer = 0.85 + 0.15 * Math.sin(t3d * 3.5);
+  three.thirdEye.material.opacity = eyeP * 0.95 * shimmer;
+  three.thirdEyeHalo.material.opacity = eyeP * 0.45;
+  three.thirdEyeHalo.scale.setScalar(1 + eyeP * 0.7 + three.thirdEyeFlash * 0.4);
+
+  // Ferrocell spoke animation — rotate each active regime's spiral at a rate
+  // derived from its frequency (log-mapped so the visual doesn't strobe).
+  for (let i = 0; i < three.spokes.length; i++) {
+    const spoke = three.spokes[i];
+    const waveIdx = regimeToWaveIdx[spoke.def.regime];
+    const coh = state.bio.coherence[spoke.def.regime];
+    const on = waveIdx >= 0 && coh > 0.02;
+    const targetOp = on ? (0.75 + state.density * 0.25) * coh : 0.0;
+    spoke.mesh.material.opacity += (targetOp - spoke.mesh.material.opacity) * Math.min(1, dt * 3);
+    // Apply current (crossfaded) frequency color to the spoke disc
+    spoke.mesh.material.color.copy(three.regimeColor[spoke.def.regime]);
+    if (on) {
+      const hz = FREQ_TABLE[state.waves[waveIdx].idx].hz;
+      // Base rotation from prescribed frequency (log-mapped), boosted by heart-driven spin
+      // When session features data is present, spinStrength (0-1) adds up to 2× rotation speed.
+      const baseSpeed = 0.18 * (Math.log10(hz) - 2);
+      const spinBoost = 1.0 + 2.0 * (state.bio.spinStrength || 0);
+      const rotSpeed = baseSpeed * spinBoost;
+      const sign = spoke.def.regime === 'HEART' ? -1 : 1;
+      spoke.mesh.rotation.y += sign * rotSpeed * dt;
+    }
+  }
+
+  // Interference particle field — intensity scales with active regime count AND harm lock,
+  // AND with biofield reach (v3.4). Reach modulates both aura opacity (brightness) and
+  // effective radius — when reach climbs, the aura pushes outward and brightens; when reach
+  // drops, it pulls in tight. This makes Selah's proposed projection scalar visible as an
+  // actual field size/intensity around the silhouette.
+  const nActive = activeRegimes.length;
+  const harmBoost = state.bio.harm; // 0..1
+  const reachBoost = (state.bio.mode !== 'manual') ? (state.bio.reach || 0) : 0; // 0..1
+  let fieldTargetOpacity;
+  if (nActive === 3) {
+    fieldTargetOpacity = 0.28 + state.density * 0.35 + harmBoost * 0.35;
+  } else if (nActive === 2) {
+    fieldTargetOpacity = 0.12 + harmBoost * 0.15;
+  } else {
+    fieldTargetOpacity = 0;
+  }
+  // Reach lifts opacity — at reach=0 it's unchanged; at reach=1 it gets +40% lift.
+  fieldTargetOpacity *= (1 + 0.4 * reachBoost);
+  // Radial scale — reach=0 → 0.85× (pulled tight); reach=1 → 1.25× (pushed outward).
+  // Smooth so scrub/playback doesn't jump.
+  const reachRadialTarget = 0.85 + 0.40 * reachBoost;
+  three.reachRadial = (three.reachRadial == null) ? reachRadialTarget
+    : three.reachRadial + (reachRadialTarget - three.reachRadial) * Math.min(1, dt * 2.5);
+  const reachRadial = three.reachRadial;
+
+  three.fieldParticles.material.opacity +=
+    (fieldTargetOpacity - three.fieldParticles.material.opacity) * Math.min(1, dt * 3);
+
+  // Experimental reach ring (v3.4.1) — ground-plane boundary at reach^(1/3) sim units,
+  // corresponding to the HeartMath-anchored 3 ft × reach^(1/3) near-field estimate.
+  // Gentle breathing pulse (~0.2 Hz) so the boundary feels alive rather than static.
+  const ringTargetScale = (reachBoost > 0) ? Math.cbrt(reachBoost) : 0;
+  three.reachRingScale += (ringTargetScale - three.reachRingScale) * Math.min(1, dt * 2.5);
+  const breathe = 1 + 0.025 * Math.sin(t3d * 0.4 * Math.PI * 2);
+  const visScale = Math.max(0.01, three.reachRingScale * breathe);
+  three.reachRing.scale.set(visScale, visScale, 1);
+  three.reachDisc.scale.set(visScale, visScale, 1);
+  const ringOpacity = (reachBoost > 0.01) ? 0.55 * Math.min(1, reachBoost * 1.8) : 0;
+  const discOpacity = (reachBoost > 0.01) ? 0.10 * Math.min(1, reachBoost * 1.4) : 0;
+  three.reachRing.material.opacity += (ringOpacity - three.reachRing.material.opacity) * Math.min(1, dt * 2.5);
+  three.reachDisc.material.opacity += (discOpacity - three.reachDisc.material.opacity) * Math.min(1, dt * 2.5);
+
+  if (nActive >= 2) {
+    const pos = three.fieldParticles.geometry.attributes.position.array;
+    const col = three.fieldParticles.geometry.attributes.color.array;
+    const orig = three.fieldOrig;
+    const count = pos.length / 3;
+
+    // Aggregate frequency
+    let fSum = 0, fCount = 0;
+    for (let w = 0; w < 3; w++) {
+      if (state.waves[w].on) {
+        fSum += Math.log10(FREQ_TABLE[state.waves[w].idx].hz);
+        fCount++;
+      }
+    }
+    const fAvg = fCount > 0 ? fSum / fCount : 2;
+    const swirlSpeed = 0.2 * fAvg;
+
+    for (let i = 0; i < count; i++) {
+      const ox = orig[i*3], oy = orig[i*3+1], oz = orig[i*3+2];
+      const r0 = Math.sqrt(ox*ox + oz*oz);
+      const r = r0 * reachRadial; // push-out / pull-in driven by reach
+      const a0 = Math.atan2(oz, ox);
+      const phase = t3d * swirlSpeed + oy * 0.5;
+      // Three-regime interference: sum of sinusoids
+      const vy = Math.sin(phase * 3) * 0.15;
+      const vr = Math.cos(phase * 2) * 0.08;
+      const va = Math.sin(phase * 1.5) * 0.3;
+      const aCurr = a0 + va;
+      pos[i*3] = (r + vr) * Math.cos(aCurr);
+      pos[i*3+1] = oy + vy;
+      pos[i*3+2] = (r + vr) * Math.sin(aCurr);
+      // Color mixing — weight each regime's contribution by its live coherence
+      const gCoh = state.bio.coherence.GUT;
+      const hCoh = state.bio.coherence.HEART;
+      const dCoh = state.bio.coherence.HEAD;
+      let cr = 0, cg = 0, cb = 0;
+      if (regimeToWaveIdx['GUT']   >= 0) { cr += 0.85 * gCoh; cg += 0.26 * gCoh; cb += 0.25 * gCoh; }
+      if (regimeToWaveIdx['HEART'] >= 0) { cr += 0.85 * hCoh; cg += 0.64 * hCoh; cb += 0.22 * hCoh; }
+      if (regimeToWaveIdx['HEAD']  >= 0) { cr += 0.44 * dCoh; cg += 0.72 * dCoh; cb += 0.79 * dCoh; }
+      const totalCoh = Math.max(0.3, gCoh + hCoh + dCoh);
+      col[i*3] = cr / totalCoh; col[i*3+1] = cg / totalCoh; col[i*3+2] = cb / totalCoh;
+    }
+    three.fieldParticles.geometry.attributes.position.needsUpdate = true;
+    three.fieldParticles.geometry.attributes.color.needsUpdate = true;
+  }
+
+  // Motion grading: the glow breathes, and intensifies as the regimes come alive.
+  if (three.bloom) {
+    const act = Math.min(1, (state.bio.coherence.GUT + state.bio.coherence.HEART + state.bio.coherence.HEAD) / 2);
+    three.bloom.strength = 0.7 + 0.55 * act + 0.07 * Math.sin(t3d * 1.4);
+  }
+  if (three.composer) three.composer.render();
+  else three.renderer.render(three.scene, three.camera);
+}
+
+/* ============ MAIN LOOP ============ */
+let last = performance.now();
+let fpsAcc = 0, fpsN = 0;
+function loop(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  updateBiofeedback(dt);
+  updateOpSigPanel();
+  updateAlignmentPanel();
+  if (state.mode === '2d') draw2D(dt);
+  else if (state.mode === '3d') draw3D(dt);
+  else if (state.mode === 'overlay') {
+    draw2D(dt);
+    draw3D(dt);
+  }
+  else if (state.mode === 'data') drawData(dt);
+  fpsAcc += 1 / Math.max(0.001, dt);
+  fpsN++;
+  if (fpsN >= 15) {
+    document.getElementById('fpsTag').textContent = (fpsAcc / fpsN).toFixed(0) + ' fps';
+    fpsAcc = 0; fpsN = 0;
+  }
+  requestAnimationFrame(loop);
+}
+
+/* ============ BIOFEEDBACK SYSTEM ============ */
+// Drives regime intensities from one of three sources:
+//   manual  — binary on/off from wave toggles (original behavior)
+//   demo    — synthetic biofield dynamics (layered sinusoids + rise envelope)
+//   import  — replay of a Coherence Lab session JSON/CSV
+
+function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
+function fmtTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
+// Flexible parser — accepts many shapes a Coherence Lab export might take.
+function parseCoherenceSession(text) {
+  // Try JSON first
+  try {
+    const raw = JSON.parse(text);
+    return normalizeJson(raw);
+  } catch (e) {
+    // Fall through to CSV
+    return parseCsv(text);
+  }
+}
+
+function normalizeJson(raw) {
+  const out = { t: [], GUT: [], HEART: [], HEAD: [], harm: [] };
+
+  // Native Coherence Lab schema: { metadata, streams: { coherence: [{t, gut, heart, head, harm, tcs, ...}], bcs: [...] } }
+  if (raw && raw.streams && Array.isArray(raw.streams.coherence)) {
+    const coh = raw.streams.coherence;
+    for (let i = 0; i < coh.length; i++) {
+      const s = coh[i];
+      out.t.push(Number(s.t) || i);
+      out.GUT.push(clamp01(Number(s.gut)));
+      out.HEART.push(clamp01(Number(s.heart)));
+      out.HEAD.push(clamp01(Number(s.head)));
+      out.harm.push(clamp01(Number(s.harm) || 0));
+    }
+    // Attach metadata + phase-transition events from the bcs stream for richer UI
+    out._meta = raw.metadata || null;
+    out._bcs = Array.isArray(raw.streams.bcs) ? raw.streams.bcs : null;
+    out._schema = 'coherence-lab';
+    // Parse features stream — three regime operating frequencies per sample
+    // GUT   = breath rate (resp.breathRate in bpm → Hz)
+    // HEART = HRV spectral peak (heart.peakFreq in Hz, already in Hz)
+    // HEAD  = Individual Alpha Frequency (head.iaf in Hz)
+    // Plus heart-derived spin-strength inputs: hrvCoherence, rmssd, meanHR
+    // Plus biofield-reach inputs (v3.4): alphaNorm (cortical coherence), rsaNorm (vagal tone)
+    //
+    // Schema tolerance (v3.4.2 — Coherence Lab v1.0.0):
+    //   Alpha:  s.head.alphaPowerNorm (canonical, v1.0.0)
+    //           s.head.alphaNorm / alphaRel / alphaPower (older/alternate)
+    //   RSA:    s.gut.rsaAmplitude  (canonical, v1.0.0, ms scale — HRV-based classic RSA)
+    //           s.resp.rsaAmplitude (alt, fractional scale — respiration-signal-derived)
+    //           s.heart.rsaAmplitude (deeper fallback)
+    //   RSA scale is auto-detected by magnitude: >1 is ms (÷50), ≤1 is fractional (÷0.08).
+    if (Array.isArray(raw.streams.features)) {
+      out._features = raw.streams.features.map(s => {
+        const gutFreq   = (s.resp && typeof s.resp.breathRate === 'number') ? s.resp.breathRate / 60 : null;
+        const heartFreq = (s.heart && typeof s.heart.peakFreq === 'number') ? s.heart.peakFreq : null;
+        const headFreq  = (s.head && typeof s.head.iaf === 'number') ? s.head.iaf : null;
+        const hrvCoh    = (s.heart && typeof s.heart.hrvCoherence === 'number') ? s.heart.hrvCoherence : null;
+        const rmssd     = (s.heart && typeof s.heart.rmssd === 'number') ? s.heart.rmssd : null;
+        const meanHR    = (s.heart && typeof s.heart.meanHR === 'number') ? s.heart.meanHR : null;
+        // Alpha — cortical coherence, 0-1 normalized
+        let alphaNorm = null;
+        if (s.head) {
+          if      (typeof s.head.alphaPowerNorm === 'number') alphaNorm = s.head.alphaPowerNorm;
+          else if (typeof s.head.alphaNorm      === 'number') alphaNorm = s.head.alphaNorm;
+          else if (typeof s.head.alphaRel       === 'number') alphaNorm = s.head.alphaRel;
+          else if (typeof s.head.alphaPower     === 'number') alphaNorm = Math.min(1, s.head.alphaPower / 10);
+        }
+        // RSA — vagal tone, pre-normalized to 0-1 here so the tick code stays clean.
+        // Check candidates in preference order; first non-zero number wins.
+        let rsaNorm = null;
+        const rsaCandidates = [
+          s.gut   && s.gut.rsaAmplitude,    // preferred — classic HRV-based RSA in ms
+          s.resp  && s.resp.rsaAmplitude,   // fallback — respiration-signal-derived
+          s.heart && s.heart.rsaAmplitude,  // deeper fallback
+        ];
+        for (const v of rsaCandidates) {
+          if (typeof v === 'number' && v > 0) {
+            rsaNorm = v > 1 ? Math.min(1, v / 50) : Math.min(1, v / 0.08);
+            break;
+          }
+        }
+        return { t: Number(s.t) || 0, gutFreq, heartFreq, headFreq, hrvCoh, rmssd, meanHR, alphaNorm, rsaNorm };
+      });
+    }
+    // Attach prescription timeline so replay can shift wave selections to match what actually played
+    if (Array.isArray(raw.streams.prescription)) {
+      out._rx = raw.streams.prescription
+        .filter(p => p && p.action === 'play' && typeof p.freq === 'number')
+        .map(p => ({ t: Number(p.t), freq: Number(p.freq), regime: p.regime, name: p.name || '' }));
+    }
+    return normalizeT(out);
+  }
+
+  // Parallel-arrays shape
+  if (raw && Array.isArray(raw.t) && (raw.GUT || raw.gut)) {
+    out.t = raw.t.map(Number);
+    const g = raw.GUT || raw.gut, h = raw.HEART || raw.heart, d = raw.HEAD || raw.head;
+    out.GUT = g.map(Number); out.HEART = h.map(Number); out.HEAD = d.map(Number);
+    out.harm = (raw.harm || new Array(out.t.length).fill(0)).map(Number);
+    return normalizeT(out);
+  }
+
+  // Array-of-samples shape (direct, or under .samples / .data / .session)
+  let samples = null;
+  if (Array.isArray(raw)) samples = raw;
+  else if (raw && Array.isArray(raw.samples)) samples = raw.samples;
+  else if (raw && Array.isArray(raw.data)) samples = raw.data;
+  else if (raw && Array.isArray(raw.session)) samples = raw.session;
+  if (!samples) return null;
+
+  const fieldNames = {
+    t:     ['t', 'time', 'timestamp', 'timestamp_s', 'ts'],
+    GUT:   ['GUT', 'gut', 'gut_coherence', 'gutCoherence', 'gutCoh'],
+    HEART: ['HEART', 'heart', 'heart_coherence', 'heartCoherence', 'heartCoh'],
+    HEAD:  ['HEAD', 'head', 'head_coherence', 'headCoherence', 'headCoh'],
+    harm:  ['harm', 'harmonicLock', 'harmonic_lock', 'crossRegime', 'tcs'],
+  };
+  const pick = (obj, keys) => {
+    for (const k of keys) if (obj[k] !== undefined && obj[k] !== null) return Number(obj[k]);
+    return NaN;
+  };
+  for (let i = 0; i < samples.length; i++) {
+    const s = samples[i];
+    const tv = pick(s, fieldNames.t);
+    out.t.push(Number.isFinite(tv) ? tv : i);
+    out.GUT.push(clamp01(pick(s, fieldNames.GUT) || 0));
+    out.HEART.push(clamp01(pick(s, fieldNames.HEART) || 0));
+    out.HEAD.push(clamp01(pick(s, fieldNames.HEAD) || 0));
+    const h = pick(s, fieldNames.harm);
+    out.harm.push(Number.isFinite(h) ? clamp01(h) : 0);
+  }
+  return out.t.length > 0 ? normalizeT(out) : null;
+}
+
+// Shift the timeline so t starts at 0 (Coherence Lab samples typically start ~0.89s in)
+function normalizeT(out) {
+  if (out.t.length > 0 && out.t[0] !== 0) {
+    const t0 = out.t[0];
+    for (let i = 0; i < out.t.length; i++) out.t[i] -= t0;
+    if (out._bcs) {
+      for (const b of out._bcs) if (typeof b.t === 'number') b.t -= t0;
+    }
+    if (out._rx) {
+      for (const p of out._rx) p.t -= t0;
+    }
+  }
+  return out;
+}
+
+function parseCsv(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return null;
+  const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const col = names => header.findIndex(h => names.some(n => h === n || h.includes(n)));
+  const tCol = col(['t', 'time', 'timestamp', 'ts']);
+  const gCol = col(['gut']);
+  const hCol = col(['heart']);
+  const dCol = col(['head']);
+  const hmCol = col(['harm', 'tcs']);
+  if (gCol < 0 && hCol < 0 && dCol < 0) return null;
+  const out = { t: [], GUT: [], HEART: [], HEAD: [], harm: [] };
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].split(',');
+    if (cells.length < 2) continue;
+    out.t.push(tCol >= 0 ? parseFloat(cells[tCol]) || (i - 1) : (i - 1));
+    out.GUT.push(gCol >= 0 ? clamp01(parseFloat(cells[gCol]) || 0) : 0);
+    out.HEART.push(hCol >= 0 ? clamp01(parseFloat(cells[hCol]) || 0) : 0);
+    out.HEAD.push(dCol >= 0 ? clamp01(parseFloat(cells[dCol]) || 0) : 0);
+    out.harm.push(hmCol >= 0 ? clamp01(parseFloat(cells[hmCol]) || 0) : 0);
+  }
+  return out.t.length > 0 ? out : null;
+}
+
+function buildBioMeters() {
+  const grid = document.getElementById('bioMetersGrid');
+  const regimes = [
+    { r: 'GUT',   col: '#d9423f' },
+    { r: 'HEART', col: '#d9a437' },
+    { r: 'HEAD',  col: '#6fb8c9' },
+  ];
+  grid.innerHTML = '';
+  for (const { r, col } of regimes) {
+    const row = document.createElement('div');
+    row.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;">
+        <span style="font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.18em; color:${col};">${r}</span>
+        <span id="bioVal_${r}" style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--ink-dim);">0.00</span>
+      </div>
+      <div style="height:4px; background:rgba(255,255,255,0.04); overflow:hidden;">
+        <div id="bioBar_${r}" style="height:100%; width:0%; background:${col}; box-shadow:0 0 8px ${col}; transition:width 120ms linear;"></div>
+      </div>
+    `;
+    grid.appendChild(row);
+  }
+}
+
+function updateBioMetersUI() {
+  const bio = state.bio;
+  for (const r of ['GUT', 'HEART', 'HEAD']) {
+    const bar = document.getElementById(`bioBar_${r}`);
+    const val = document.getElementById(`bioVal_${r}`);
+    if (bar) bar.style.width = `${(bio.coherence[r] * 100).toFixed(0)}%`;
+    if (val) val.textContent = bio.coherence[r].toFixed(2);
+  }
+  document.getElementById('harmVal').textContent = `harm ${bio.harm.toFixed(2)}`;
+  // In non-manual modes, the main readouts should reflect live biofeedback, not toggle state
+  if (bio.mode !== 'manual') {
+    let nActive = 0;
+    for (const r of ['GUT', 'HEART', 'HEAD']) if (bio.coherence[r] > 0.15) nActive++;
+    document.getElementById('activeCount').textContent = nActive;
+    document.getElementById('activeTag').textContent = `${nActive} / 3 active`;
+    document.getElementById('cohVal').textContent = bio.harm.toFixed(2);
+  }
+}
+
+// Apply a prescription event — route to the wave locked to that regime.
+// Wave A=GUT (idx 0), Wave B=HEART (idx 1), Wave C=HEAD (idx 2).
+function applyPrescription(rx) {
+  let targetIdx = -1;
+  for (const f of FREQ_TABLE) {
+    if (f.regime === rx.regime && Math.abs(f.hz - rx.freq) < 0.5) { targetIdx = f.i; break; }
+  }
+  if (targetIdx < 0) return;
+  const waveIdx = WAVE_REGIME.indexOf(rx.regime);
+  if (waveIdx < 0) return;
+  state.waves[waveIdx].idx = targetIdx;
+  state.waves[waveIdx].on = true;
+  updateWaveDisplay(waveIdx);
+  const sel = document.querySelector(`select[data-sel="${waveIdx}"]`);
+  if (sel) sel.value = targetIdx;
+}
+
+function updateBiofeedback(dt) {
+  const bio = state.bio;
+
+  if (bio.mode === 'manual') {
+    // Binary per-regime — on if any assigned wave in that regime is engaged
+    for (const r of ['GUT', 'HEART', 'HEAD']) {
+      let on = false;
+      for (let w = 0; w < 3; w++) {
+        if (state.waves[w].on && FREQ_TABLE[state.waves[w].idx].regime === r) { on = true; break; }
+      }
+      bio.coherence[r] = on ? 1.0 : 0.0;
+    }
+    bio.harm = (bio.coherence.GUT === 1 && bio.coherence.HEART === 1 && bio.coherence.HEAD === 1) ? 1 : 0;
+  }
+  else if (bio.mode === 'demo') {
+    bio.demoT += dt;
+    const t = bio.demoT;
+    // Rise envelope — like a user settling into a session
+    const rise = Math.min(1, t / 45);
+    // Each regime gets layered drift at its own tempo
+    const targetG = clamp01(0.22 + rise * 0.40 + 0.14 * Math.sin(t * 0.11)        + 0.09 * Math.sin(t * 0.37 + 1.2));
+    const targetH = clamp01(0.18 + rise * 0.50 + 0.18 * Math.sin(t * 0.13 + 0.7)  + 0.07 * Math.sin(t * 0.29 + 2.0));
+    const targetD = clamp01(0.15 + rise * 0.38 + 0.16 * Math.sin(t * 0.09 + 2.1)  + 0.11 * Math.sin(t * 0.41 + 0.5));
+    // Low-pass smoothing
+    const k = Math.min(1, dt * 1.5);
+    bio.coherence.GUT   += (targetG - bio.coherence.GUT) * k;
+    bio.coherence.HEART += (targetH - bio.coherence.HEART) * k;
+    bio.coherence.HEAD  += (targetD - bio.coherence.HEAD) * k;
+    // Cross-regime lock — fires when all three are high AND close to each other
+    const avg = (bio.coherence.GUT + bio.coherence.HEART + bio.coherence.HEAD) / 3;
+    const spread = Math.max(
+      Math.abs(bio.coherence.GUT - avg),
+      Math.abs(bio.coherence.HEART - avg),
+      Math.abs(bio.coherence.HEAD - avg)
+    );
+    bio.harm = (avg > 0.55 && spread < 0.18) ? clamp01((avg - 0.55) * 2.8 - spread) : 0;
+    // Demo reach — synthesize spin + reach from the demo envelope so the visualization
+    // has the full v3.4 feedback without requiring a session import. The rise envelope
+    // drives a slow-climbing spin; alphaN and rsaN drift on different tempos.
+    const demoSpin  = clamp01(rise * avg * (0.7 + 0.3 * Math.sin(t * 0.17)));
+    const demoAlpha = clamp01(0.35 + rise * 0.45 + 0.15 * Math.sin(t * 0.08 + 1.1));
+    const demoRsa   = clamp01(0.30 + rise * 0.50 + 0.12 * Math.sin(t * 0.14 + 2.4));
+    bio.spinStrength = demoSpin;
+    bio.reachAlpha = demoAlpha;
+    bio.reachRsa   = demoRsa;
+    bio.reach = clamp01(demoSpin * (1 + bio.harm) * demoAlpha * demoRsa);
+  }
+  else if (bio.mode === 'import' && bio.session) {
+    if (bio.sessionPlaying) bio.sessionT += dt;
+    const sess = bio.session;
+    const duration = sess.t[sess.t.length - 1] || 1;
+    if (bio.sessionT >= duration) {
+      bio.sessionT = duration;
+      if (bio.sessionPlaying) {
+        bio.sessionPlaying = false;
+        document.getElementById('bioPlay').textContent = '▶ Play';
+      }
+    }
+    // Linear interpolation between samples
+    if (bio.sessionT < sess.t[bio.sessionIdx]) bio.sessionIdx = 0;
+    while (bio.sessionIdx < sess.t.length - 1 && sess.t[bio.sessionIdx + 1] <= bio.sessionT) {
+      bio.sessionIdx++;
+    }
+    const i = bio.sessionIdx;
+    const j = Math.min(i + 1, sess.t.length - 1);
+    const span = Math.max(0.001, sess.t[j] - sess.t[i]);
+    const a = clamp01((bio.sessionT - sess.t[i]) / span);
+    const lerp = (aa, bb) => aa * (1 - a) + bb * a;
+    bio.coherence.GUT   = lerp(sess.GUT[i],   sess.GUT[j]);
+    bio.coherence.HEART = lerp(sess.HEART[i], sess.HEART[j]);
+    bio.coherence.HEAD  = lerp(sess.HEAD[i],  sess.HEAD[j]);
+    bio.harm            = lerp(sess.harm[i],  sess.harm[j]);
+
+    // Track BCS stream in parallel (sparser sampling — typically ~10s intervals)
+    if (sess._bcs && sess._bcs.length > 0) {
+      if (bio.sessionT < sess._bcs[bio.bcsIdx].t) bio.bcsIdx = 0;
+      while (bio.bcsIdx < sess._bcs.length - 1 && sess._bcs[bio.bcsIdx + 1].t <= bio.sessionT) {
+        bio.bcsIdx++;
+      }
+      bio.currentBcs = sess._bcs[bio.bcsIdx];
+    }
+
+    // Features stream — three regime operating frequencies + heart-derived spin strength
+    if (sess._features && sess._features.length > 0) {
+      if (bio.sessionT < sess._features[bio.featuresIdx].t) bio.featuresIdx = 0;
+      while (bio.featuresIdx < sess._features.length - 1 && sess._features[bio.featuresIdx + 1].t <= bio.sessionT) {
+        bio.featuresIdx++;
+      }
+      const fi = bio.featuresIdx;
+      const fj = Math.min(fi + 1, sess._features.length - 1);
+      const fSpan = Math.max(0.001, sess._features[fj].t - sess._features[fi].t);
+      const fA = clamp01((bio.sessionT - sess._features[fi].t) / fSpan);
+      const flerp = (aa, bb) => (aa == null || bb == null) ? (aa != null ? aa : bb) : aa * (1 - fA) + bb * fA;
+      const fa = sess._features[fi], fb = sess._features[fj];
+      bio.currentFeatures = {
+        t: bio.sessionT,
+        gutFreq:   flerp(fa.gutFreq,   fb.gutFreq),
+        heartFreq: flerp(fa.heartFreq, fb.heartFreq),
+        headFreq:  flerp(fa.headFreq,  fb.headFreq),
+        hrvCoh:    flerp(fa.hrvCoh,    fb.hrvCoh),
+        rmssd:     flerp(fa.rmssd,     fb.rmssd),
+        meanHR:    flerp(fa.meanHR,    fb.meanHR),
+        alphaNorm: flerp(fa.alphaNorm, fb.alphaNorm),
+        rsaNorm:   flerp(fa.rsaNorm,   fb.rsaNorm),
+      };
+      // Operating Signature — three regime frequencies + unified (geometric mean in log-Hz space)
+      bio.opFreq.GUT   = bio.currentFeatures.gutFreq;
+      bio.opFreq.HEART = bio.currentFeatures.heartFreq;
+      bio.opFreq.HEAD  = bio.currentFeatures.headFreq;
+      // Unified signature = geometric mean — meaningful across the 0.1 Hz → 10 Hz spread of the three regimes
+      const g = bio.opFreq.GUT, h = bio.opFreq.HEART, d = bio.opFreq.HEAD;
+      if (g > 0 && h > 0 && d > 0) {
+        bio.opFreq.unified = Math.pow(g * h * d, 1/3);
+      } else {
+        bio.opFreq.unified = null;
+      }
+      // Spin Strength — heart as the engine of biofield rotation
+      //   hrvCoh (normalize by dividing by 3, clamp 0-1) × rmssd (normalize by 50ms) × kuramoto
+      // Physical meaning: a phase-locked (high kuramoto) heart with high HRV coherence and
+      //   substantial HRV amplitude drives stronger rotational dynamics across the biofield
+      const hrvCohN  = clamp01((bio.currentFeatures.hrvCoh  || 0) / 3);
+      const rmssdN   = clamp01((bio.currentFeatures.rmssd   || 0) / 50);
+      const kuramoto = bio.currentBcs ? bio.currentBcs.kuramoto : 0.5;
+      bio.spinStrength = hrvCohN * rmssdN * kuramoto;
+      // Biofield Reach (v3.4) — composite projection scalar
+      //   reach = spin × (1 + harm) × alphaNorm × rsaNorm  →  clamp 0..1
+      // alphaNorm and rsaNorm are pre-normalized at import time (see normalizeJson).
+      // Fallbacks apply when session doesn't export those fields:
+      //   alpha → hrvCohN (both index cortical/autonomic coherence)
+      //   RSA   → rmssdN  (rmssd is a well-established surrogate for RSA amplitude)
+      const alphaN = (bio.currentFeatures.alphaNorm != null)
+        ? clamp01(bio.currentFeatures.alphaNorm)
+        : hrvCohN;
+      const rsaN = (bio.currentFeatures.rsaNorm != null)
+        ? clamp01(bio.currentFeatures.rsaNorm)
+        : rmssdN;
+      bio.reachAlpha = alphaN;
+      bio.reachRsa   = rsaN;
+      bio.reach = clamp01(bio.spinStrength * (1 + bio.harm) * alphaN * rsaN);
+    }
+
+    // Prescription timeline — reassign waves as the session plays through its frequency schedule
+    if (sess._rx && sess._rx.length > 0) {
+      let targetRxIdx = -1;
+      for (let k = 0; k < sess._rx.length; k++) {
+        if (sess._rx[k].t <= bio.sessionT) targetRxIdx = k;
+        else break;
+      }
+      if (targetRxIdx !== bio.rxIdx) {
+        // A new prescription event has become active (or we scrubbed to an earlier point)
+        if (targetRxIdx >= 0) {
+          applyPrescription(sess._rx[targetRxIdx]);
+          bio.currentRx = sess._rx[targetRxIdx];
+        } else {
+          bio.currentRx = null;
+        }
+        bio.rxIdx = targetRxIdx;
+      }
+    }
+    // Update scrubber UI only if user isn't dragging
+    const scrub = document.getElementById('bioScrub');
+    if (!bio.scrubbing) scrub.value = bio.sessionT / duration;
+    document.getElementById('bioScrubT').textContent = fmtTime(bio.sessionT);
+  }
+  // 'live' mode: window.aetheriaBio.set() writes directly into bio.coherence, no update here
+
+  updateBioMetersUI();
+}
+
+function switchBioMode(newMode) {
+  const bio = state.bio;
+  bio.mode = newMode;
+  document.querySelectorAll('#bioModes button').forEach(b => {
+    b.classList.toggle('active', b.dataset.bio === newMode);
+  });
+  document.getElementById('bioImport').classList.toggle('hide', newMode !== 'import');
+  // When leaving manual, auto-engage all three waves so the regimes are visible
+  if (newMode !== 'manual') {
+    for (let w = 0; w < 3; w++) {
+      if (!state.waves[w].on) {
+        state.waves[w].on = true;
+        updateWaveDisplay(w);
+      }
+    }
+  }
+  // Reset demo clock so user sees the rise envelope fresh
+  if (newMode === 'demo') bio.demoT = 0;
+}
+
+function initBiofeedback() {
+  buildBioMeters();
+
+  // Color scheme toggle — switches between guidebook (symbolic) and physical (octave-doubled)
+  function refreshWlInfo() {
+    const info = document.getElementById('wlInfo');
+    if (state.colorScheme !== 'physical') { info.textContent = ''; return; }
+    // Show wavelengths for the currently engaged waves
+    const parts = [];
+    for (let w = 0; w < 3; w++) {
+      if (!state.waves[w].on) continue;
+      const f = FREQ_TABLE[state.waves[w].idx];
+      const wl = f.wlNm.toFixed(0);
+      const band = (f.wlNm < 380 || f.wlNm > 780) ? 'UV' : 'nm';
+      parts.push(`${String.fromCharCode(65 + w)}:${wl}${band}`);
+    }
+    info.textContent = parts.join('  ');
+  }
+  document.querySelectorAll('#colorSchemeToggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#colorSchemeToggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.colorScheme = btn.dataset.cs;
+      for (let w = 0; w < 3; w++) updateWaveDisplay(w);
+      refreshWlInfo();
+    });
+  });
+  // Also refresh wavelength info whenever a wave changes
+  const origUWD = updateWaveDisplay;
+  window._refreshWlInfo = refreshWlInfo;
+  refreshWlInfo();
+  // Mode buttons
+  document.querySelectorAll('#bioModes button').forEach(btn => {
+    btn.addEventListener('click', () => switchBioMode(btn.dataset.bio));
+  });
+  // File import — label now wraps the input directly, so clicking the label triggers the picker natively
+  const fileIn = document.getElementById('bioFile');
+  const infoBox = document.getElementById('bioSessionInfo');
+
+  async function loadSessionText(text, sourceName) {
+    const bytes = text.length;
+    infoBox.innerHTML = `<span style="color:var(--accent);">●</span> Parsing ${sourceName}… (${(bytes/1024).toFixed(0)} KB)`;
+    try {
+      // Yield to browser so the status paints before parse begins
+      await new Promise(r => setTimeout(r, 20));
+      const sess = parseCoherenceSession(text);
+      if (!sess || !sess.t || sess.t.length === 0) {
+        infoBox.innerHTML = `<span style="color:#ff6b6b;">✗ Parse returned empty</span><br><span style="color:var(--ink-dim);">File had ${bytes} chars but no GUT/HEART/HEAD data found. Expected Coherence Lab format or JSON/CSV with gut/heart/head fields.</span>`;
+        return;
+      }
+      state.bio.session = sess;
+      state.bio.sessionIdx = 0;
+      state.bio.sessionT = 0;
+      state.bio.sessionPlaying = false;
+      const duration = sess.t[sess.t.length - 1];
+      let info;
+      if (sess._schema === 'coherence-lab' && sess._meta) {
+        const m = sess._meta;
+        const dt = m.startTime ? new Date(m.startTime).toISOString().slice(0, 16).replace('T', ' ') + ' UTC' : '';
+        const bcsN = sess._bcs ? ` · ${sess._bcs.length} bcs` : '';
+        info = `<span style="color:var(--accent);">✓ Coherence Lab</span><br>${m.sessionId || sourceName}<br>${dt}<br>${sess.t.length} samples${bcsN} · ${fmtTime(duration)}`;
+      } else {
+        info = `<span style="color:var(--accent);">✓ Loaded</span><br>${sourceName}<br>${sess.t.length} samples · ${fmtTime(duration)}`;
+      }
+      infoBox.innerHTML = info;
+      document.getElementById('bioScrubTotal').textContent = fmtTime(duration);
+      document.getElementById('bioScrub').value = 0;
+      document.getElementById('bioPlay').textContent = '▶ Play';
+    } catch (err) {
+      infoBox.innerHTML = `<span style="color:#ff6b6b;">✗ ${err.name}: ${err.message}</span>`;
+      console.error('Session parse error:', err);
+    }
+  }
+
+  fileIn.addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) { infoBox.innerHTML = '<span style="color:#ff6b6b;">No file selected</span>'; return; }
+    infoBox.innerHTML = `<span style="color:var(--accent);">●</span> Reading ${f.name}… (${(f.size/1024/1024).toFixed(2)} MB)`;
+    try {
+      await new Promise(r => setTimeout(r, 20));
+      const text = await f.text();
+      await loadSessionText(text, f.name);
+    } catch (err) {
+      infoBox.innerHTML = `<span style="color:#ff6b6b;">✗ Read failed: ${err.name}: ${err.message}</span>`;
+      console.error('File read error:', err);
+    }
+  });
+
+  // Paste fallback — bypasses the file picker entirely
+  document.getElementById('bioPasteBtn').addEventListener('click', () => {
+    const text = document.getElementById('bioPaste').value;
+    if (!text || text.trim().length < 10) {
+      infoBox.innerHTML = '<span style="color:#ff6b6b;">Paste area is empty</span>';
+      return;
+    }
+    loadSessionText(text, 'pasted JSON');
+  });
+  document.getElementById('bioPlay').addEventListener('click', () => {
+    if (!state.bio.session) return;
+    state.bio.sessionPlaying = !state.bio.sessionPlaying;
+    document.getElementById('bioPlay').textContent = state.bio.sessionPlaying ? '⏸ Pause' : '▶ Play';
+  });
+  document.getElementById('bioReset').addEventListener('click', () => {
+    state.bio.sessionT = 0;
+    state.bio.sessionIdx = 0;
+    state.bio.bcsIdx = 0;
+    state.bio.featuresIdx = 0;
+    state.bio.rxIdx = -1;
+    state.bio.currentBcs = null;
+    state.bio.currentRx = null;
+    state.bio.currentFeatures = null;
+    state.bio.opFreq = { GUT: null, HEART: null, HEAD: null, unified: null };
+    state.bio.spinStrength = 0;
+    state.bio.reach = 0;
+    state.bio.reachAlpha = 0;
+    state.bio.reachRsa = 0;
+    state.bio.sessionPlaying = false;
+    // Restore default frequencies for each regime-locked wave
+    const defaults = [0, 9, 18]; // GUT-1, HEART-1, HEAD-1
+    for (let w = 0; w < 3; w++) {
+      state.waves[w].idx = defaults[w];
+      updateWaveDisplay(w);
+      const sel = document.querySelector(`select[data-sel="${w}"]`);
+      if (sel) sel.value = defaults[w];
+    }
+    document.getElementById('bioPlay').textContent = '▶ Play';
+    document.getElementById('bioScrub').value = 0;
+  });
+  const scrub = document.getElementById('bioScrub');
+  scrub.addEventListener('input', () => {
+    if (!state.bio.session) return;
+    state.bio.scrubbing = true;
+    const duration = state.bio.session.t[state.bio.session.t.length - 1];
+    state.bio.sessionT = parseFloat(scrub.value) * duration;
+    state.bio.sessionIdx = 0;
+    state.bio.bcsIdx = 0;
+    state.bio.featuresIdx = 0;
+    state.bio.rxIdx = -1;
+  });
+  scrub.addEventListener('change', () => { state.bio.scrubbing = false; });
+
+  // Public API for external drivers (Coherence Lab, Sophia, WebSocket relays)
+  window.aetheriaBio = {
+    set(values) {
+      state.bio.mode = 'live';
+      document.querySelectorAll('#bioModes button').forEach(b => b.classList.remove('active'));
+      if (values.GUT   !== undefined) state.bio.coherence.GUT   = clamp01(+values.GUT);
+      if (values.HEART !== undefined) state.bio.coherence.HEART = clamp01(+values.HEART);
+      if (values.HEAD  !== undefined) state.bio.coherence.HEAD  = clamp01(+values.HEAD);
+      if (values.harm  !== undefined) state.bio.harm            = clamp01(+values.harm);
+      if (values.spin  !== undefined) state.bio.spinStrength    = clamp01(+values.spin);
+      if (values.alphaNorm !== undefined) state.bio.reachAlpha  = clamp01(+values.alphaNorm);
+      if (values.rsaNorm   !== undefined) state.bio.reachRsa    = clamp01(+values.rsaNorm);
+      // If reach is supplied directly, trust it. Otherwise, if any of the input ingredients
+      // were supplied, recompute reach from the canonical formula so the display stays
+      // consistent with spin/harm/alpha/rsa the caller pushed in.
+      if (values.reach !== undefined) {
+        state.bio.reach = clamp01(+values.reach);
+      } else if (values.spin !== undefined || values.harm !== undefined
+              || values.alphaNorm !== undefined || values.rsaNorm !== undefined) {
+        state.bio.reach = clamp01(state.bio.spinStrength * (1 + state.bio.harm)
+                                * state.bio.reachAlpha * state.bio.reachRsa);
+      }
+    },
+    get() {
+      return { ...state.bio.coherence, harm: state.bio.harm, spin: state.bio.spinStrength,
+               reach: state.bio.reach, alphaNorm: state.bio.reachAlpha, rsaNorm: state.bio.reachRsa,
+               mode: state.bio.mode };
+    },
+    returnToManual() { switchBioMode('manual'); },
+  };
+}
+
+/* ============ INIT ============ */
+populateSelectors();
+initToggles();
+initHzEditor();
+initModeSwitch();
+initBiofeedback();
+initAlignmentPanel();
+initTutorialModal();
+updateReadouts();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

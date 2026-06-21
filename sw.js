@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aetheria-rct-v5';
+const CACHE_NAME = 'aetheria-rct-v12';
 const ASSETS = [
   './',
   './index.html',
@@ -6,6 +6,10 @@ const ASSETS = [
   './athena-core.js',
   './interval-analysis.js',
   './prescription-engine.js',
+  './neurodynamics.js',
+  './spiral-wave.js',
+  './regime_collider.html',
+  './loshu_cube_explorer_v3.html',
   './icons/icon-192.png',
   './icons/icon-512.png'
 ];
